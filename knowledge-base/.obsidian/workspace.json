@@ -1,0 +1,199 @@
+{
+  "main": {
+    "id": "a90f01de27af36a0",
+    "type": "split",
+    "children": [
+      {
+        "id": "0e656f64d7f8a3a9",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "adc957a27aedf576",
+            "type": "leaf",
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "Research-Biometric-Reaction.canvas",
+                "viewState": {
+                  "x": 2056.273299086122,
+                  "y": -179.17293963440235,
+                  "zoom": -0.9123682557985169
+                }
+              },
+              "icon": "lucide-layout-dashboard",
+              "title": "Research-Biometric-Reaction"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "a8ab5891027d59d4",
+    "type": "split",
+    "children": [
+      {
+        "id": "ca378fd047b3c718",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "921776a7fa569565",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "4f43366be7cfb738",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "—",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "d5987f635c3ac461",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "right": {
+    "id": "cc2f6ff2d158e621",
+    "type": "split",
+    "children": [
+      {
+        "id": "706923252a56ff00",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f327daa057d82b4f",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Database.canvas",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Database"
+            }
+          },
+          {
+            "id": "19a96a43e76976c2",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Database.canvas",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Database"
+            }
+          },
+          {
+            "id": "d03fed4138266c44",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "bb7b75e5042aa626",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "cfba97ad196cfd2c",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Database.canvas",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Database"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "adc957a27aedf576",
+  "lastOpenFiles": [
+    "Crisis Safety System.md",
+    "Research-Biometric-Reaction.canvas",
+    "Research.canvas",
+    "Database.canvas",
+    "Product.md",
+    "Database strucutre.md"
+  ]
+}
