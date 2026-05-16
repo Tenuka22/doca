@@ -1,12 +1,19 @@
 import { useAuth, useSignUp } from "@clerk/expo";
 import { type Href, Link, useRouter } from "expo-router";
-import React from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { useState } from "react";
+import {
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  useColorScheme,
+  View,
+} from "react-native";
 
 function pushDecoratedUrl(
   router: ReturnType<typeof useRouter>,
   decorateUrl: (url: string) => string,
-  href: string,
+  href: string
 ) {
   const url = decorateUrl(href);
   const nextHref = url.startsWith("http") ? new URL(url).pathname : url;
@@ -17,10 +24,13 @@ export default function Page() {
   const { signUp, errors, fetchStatus } = useSignUp();
   const { isSignedIn } = useAuth();
   const router = useRouter();
-  const [emailAddress, setEmailAddress] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [code, setCode] = React.useState("");
-  const [statusMessage, setStatusMessage] = React.useState<string | null>(null);
+  const colorScheme = useColorScheme();
+  const [emailAddress, setEmailAddress] = useState("");
+  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  const placeholderTextColor = colorScheme === "dark" ? "#9ca3af" : "#6b7280";
 
   const handleSubmit = async () => {
     setStatusMessage(null);
@@ -32,7 +42,9 @@ export default function Page() {
 
     if (error) {
       console.error(JSON.stringify(error, null, 2));
-      setStatusMessage(error.longMessage ?? "Unable to sign up. Please try again.");
+      setStatusMessage(
+        error.longMessage ?? "Unable to sign up. Please try again."
+      );
       return;
     }
 
@@ -43,15 +55,12 @@ export default function Page() {
   const handleVerify = async () => {
     setStatusMessage(null);
 
-    await signUp.verifications.verifyEmailCode({
-      code,
-    });
+    await signUp.verifications.verifyEmailCode({ code });
 
     if (signUp.status === "complete") {
       await signUp.finalize({
         navigate: ({ session, decorateUrl }) => {
           if (session?.currentTask) {
-            console.log(session.currentTask);
             return;
           }
 
@@ -68,163 +77,147 @@ export default function Page() {
     return null;
   }
 
-  if (
-    signUp.status === "missing_requirements" &&
-    signUp.unverifiedFields.includes("email_address") &&
-    signUp.missingFields.length === 0
-  ) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Verify your account</Text>
-        {statusMessage && <Text style={styles.helper}>{statusMessage}</Text>}
-        <TextInput
-          style={styles.input}
-          value={code}
-          placeholder="Enter your verification code"
-          placeholderTextColor="#666666"
-          onChangeText={(value) => setCode(value)}
-          keyboardType="numeric"
-        />
-        {errors.fields.code && <Text style={styles.error}>{errors.fields.code.message}</Text>}
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            fetchStatus === "fetching" && styles.buttonDisabled,
-            pressed && styles.buttonPressed,
-          ]}
-          onPress={handleVerify}
-          disabled={fetchStatus === "fetching"}
-        >
-          <Text style={styles.buttonText}>Verify</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
-          onPress={() => signUp.verifications.sendEmailCode()}
-        >
-          <Text style={styles.secondaryButtonText}>I need a new code</Text>
-        </Pressable>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign up</Text>
-      {statusMessage && <Text style={styles.helper}>{statusMessage}</Text>}
-      <Text style={styles.label}>Email address</Text>
-      <TextInput
-        style={styles.input}
-        autoCapitalize="none"
-        value={emailAddress}
-        placeholder="Enter email"
-        placeholderTextColor="#666666"
-        onChangeText={(value) => setEmailAddress(value)}
-        keyboardType="email-address"
-      />
-      {errors.fields.emailAddress && (
-        <Text style={styles.error}>{errors.fields.emailAddress.message}</Text>
-      )}
-      <Text style={styles.label}>Password</Text>
-      <TextInput
-        style={styles.input}
-        value={password}
-        placeholder="Enter password"
-        placeholderTextColor="#666666"
-        secureTextEntry={true}
-        onChangeText={(value) => setPassword(value)}
-      />
-      {errors.fields.password && <Text style={styles.error}>{errors.fields.password.message}</Text>}
-      <Pressable
-        style={({ pressed }) => [
-          styles.button,
-          (!emailAddress || !password || fetchStatus === "fetching") && styles.buttonDisabled,
-          pressed && styles.buttonPressed,
-        ]}
-        onPress={handleSubmit}
-        disabled={!emailAddress || !password || fetchStatus === "fetching"}
-      >
-        <Text style={styles.buttonText}>Sign up</Text>
-      </Pressable>
-      <View style={styles.linkContainer}>
-        <Text>Already have an account? </Text>
-        <Link href="/sign-in">
-          <Text style={styles.linkText}>Sign in</Text>
-        </Link>
+    <ScrollView
+      className="flex-1 bg-background"
+      contentContainerStyle={{ flexGrow: 1 }}
+      contentInsetAdjustmentBehavior="automatic"
+      showsVerticalScrollIndicator={false}
+    >
+      <View className="flex-1 justify-center px-page py-page">
+        {signUp.status === "missing_requirements" &&
+        signUp.unverifiedFields.includes("email_address") &&
+        signUp.missingFields.length === 0 ? (
+          <View className="gap-section rounded-card border-2 border-border bg-card p-card">
+            <Text className="font-medium font-sans text-4xl text-foreground">
+              Verify your account
+            </Text>
+            {statusMessage ? (
+              <Text className="font-normal font-sans text-muted-foreground text-sm">
+                {statusMessage}
+              </Text>
+            ) : null}
+
+            <View className="gap-chip">
+              <Text className="font-medium font-sans text-foreground text-sm uppercase tracking-[0.18em]">
+                Verification code
+              </Text>
+              <TextInput
+                autoComplete="one-time-code"
+                className="rounded-control border-2 border-border bg-background px-card py-control font-sans text-foreground"
+                keyboardType="numeric"
+                onChangeText={setCode}
+                placeholder="Enter your verification code"
+                placeholderTextColor={placeholderTextColor}
+                value={code}
+              />
+              {errors.fields.code ? (
+                <Text className="font-medium font-sans text-destructive text-sm">
+                  {errors.fields.code.message}
+                </Text>
+              ) : null}
+            </View>
+
+            <Pressable
+              accessibilityRole="button"
+              className="items-center rounded-control border-2 border-border bg-primary px-card py-control active:opacity-80 disabled:opacity-50"
+              disabled={fetchStatus === "fetching"}
+              onPress={handleVerify}
+            >
+              <Text className="font-medium font-sans text-primary-foreground">
+                Verify
+              </Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              className="items-center rounded-control border-2 border-border bg-card px-card py-control active:opacity-80"
+              onPress={() => signUp.verifications.sendEmailCode()}
+            >
+              <Text className="font-medium font-sans text-foreground">
+                I need a new code
+              </Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View className="gap-section rounded-card border-2 border-border bg-card p-card">
+            <Text className="font-medium font-sans text-4xl text-foreground">
+              Sign up
+            </Text>
+            {statusMessage ? (
+              <Text className="font-normal font-sans text-muted-foreground text-sm">
+                {statusMessage}
+              </Text>
+            ) : null}
+
+            <View className="gap-chip">
+              <Text className="font-medium font-sans text-foreground text-sm uppercase tracking-[0.18em]">
+                Email address
+              </Text>
+              <TextInput
+                autoCapitalize="none"
+                autoComplete="email"
+                className="rounded-control border-2 border-border bg-background px-card py-control font-sans text-foreground"
+                keyboardType="email-address"
+                onChangeText={setEmailAddress}
+                placeholder="Enter email"
+                placeholderTextColor={placeholderTextColor}
+                value={emailAddress}
+              />
+              {errors.fields.emailAddress ? (
+                <Text className="font-medium font-sans text-destructive text-sm">
+                  {errors.fields.emailAddress.message}
+                </Text>
+              ) : null}
+            </View>
+
+            <View className="gap-chip">
+              <Text className="font-medium font-sans text-foreground text-sm uppercase tracking-[0.18em]">
+                Password
+              </Text>
+              <TextInput
+                className="rounded-control border-2 border-border bg-background px-card py-control font-sans text-foreground"
+                onChangeText={setPassword}
+                placeholder="Enter password"
+                placeholderTextColor={placeholderTextColor}
+                secureTextEntry
+                value={password}
+              />
+              {errors.fields.password ? (
+                <Text className="font-medium font-sans text-destructive text-sm">
+                  {errors.fields.password.message}
+                </Text>
+              ) : null}
+            </View>
+
+            <Pressable
+              accessibilityRole="button"
+              className="items-center rounded-control border-2 border-border bg-primary px-card py-control active:opacity-80 disabled:opacity-50"
+              disabled={
+                !(emailAddress && password) || fetchStatus === "fetching"
+              }
+              onPress={handleSubmit}
+            >
+              <Text className="font-medium font-sans text-primary-foreground">
+                Sign up
+              </Text>
+            </Pressable>
+
+            <View className="flex-row items-center gap-chip">
+              <Text className="font-normal font-sans text-foreground">
+                Already have an account?
+              </Text>
+              <Link href="/sign-in">
+                <Text className="font-medium font-sans text-primary">
+                  Sign in
+                </Text>
+              </Link>
+            </View>
+
+            <View nativeID="clerk-captcha" />
+          </View>
+        )}
       </View>
-      <View nativeID="clerk-captcha" />
-    </View>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    gap: 12,
-  },
-  title: {
-    marginBottom: 8,
-    fontSize: 24,
-    fontWeight: "700",
-  },
-  label: {
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: "#fff",
-  },
-  button: {
-    backgroundColor: "#0a7ea4",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  buttonPressed: {
-    opacity: 0.7,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-  secondaryButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  secondaryButtonText: {
-    color: "#0a7ea4",
-    fontWeight: "600",
-  },
-  linkContainer: {
-    flexDirection: "row",
-    gap: 4,
-    marginTop: 12,
-    alignItems: "center",
-  },
-  linkText: {
-    color: "#0a7ea4",
-    fontWeight: "600",
-  },
-  error: {
-    color: "#d32f2f",
-    fontSize: 12,
-    marginTop: -8,
-  },
-  helper: {
-    color: "#555555",
-    fontSize: 13,
-  },
-});

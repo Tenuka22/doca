@@ -10,7 +10,7 @@ import { getClerkAuthToken } from "@/utils/clerk-auth";
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
-      console.log(error);
+      console.error(error);
     },
   }),
 });
