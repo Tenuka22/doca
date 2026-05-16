@@ -1,0 +1,4 @@
+.venv/
+data-sets-raw/
+.env
+.env.*
