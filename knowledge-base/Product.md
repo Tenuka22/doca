@@ -1,182 +1,163 @@
 # ZenDoc Product
 
-ZenDoc is a licensed digital privacy focused therapy platform. The product combines patient privacy, therapist verification, booking and video sessions, subscription billing, and a high-priority crisis safety system.
+ZenDoc is an Android mobile mental health and wellness app that connects users anonymously with licensed doctors and therapists. The product combines privacy-first onboarding, wellness activities, smartwatch health integration, session booking, credit-based pricing, and a high-priority crisis safety system.
 
 ## What The Product Does
 
-- Lets patients book therapy anonymously or with revealed identity when required.
-- Lets therapists verify their qualifications and manage availability.
-- Lets admins approve therapist credentials and manage user roles.
-- Runs live video/audio therapy sessions through LiveKit.
-- Tracks subscription access and session limits.
+- Lets users register in self mode or relative/guardian mode.
+- Lets users book therapy anonymously using alias-based profiles.
+- Provides guided wellness activities like breathing, yoga, grounding, journaling, and body scan.
+- Connects optional smartwatch data for health monitoring and crisis detection.
+- Uses credit-based session plans and a free trial with payment info required.
 - Captures consent and crisis logs for safety and audit purposes.
-- Uses animated client-facing experiences with GSAP on public, patient, and therapist routes.
+- Supports a bold New Brutalism mobile UI with high contrast and thick borders.
 
 ## System Flow
 
-1. A user opens the Next.js web app.
-2. Clerk handles authentication and session tokens.
-3. `apps/web/src/proxy.ts` protects route groups.
-4. The web app calls the oRPC API through `apps/web/src/utils/orpc.ts`.
-5. `apps/server/src/index.ts` exposes `/rpc` and `/api-reference`.
-6. `packages/api` applies auth and role checks.
-7. `packages/db` reads and writes Cloudflare D1 through Drizzle.
-8. The route group chosen depends on role: public, patient, doctor, or admin.
+1. A user opens the Android app.
+2. The user lands on the marketing home screen, or goes straight into onboarding if they tap a CTA.
+3. Onboarding collects mode selection, relative details if needed, and alias setup.
+4. The user optionally connects a smartwatch.
+5. Logged-in users enter the bottom-tab app shell with Home, Activities, Doctors, and Profile.
+6. Credit plans or trial access unlock bookings.
+7. Crisis monitoring uses smartwatch signals and app state to trigger alerts and escalation.
 
 ## Current Architecture
 
 ### Frontend
 
-- `apps/web` is the Next.js application.
-- `apps/web/src/app/layout.tsx` mounts `ClerkProvider`, theme support, and query support.
-- `apps/web/src/components/gsap-provider.tsx` registers GSAP plugins and provides animation scope.
-- `apps/web/src/components/cl/*` holds route-specific layout and animation primitives.
+- Android mobile app.
+- Bottom tab navigation for Home, Activities, Doctors, and Profile.
+- Full-screen animated activity pages.
+- Brutalist landing, pricing, and contact screens for logged-out users.
 
 ### Backend
 
-- `apps/server` is the Hono worker entrypoint.
-- It wires oRPC RPC handling and OpenAPI reference handling.
-- CORS is configured for the web app origin.
+- Mobile app backend provides auth, booking, session history, credits, notifications, and crisis escalation.
+- Crisis and health data are stored with strict privacy controls.
 
-### Shared Packages
+### Shared Logic
 
-- `packages/api` contains auth helpers, role guards, and API routers.
-- `packages/db` contains the D1 schema and Drizzle client.
-- `packages/ui` contains shared shadcn-style primitives.
-- `packages/env` contains environment typing.
-- `packages/infra` holds Cloudflare/Alchemy deployment bindings.
+- Alias-based identity.
+- Relative/guardian relationships.
+- Subscription credits and trial access.
+- Smartwatch telemetry ingestion.
 
 ## Identity And Authorization
 
-- Clerk is the authentication source of truth.
-- The app stores the internal role in the `users` table.
-- Roles are `patient`, `doctor`, and `admin`.
-- Admins can change user roles.
-- Doctors need verification before they can be treated as approved clinicians.
-- Public patient anonymity is stored per user and per appointment.
+- Users can register for themselves or as a relative/guardian.
+- Public-facing profiles use aliases only.
+- Real names are not required publicly.
+- Doctors are shown anonymously in previews.
+- Guarded booking and session access depend on credits or trial status.
 
-## Route Model
+## Screen Model
 
-### Public
+### Logged Out
 
-- `/` landing page
-- `/about`
-- `/therapy`
-- `/crisis-safety`
-- `/pricing`
-- `/therapists`
-- `/therapist/[id]`
+- Marketing home
+- Pricing
+- Contact us
+- Doctor preview
+- Sign up / sign in
 
-### Patient
+### Onboarding
 
-- `/dashboard`
-- `/book`
-- `/book/[doctorId]`
-- `/session/[id]`
-- `/sessions`
-- `/settings`
-- `/billing`
-- `/crisis-log`
+- Mode selection
+- Relative details
+- Alias setup
+- Smartwatch connection
 
-### Doctor
+### Logged In
 
-- `/doctor/dashboard`
-- `/doctor/schedule`
-- `/doctor/reservations`
-- `/doctor/sessions`
-- `/doctor/profile`
-- `/doctor/settings`
-
-### Admin
-
-- `/admin/dashboard`
-- `/admin/therapists`
-- `/admin/users`
-- `/admin/crisis-events`
-- `/admin/billing`
-- `/admin/settings`
+- Home / dashboard
+- Activities library
+- Doctor list and doctor profile
+- Booking flow
+- My profile / patient page
+- Crisis alert screen
 
 ## UI Strategy
 
-- Public, patient, and doctor routes use GSAP-driven animation primitives.
-- Admin routes use standard UI without the marketing motion layer.
-- Shared components live in `components/cl` and compose `packages/ui` primitives.
-- The app uses route shells to keep the experience role-aware.
+- New Brutalism visual language.
+- Heavy grotesk sans-serif typography.
+- Thick black borders and hard offset shadows.
+- Red, black, and white only.
+- Bold outlined icons only.
+- Deliberate whitespace to preserve trust and clarity.
 
-## Core Database Model
+## Core Data Model
 
-The D1 schema now includes the foundation for:
+The app model includes the foundation for:
 
-- `users`
-- `patient_private_data`
-- `doctor_qualifications`
-- `subscription_plans`
-- `user_subscriptions`
-- `schedules`
-- `schedule_blocks`
-- `appointments`
-- `session_usage`
-- `crisis_events`
-- `consent_records`
+- users
+- alias profiles
+- relative or guardian relationships
+- doctor profiles
+- subscription plans
+- user credits
+- appointments
+- session history
+- activity completion logs
+- smartwatch connections
+- crisis events
+- consent records
 
 ### What Each One Means
 
-- `users`: Clerk-linked identity, role, anonymity, availability, auto-accept.
-- `patient_private_data`: encrypted private profile data.
-- `doctor_qualifications`: therapist verification workflow.
-- `subscription_plans`: internal plan mapping for billing.
-- `user_subscriptions`: user plan state and session usage.
-- `schedules`: recurring availability blocks.
-- `schedule_blocks`: blocked periods and exceptions.
-- `appointments`: booking, anonymity, room data, and lifecycle.
-- `session_usage`: session consumption records for billing.
-- `crisis_events`: crisis audit trail.
-- `consent_records`: required signup and safety consent tracking.
+- users: app account and mode ownership.
+- alias profiles: public identity used throughout the app.
+- relative or guardian relationships: linked monitoring profile.
+- doctor profiles: anonymized clinician records.
+- subscription plans: credit-based pricing tiers and trial access.
+- user credits: bookable session balance.
+- appointments: booked doctor sessions.
+- session history: past consultations and durations.
+- activity completion logs: completed wellness content.
+- smartwatch connections: health integration status.
+- crisis events: escalation audit trail.
+- consent records: onboarding and safety consent tracking.
 
 ## API Model
 
 ### Current Procedures
 
-- `healthCheck`
-- `privateData`
-- `users.getProfile`
-- `users.updateProfile`
-- `users.updateRole`
-- `users.getPrivateData`
-- `users.updatePrivateData`
+- app health
+- onboarding profile setup
+- alias and mode updates
+- relative profile updates
+- doctor discovery
+- booking and credit redemption
+- session history retrieval
+- crisis signal ingestion
 
 ### Authorization Pattern
 
-- `publicProcedure` for public endpoints.
-- `protectedProcedure` for authenticated endpoints.
-- `requireRole(...)` for role-based access.
-- `requireAdmin`, `requireDoctor`, and `requirePatient` are the current role helpers.
+- Public access for marketing, pricing, and doctor previews.
+- Authenticated access for dashboard, bookings, profile, and activity tracking.
+- Guardian access to linked relative data where consent allows.
 
 ## Crisis System
 
-The full crisis system is still to be built, but the product design is clear:
+The crisis system uses smartwatch biometrics and app context to detect risk patterns.
 
-- Client-side audio monitoring detects risk spikes.
-- A triage endpoint receives compressed crisis signals.
-- AI classifies urgency.
-- Audio, snapshots, and transcripts are stored with encryption and TTL.
-- Therapist alerts are pushed immediately.
-- If the threshold is severe enough, the system escalates to an authority voice agent.
+- Low-risk events are logged to the dashboard.
+- Medium-risk events notify the assigned doctor and guardian when applicable.
+- High-risk events automatically escalate to emergency services or a local crisis line.
+- Crisis alerts use a full-screen bold warning state.
+- Users can dismiss low-level alerts with a reason log.
 
 ## Current Implementation Status
 
-- Phase 1 foundation is complete.
-- GSAP is installed and the animation layer exists.
-- Route groups are in place for public, patient, doctor, and admin paths.
-- Clerk auth and role guards are in place.
-- The first real API router exists.
-- The D1 schema foundation exists.
-- LiveKit, Twilio, billing, and crisis automation are still future phases.
+- Product direction is mobile-first and Android-only.
+- The public marketing flow and logged-in tab shell are the core experience.
+- Credit-based booking, smartwatch integration, and crisis escalation are product requirements.
+- Privacy and anonymity are required throughout the app.
 
 ## Important Product Rules
 
-- Patient anonymity is a feature, not a default-only UI state.
-- Role assignment is admin-driven.
-- Crisis handling must be fast and auditable.
-- Client-facing motion should support clarity, not obscure critical actions.
-- Admin interfaces should stay conventional and easy to audit.
+- Anonymity is the default public identity model.
+- The app must support self mode and relative or guardian mode.
+- Doctor identities shown to users are anonymized.
+- Crisis handling must be fast, clear, and auditable.
+- The brutalist design must still feel trustworthy and readable.

@@ -1,28 +1,30 @@
-Data pre prossessing
+## AI System
 
-Data encoding
+ZenDoc uses AI for risk scoring and crisis triage support in the mobile app.
 
-Lstm & rnn - minmax encoding
-Auto encoder - minmax encoding
-Xgba - robust encoding
-Back looking sequence - min sequence amount train -> max sequence amount train
+### Signal Inputs
 
-Get 2 models for probabilities and pred
+- Heart rate variability
+- Stress level
+- Sleep anomalies
+- Activity anomalies
+- Session context
+- Guardian mode status
 
-Meu and lamda (uncerteinity and performance)
+### Model Goals
 
-=========
-Dropdout early stop
+- Produce a conservative risk score.
+- Separate low, medium, and high-risk states.
+- Avoid over-escalation unless the confidence and risk pattern justify it.
 
-Uncertinity factor
+### Output Logic
 
-Roc auc factor
+- Low risk: log only.
+- Medium risk: notify doctor and guardian when applicable.
+- High risk: trigger emergency escalation flow.
 
-Performance
+### Model Notes
 
-=========
-
-Result
-
-Checking the waight, and avg the output
-If there is a higher change notify
+- Use multiple models or signals if helpful, but the final decision should be conservative.
+- Track confidence, stability, and alert history.
+- Use the average or weighted result only if it improves safety.
