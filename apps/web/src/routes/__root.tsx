@@ -9,11 +9,10 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { Toaster } from "@zen-doc/ui/components/sonner";
+import { TooltipProvider } from "@zen-doc/ui/components/tooltip";
 import { useEffect } from "react";
 
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
-
-import Header from "../components/header";
 
 import appCss from "../index.css?url";
 
@@ -64,23 +63,25 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 
 function RootDocument() {
   return (
-    <ClerkProvider>
+    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
       <ClerkApiAuthBridge />
-      <html className="dark" lang="en">
-        <head>
-          <HeadContent />
-        </head>
-        <body>
-          <div className="grid h-svh grid-rows-[auto_1fr]">
-            <Header />
+      <TooltipProvider>
+        <html className="dark" lang="en">
+          <head>
+            <HeadContent />
+          </head>
+          <body>
             <Outlet />
-          </div>
-          <Toaster richColors />
-          <TanStackRouterDevtools position="bottom-left" />
-          <ReactQueryDevtools buttonPosition="bottom-right" position="bottom" />
-          <Scripts />
-        </body>
-      </html>
+            <Toaster richColors />
+            <TanStackRouterDevtools position="bottom-left" />
+            <ReactQueryDevtools
+              buttonPosition="bottom-right"
+              position="bottom"
+            />
+            <Scripts />
+          </body>
+        </html>
+      </TooltipProvider>
     </ClerkProvider>
   );
 }

@@ -1,51 +1,87 @@
-import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { UserButton, useUser } from "@clerk/tanstack-react-start";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { buttonVariants } from "@zen-doc/ui/components/button";
 
-import { orpc } from "@/utils/orpc";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@zen-doc/ui/components/card";
 
 export const Route = createFileRoute("/")({
-  component: HomeComponent,
+  component: HomeRoute,
 });
 
-const TITLE_TEXT = `
- ██████╗ ███████╗████████╗████████╗███████╗██████╗
- ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
- ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
- ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
- ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
- ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
-
- ████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗
- ╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
-    ██║       ███████╗   ██║   ███████║██║     █████╔╝
-    ██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
-    ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
-    ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
- `;
-
-function HomeComponent() {
-  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+function HomeRoute() {
+  const user = useUser();
 
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-2">
-      <pre className="overflow-x-auto font-mono text-sm">{TITLE_TEXT}</pre>
-      <div className="grid gap-6">
-        <section className="rounded-lg border p-4">
-          <h2 className="mb-2 font-medium">API Status</h2>
-          <div className="flex items-center gap-2">
-            <div
-              className={`h-2 w-2 rounded-full ${healthCheck.data ? "bg-green-500" : "bg-red-500"}`}
-            />
-            <span className="text-muted-foreground text-sm">
-              {healthCheck.isLoading
-                ? "Checking..."
-                : healthCheck.data
-                  ? "Connected"
-                  : "Disconnected"}
-            </span>
-          </div>
-        </section>
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
+      <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+        <div className="flex items-center gap-3">
+          <span className="font-semibold">ZenDoc</span>
+          <nav className="flex items-center gap-4 font-medium text-sm">
+            <Link
+              className="text-muted-foreground transition-colors hover:text-foreground"
+              to="/doctor"
+            >
+              Doctor
+            </Link>
+            {user.isLoaded && user.user?.publicMetadata?.role === "admin" && (
+              <Link
+                className="text-muted-foreground transition-colors hover:text-foreground"
+                search={{ page: 1, query: "" }}
+                to="/admin"
+              >
+                Admin
+              </Link>
+            )}
+          </nav>
+        </div>
+        <div className="flex items-center gap-2">
+          {user.isLoaded && user.user ? (
+            <div className="flex items-center gap-3">
+              <span className="text-muted-foreground text-sm">
+                Hi, {user.user.fullName ?? user.user.username}
+              </span>
+              <UserButton />
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link
+                className={buttonVariants({ variant: "outline" })}
+                to="/sign-in"
+              >
+                Sign In
+              </Link>
+              <Link
+                className={buttonVariants({ variant: "default" })}
+                to="/sign-up"
+              >
+                Sign Up
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Web portal</CardTitle>
+          <CardDescription>
+            Doctor onboarding and admin approvals.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm">
+            {user.isLoaded && user.user
+              ? `Signed in as ${user.user.fullName ?? user.user.username ?? "User"}`
+              : "Not signed in."}
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

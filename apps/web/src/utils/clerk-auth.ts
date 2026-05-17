@@ -1,3 +1,5 @@
+import { createIsomorphicFn } from "@tanstack/react-start";
+
 type ClerkTokenGetter = () => Promise<string | null>;
 
 let clerkTokenGetter: ClerkTokenGetter | null = null;
@@ -6,6 +8,10 @@ export function setClerkAuthTokenGetter(getToken: ClerkTokenGetter | null) {
   clerkTokenGetter = getToken;
 }
 
-export async function getClerkAuthToken() {
-  return (await clerkTokenGetter?.()) ?? null;
-}
+export const getClerkAuthToken = createIsomorphicFn()
+  .server(async () => {
+    const { auth } = await import("@clerk/tanstack-react-start/server");
+    const sessionAuth = await auth();
+    return (await sessionAuth.getToken?.()) ?? null;
+  })
+  .client(async () => (await clerkTokenGetter?.()) ?? null);

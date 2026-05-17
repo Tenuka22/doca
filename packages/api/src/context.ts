@@ -1,19 +1,28 @@
-type ClerkContextAuth = {
+export interface ClerkContextAuth {
+  sessionClaims: CustomJwtSessionClaims | null;
   userId: string | null;
-};
+}
 
-type ClerkRequestContext = {
+export interface ClerkRequestContext {
   auth: ClerkContextAuth | null;
+  clerk: typeof clerkClient;
+  db: ReturnType<typeof createDb>;
   session: null;
-};
+}
 
 function toClerkContextAuth(
-  auth: { userId: string | null } | null
+  auth: {
+    userId: string | null;
+    sessionClaims?: CustomJwtSessionClaims | null;
+  } | null
 ): ClerkContextAuth | null {
-  return auth ? { userId: auth.userId } : null;
+  return auth
+    ? { userId: auth.userId, sessionClaims: auth.sessionClaims ?? null }
+    : null;
 }
 
 import { createClerkClient } from "@clerk/backend";
+import { createDb } from "@zen-doc/db";
 import { env } from "@zen-doc/env/server";
 
 const clerkClient = createClerkClient({
@@ -32,9 +41,9 @@ async function authenticateClerkRequest(
 
 import type { Context as HonoContext } from "hono";
 
-export type CreateContextOptions = {
+export interface CreateContextOptions {
   context: HonoContext;
-};
+}
 
 export async function createContext({
   context,
@@ -43,6 +52,8 @@ export async function createContext({
   return {
     auth: clerkAuth,
     session: null,
+    db: createDb(),
+    clerk: clerkClient,
   };
 }
 
