@@ -57,14 +57,18 @@ type DoctorProfileFormValues = z.output<typeof doctorProfileFormSchema>;
 
 export const Route = createFileRoute("/doctor")({
   loader: async ({ context }): Promise<{ initialData: DoctorProfileData }> => {
-    const initialData = await context.queryClient.fetchQuery<DoctorProfileData>(
-      {
-        queryKey: orpc.doctorProfile.queryKey(),
-        queryFn: () => orpc.doctorProfile.call(),
-      }
-    );
+    try {
+      const initialData = await context.queryClient.fetchQuery<DoctorProfileData>(
+        {
+          queryKey: orpc.doctorProfile.queryKey(),
+          queryFn: () => orpc.doctorProfile.call(),
+        }
+      );
 
-    return { initialData };
+      return { initialData };
+    } catch {
+      return { initialData: { profile: null, role: null } };
+    }
   },
   component: DoctorLayoutRoute,
 });

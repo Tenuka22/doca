@@ -1,4 +1,18 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  integer,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
+
+const scheduleKindValues = ["open", "block", "session"] as const;
+const scheduleNoteValues = [
+  "home",
+  "work",
+  "pharmacy",
+  "after_gym",
+  "other",
+] as const;
 
 export const doctorProfiles = sqliteTable("doctor_profiles", {
   userId: text("user_id").primaryKey(),
@@ -9,4 +23,37 @@ export const doctorProfiles = sqliteTable("doctor_profiles", {
   updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
 });
 
+export const doctorSessions = sqliteTable("doctor_sessions", {
+  id: text("id").primaryKey(),
+  doctorId: text("doctor_id").notNull(),
+  patientId: text("patient_id").notNull(),
+  startAt: text("start_at").notNull(),
+  endAt: text("end_at").notNull(),
+  status: text("status").notNull().default("scheduled"),
+  createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+  updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
+});
+
+export const doctorScheduleEntries = sqliteTable(
+  "doctor_schedule_entries",
+  {
+    id: text("id").primaryKey(),
+    doctorId: text("doctor_id").notNull(),
+    kind: text("kind", { enum: scheduleKindValues }).notNull(),
+    noteKind: text("note_kind", { enum: scheduleNoteValues }),
+    startAt: text("start_at").notNull(),
+    endAt: text("end_at").notNull(),
+    sessionId: text("session_id"),
+    createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+    updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
+  },
+  (table) => ({
+    sessionUnique: uniqueIndex("doctor_schedule_entries_session_id_unique").on(
+      table.sessionId
+    ),
+  })
+);
+
 export type DoctorProfile = typeof doctorProfiles.$inferSelect;
+export type DoctorSession = typeof doctorSessions.$inferSelect;
+export type DoctorScheduleEntry = typeof doctorScheduleEntries.$inferSelect;

@@ -56,12 +56,16 @@ export const Route = createFileRoute("/admin/doc-requests/")({
       page: deps.page,
       query: deps.query,
     };
-    const initialData =
-      await context.queryClient.fetchQuery<PendingDoctorsPage>({
-        queryKey: orpc.pendingDoctors.queryKey({ input }),
-        queryFn: () => orpc.pendingDoctors.call(input),
-      });
-    return { initialData };
+    try {
+      const initialData =
+        await context.queryClient.fetchQuery<PendingDoctorsPage>({
+          queryKey: orpc.pendingDoctors.queryKey({ input }),
+          queryFn: () => orpc.pendingDoctors.call(input),
+        });
+      return { initialData };
+    } catch {
+      return { initialData: { items: [], page: 1, nextPage: null, prevPage: null, firstUserId: null, lastUserId: null } };
+    }
   },
   component: AdminDocRequestsRoute,
 });

@@ -15,6 +15,13 @@
       "when": 1779018030896,
       "tag": "0001_funny_tattoo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1779027690169,
+      "tag": "0002_overjoyed_madame_hydra",
+      "breakpoints": true
     }
   ]
 }

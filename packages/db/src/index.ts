@@ -3,12 +3,26 @@ import { drizzle } from "drizzle-orm/d1";
 
 import {
   type DoctorProfile as DoctorProfileSchema,
+  type DoctorScheduleEntry as DoctorScheduleEntrySchema,
+  type DoctorSession as DoctorSessionSchema,
   doctorProfiles as doctorProfilesTable,
+  doctorScheduleEntries as doctorScheduleEntriesTable,
+  doctorSessions as doctorSessionsTable,
 } from "./schema";
 
 export const doctorProfiles = doctorProfilesTable;
+export const doctorSessions = doctorSessionsTable;
+export const doctorScheduleEntries = doctorScheduleEntriesTable;
 export type DoctorProfile = DoctorProfileSchema;
+export type DoctorSession = DoctorSessionSchema;
+export type DoctorScheduleEntry = DoctorScheduleEntrySchema;
 
 export function createDb() {
-  return drizzle(env.DB, { schema: { doctorProfiles } });
+  return drizzle(env.DB, {
+    schema: {
+      doctorProfiles,
+      doctorSessions,
+      doctorScheduleEntries,
+    },
+  });
 }
