@@ -1,13 +1,19 @@
 import { useSignIn } from "@clerk/expo";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { type Href, useRouter } from "expo-router";
 import { useState } from "react";
 import { Text, useColorScheme, View } from "react-native";
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Screen } from "@/components/ui/screen";
 import { TextLink } from "@/components/ui/text-link";
+
+const OAUTH_STRATEGIES = [
+  { strategy: "oauth_google", label: "Google", icon: "google" as const },
+  { strategy: "oauth_apple", label: "Apple", icon: "apple" as const },
+  { strategy: "oauth_line", label: "LINE", icon: "comments" as const },
+] as const;
 
 function pushDecoratedUrl(
   router: ReturnType<typeof useRouter>,
@@ -110,6 +116,24 @@ export default function Page() {
     }
   };
 
+  const handleOAuth = async (
+    strategy: (typeof OAUTH_STRATEGIES)[number]["strategy"]
+  ) => {
+    setStatusMessage(null);
+
+    const { error } = await signIn.sso({
+      strategy,
+      redirectUrl: "/",
+    });
+
+    if (error) {
+      console.error(JSON.stringify(error, null, 2));
+      setStatusMessage(
+        error.longMessage ?? "Unable to sign in with SSO. Please try again."
+      );
+    }
+  };
+
   return (
     <Screen contentClassName="flex-1 justify-center px-page py-page">
       <View>
@@ -202,6 +226,37 @@ export default function Page() {
                 Don&apos;t have an account?
               </Text>
               <TextLink href="/sign-up">Sign up</TextLink>
+            </View>
+
+            <View className="mt-6">
+              <View className="flex-row items-center">
+                <View className="h-px flex-1 bg-border" />
+                <Text className="px-3 text-muted-foreground text-sm">or</Text>
+                <View className="h-px flex-1 bg-border" />
+              </View>
+
+              <View className="mt-4 gap-3">
+                {OAUTH_STRATEGIES.map((provider) => {
+                  const textColor = placeholderTextColor;
+
+                  return (
+                    <Button
+                      disabled={fetchStatus === "fetching"}
+                      key={provider.strategy}
+                      onPress={() => handleOAuth(provider.strategy)}
+                      variant="secondary"
+                    >
+                      <FontAwesome
+                        color={textColor}
+                        name={provider.icon}
+                        size={18}
+                        style={{ marginRight: 12 }}
+                      />
+                      <Text>Sign in with {provider.label}</Text>
+                    </Button>
+                  );
+                })}
+              </View>
             </View>
           </Card>
         )}
