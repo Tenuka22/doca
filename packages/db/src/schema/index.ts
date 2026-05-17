@@ -61,6 +61,37 @@ export const doctorScheduleEntries = sqliteTable(
   })
 );
 
+export const patientProfiles = sqliteTable("patient_profiles", {
+  userId: text("user_id").primaryKey(),
+  alias: text("alias").notNull(),
+  phone: text("phone"),
+  email: text("email"),
+  guardianUserId: text("guardian_user_id"),
+  guardianEmail: text("guardian_email"),
+  guardianPhone: text("guardian_phone"),
+  guardianRequestStatus: text("guardian_request_status"), // "pending" | "approved" | null
+  isOnboardingComplete: integer("is_onboarding_complete", {
+    mode: "boolean",
+  })
+    .notNull()
+    .default(false),
+  createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+  updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
+});
+
+export const guardianProfiles = sqliteTable("guardian_profiles", {
+  userId: text("user_id").primaryKey(),
+  clerkUserId: text("clerk_user_id"),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+  updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
+}, (table) => ({
+  emailUnique: uniqueIndex("guardian_email_unique").on(table.email),
+}));
+
 export type DoctorProfile = typeof doctorProfiles.$inferSelect;
 export type DoctorSession = typeof doctorSessions.$inferSelect;
 export type DoctorScheduleEntry = typeof doctorScheduleEntries.$inferSelect;
+export type PatientProfile = typeof patientProfiles.$inferSelect;
+export type GuardianProfile = typeof guardianProfiles.$inferSelect;

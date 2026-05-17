@@ -36,6 +36,20 @@
       "when": 1779037415474,
       "tag": "0004_fantastic_liz_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1779039700850,
+      "tag": "0005_woozy_maria_hill",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1779042961876,
+      "tag": "0006_lethal_molecule_man",
+      "breakpoints": true
     }
   ]
 }
