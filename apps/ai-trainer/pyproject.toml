@@ -13,12 +13,9 @@ dependencies = [
 ]
 
 [project.scripts]
-dataset-creation = "dataset_creation:main"
-unified-extractor = "unified_extractor:main"
-visualize = "visualize_data:main"
 
 [tool.setuptools]
-py-modules = ["dataset_creation", "unified_extractor", "visualize_data"]
+py-modules = ["dataset_creation", "visualize_data"]
 
 [build-system]
 requires = ["setuptools>=69", "wheel"]
