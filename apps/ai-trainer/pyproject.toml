@@ -13,6 +13,8 @@ dependencies = [
 ]
 
 [project.scripts]
+extract-data = "src.bins.data_extractor:main"
+visualize-data = "src.bins.data_visualization:main"
 
 [tool.setuptools]
 py-modules = ["dataset_creation", "visualize_data"]
