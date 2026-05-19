@@ -14,10 +14,6 @@ dependencies = [
     "tensorflow>=2.21.0",
 ]
 
-[project.scripts]
-build-dataset = "src.bins.data_extractor:main"
-visualize-data = "src.bins.data_visualization:main"
-
 [tool.setuptools]
 py-modules = ["dataset_creation", "data_extractor"]
 packages = ["src", "src.bins", "src.bins.data_extractor", "src.bins.data_visualization"]
