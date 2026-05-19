@@ -1161,7 +1161,7 @@ function toggleArrayValue<T extends string>(
   const next = checked
     ? [...new Set([...current, value])]
     : current.filter((item) => item !== value);
-  form.setValue(field, next, { shouldDirty: true, shouldTouch: true });
+  form.setValue(field, next as never, { shouldDirty: true, shouldTouch: true });
 }
 
 function toggleButtonValue<T extends string>(
@@ -1175,7 +1175,7 @@ function toggleButtonValue<T extends string>(
   const next = current.includes(value)
     ? current.filter((item) => item !== value)
     : [...current, value];
-  form.setValue(field, next, { shouldDirty: true, shouldTouch: true });
+  form.setValue(field, next as never, { shouldDirty: true, shouldTouch: true });
 }
 
 function emptyToUndefined(value: unknown) {

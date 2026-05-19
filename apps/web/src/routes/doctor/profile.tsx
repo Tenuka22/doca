@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useUser } from "@clerk/tanstack-react-start";
 import { useQuery } from "@tanstack/react-query";
 
-import { DoctorFilesPanel, DoctorProfileCard } from "./components/-index";
+import { DoctorFilesPanel, DoctorProfileCard } from "./components";
 
 import { orpc } from "@/utils/orpc";
 

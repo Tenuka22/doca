@@ -4,24 +4,24 @@
     "type": "split",
     "children": [
       {
-        "id": "0e656f64d7f8a3a9",
+        "id": "2a9e554b98de4d53",
         "type": "tabs",
         "children": [
           {
-            "id": "adc957a27aedf576",
+            "id": "048b7d83573f7f3b",
             "type": "leaf",
             "state": {
               "type": "canvas",
               "state": {
-                "file": "Research-Biometric-Reaction.canvas",
+                "file": "Research.canvas",
                 "viewState": {
-                  "x": -1494.3145311295111,
-                  "y": -1055.3275903807098,
-                  "zoom": -3.4550142202223326
+                  "x": -1106.0181837867497,
+                  "y": 3862.855988821672,
+                  "zoom": -0.8285215881389384
                 }
               },
               "icon": "lucide-layout-dashboard",
-              "title": "Research-Biometric-Reaction"
+              "title": "Research"
             }
           }
         ]
@@ -187,14 +187,24 @@
       "bases:Create new base": false
     }
   },
-  "active": "adc957a27aedf576",
+  "active": "048b7d83573f7f3b",
   "lastOpenFiles": [
+    "Pasted image 20260519194856.png",
+    "Pasted image 20260519194620.png",
+    "Pasted image 20260519194033.png",
+    "Pasted image 20260519193822.png",
+    "Pasted image 20260519191000.png",
+    "Pasted image 20260519185947.png",
+    "Pasted image 20260519185240.png",
+    "Product.md",
+    "IOT Device.md",
+    "IOT Device.canvas",
+    "AI System.md",
+    "Research-Biometric-Reaction.canvas",
     "Ai System.md",
     "Crisis Safety System.md",
-    "Research-Biometric-Reaction.canvas",
     "Research.canvas",
     "Database.canvas",
-    "Product.md",
     "Database strucutre.md"
   ]
 }

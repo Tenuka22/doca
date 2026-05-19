@@ -40,9 +40,7 @@ function downloadFile(url: string, fileName: string) {
   link.href = url;
   link.download = fileName;
   link.rel = "noopener";
-  document.body.append(link);
   link.click();
-  link.remove();
 }
 
 function getPreviewRatio(fileKind: DoctorFileItem["fileKind"]): number {
@@ -199,7 +197,7 @@ export function DoctorFileCard({
               </div>
 
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+                <DropdownMenuTrigger>
                   <Button className="shrink-0" size="icon" variant="ghost">
                     <MoreVertical className="size-4" />
                   </Button>

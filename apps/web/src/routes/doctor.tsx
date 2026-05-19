@@ -74,7 +74,6 @@ function DoctorLayoutRoute() {
   const loaderData = useLoaderData({ from: "/doctor" });
   const doctorProfileQuery = useQuery(
     orpc.doctorProfile.queryOptions({
-      initialData: loaderData.initialData,
       enabled: user.isLoaded && !!user.user,
     })
   );

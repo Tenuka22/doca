@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { formatDateKey, getCalendarCells } from "../utils/-calendar";
 import type { ScheduleEntry } from "../utils/-types";
-import { DayCell } from "./-day-cell";
+import { DayCell } from "./day-cell";
 
 interface CalendarMonthViewProps {
   currentMonth: Date;

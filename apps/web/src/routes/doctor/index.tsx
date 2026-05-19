@@ -42,7 +42,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { orpc } from "@/utils/orpc";
-import { CalendarHeader, CalendarMonthView } from "./components/-index";
+import { CalendarHeader, CalendarMonthView } from "./components";
 import { scheduleNotes, schedulePageSchema, timeOptions } from "./utils/-types";
 
 function parseScheduleEntry(entry: unknown): ScheduleEntry {

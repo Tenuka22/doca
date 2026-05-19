@@ -37,7 +37,7 @@ import {
 } from "../hooks/-use-doctor-files";
 import { useDoctorMaterialPreviewUrl } from "../hooks/-use-doctor-material-preview";
 import { type DoctorFileKind, doctorFileKinds } from "../utils/-files";
-import { DoctorFileCard } from "./-doctor-file-card";
+import { DoctorFileCard } from "./doctor-file-card";
 
 interface DoctorFilesPanelProps {
   canManage: boolean;
