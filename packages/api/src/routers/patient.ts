@@ -1,17 +1,8 @@
 import { guardianProfiles, patientProfiles } from "@zen-doc/db";
+import { completeOnboardingSchema } from "@zen-doc/db/schemas-types";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { protectedProcedure, publicProcedure } from "../index";
-
-const onboardingModeSchema = z.enum(["self", "has_guardian", "guardian"]);
-const completeOnboardingSchema = z.object({
-  mode: onboardingModeSchema,
-  alias: z.string().min(1).max(100),
-  phone: z.string().optional(),
-  email: z.string().email().optional(),
-  guardianEmail: z.string().email().optional(),
-  guardianPhone: z.string().optional(),
-});
 
 export const patientRouter = {
   getPatientProfile: protectedProcedure.handler(async ({ context }) => {

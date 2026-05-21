@@ -1,11 +1,13 @@
+import {
+  scheduleKindValues,
+  scheduleNoteValues,
+} from "@zen-doc/db/schemas-types/values";
 import { z } from "zod";
 
 export const scheduleEntrySchema = z.object({
   id: z.string(),
-  kind: z.enum(["open", "block", "session"]),
-  noteKind: z
-    .enum(["home", "work", "pharmacy", "after_gym", "other"])
-    .nullable(),
+  kind: z.enum(scheduleKindValues),
+  noteKind: z.enum(scheduleNoteValues).nullable(),
   startAt: z.string(),
   endAt: z.string(),
   sessionId: z.string().nullable(),

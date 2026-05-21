@@ -5,16 +5,11 @@ import {
   parseJsonApproachSteps,
   parseJsonStringArray,
 } from "@zen-doc/db";
+import { listDoctorsInputSchema } from "@zen-doc/db/schemas-types";
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { protectedProcedure, publicProcedure } from "../index";
-
-const listDoctorsInputSchema = z.object({
-  page: z.coerce.number().int().positive().catch(1),
-  pageSize: z.coerce.number().int().min(1).max(24).catch(6),
-  search: z.string().trim().max(60).catch(""),
-});
 
 function mapDoctorProfile(profile: typeof doctorProfiles.$inferSelect) {
   return {

@@ -1,5 +1,4 @@
-import type { Href } from "expo-router";
-import type { useRouter } from "expo-router";
+import type { Href, useRouter } from "expo-router";
 
 export const OAUTH_STRATEGIES = [
   { strategy: "oauth_google", label: "Google", icon: "google" as const },

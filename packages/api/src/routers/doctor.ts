@@ -5,82 +5,23 @@ import type {
   DoctorSession,
 } from "@zen-doc/db";
 import {
-  doctorConsultationModeValues,
   doctorEducationEntries,
-  doctorFocusAreaValues,
-  doctorLanguageValues,
   doctorProfiles,
   doctorScheduleEntries,
   doctorSessions,
-  doctorSpecialtyValues,
   parseJsonApproachSteps,
   parseJsonStringArray,
   stringifyJsonApproachSteps,
   stringifyJsonStringArray,
 } from "@zen-doc/db";
+import {
+  createScheduleEntrySchema,
+  doctorProfileInputSchema,
+  listScheduleEntriesSchema,
+} from "@zen-doc/db/schemas-types";
 import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import { z } from "zod";
 import { protectedProcedure } from "../index";
-
-const scheduleKindSchema = z.enum(["open", "block", "session"]);
-const scheduleNoteSchema = z.enum([
-  "home",
-  "work",
-  "pharmacy",
-  "after_gym",
-  "other",
-]);
-
-const scheduleRangeSchema = z.object({
-  startAt: z.iso.datetime(),
-  endAt: z.iso.datetime(),
-});
-
-const doctorSpecialtySchema = z.enum(doctorSpecialtyValues);
-const doctorLanguageSchema = z.enum(doctorLanguageValues);
-const doctorConsultationModeSchema = z.enum(doctorConsultationModeValues);
-const doctorApproachStepSchema = z.object({
-  id: z.string().min(1),
-  text: z.string().trim().min(1).max(240),
-});
-const doctorEducationEntrySchema = z.object({
-  id: z.string().min(1),
-  institution: z.string().trim().min(1).max(120),
-  degree: z.string().trim().min(1).max(120),
-  year: z.coerce.number().int().min(1900).max(2100).nullable().optional(),
-});
-
-const createScheduleEntrySchema = z
-  .object({
-    kind: scheduleKindSchema,
-    noteKind: scheduleNoteSchema.optional(),
-    sessionId: z.string().uuid().nullable().optional(),
-  })
-  .and(scheduleRangeSchema)
-  .superRefine((value, ctx) => {
-    if (new Date(value.startAt) >= new Date(value.endAt)) {
-      ctx.addIssue({
-        code: "custom",
-        message: "End time must be after start time",
-        path: ["endAt"],
-      });
-    }
-
-    if (value.kind !== "open" && value.noteKind) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Only open entries can have notes",
-        path: ["noteKind"],
-      });
-    }
-  });
-
-const listScheduleEntriesSchema = z.object({
-  from: z.iso.datetime(),
-  to: z.iso.datetime(),
-  page: z.coerce.number().int().positive().catch(1),
-  pageSize: z.coerce.number().int().positive().max(500).catch(100),
-});
 
 type ScheduleEntryRow = DoctorScheduleEntry & {
   session: DoctorSession | null;
@@ -270,86 +211,7 @@ export const doctorRouter = {
     };
   }),
   saveDoctorProfile: protectedProcedure
-    .input(
-      z.object({
-        displayName: z.preprocess(
-          (value) =>
-            typeof value === "string" && value.trim() === ""
-              ? undefined
-              : value,
-          z.string().trim().min(2).max(100).optional()
-        ),
-        headline: z.preprocess(
-          (value) =>
-            typeof value === "string" && value.trim() === ""
-              ? undefined
-              : value,
-          z.string().trim().min(2).max(140).optional()
-        ),
-        bio: z.string().optional(),
-        licenseNumber: z.string().optional(),
-        location: z.preprocess(
-          (value) =>
-            typeof value === "string" && value.trim() === ""
-              ? undefined
-              : value,
-          z.string().trim().max(120).optional()
-        ),
-        experienceStartYear: z.coerce
-          .number()
-          .int()
-          .min(1900)
-          .max(2100)
-          .optional(),
-        specialties: z.array(doctorSpecialtySchema).max(5).optional(),
-        languages: z.array(doctorLanguageSchema).max(8).optional(),
-        consultationModes: z
-          .array(doctorConsultationModeSchema)
-          .max(3)
-          .optional(),
-        focusAreas: z.array(z.enum(doctorFocusAreaValues)).max(10).optional(),
-        approach: z.preprocess(
-          (value) =>
-            typeof value === "string" && value.trim() === ""
-              ? undefined
-              : value,
-          z.string().trim().max(500).optional()
-        ),
-        education: z.preprocess(
-          (value) =>
-            typeof value === "string" && value.trim() === ""
-              ? undefined
-              : value,
-          z.string().trim().max(500).optional()
-        ),
-        placeName: z.preprocess(
-          (value) =>
-            typeof value === "string" && value.trim() === ""
-              ? undefined
-              : value,
-          z.string().trim().max(120).optional()
-        ),
-        placeAddress: z.preprocess(
-          (value) =>
-            typeof value === "string" && value.trim() === ""
-              ? undefined
-              : value,
-          z.string().trim().max(240).optional()
-        ),
-        placeDescription: z.preprocess(
-          (value) =>
-            typeof value === "string" && value.trim() === ""
-              ? undefined
-              : value,
-          z.string().trim().max(500).optional()
-        ),
-        approachSteps: z.array(doctorApproachStepSchema).max(12).optional(),
-        educationEntries: z
-          .array(doctorEducationEntrySchema)
-          .max(12)
-          .optional(),
-      })
-    )
+    .input(doctorProfileInputSchema)
     .handler(async ({ context, input }) => {
       const userId = context.auth?.userId;
       if (!userId) {

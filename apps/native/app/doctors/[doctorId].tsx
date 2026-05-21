@@ -55,12 +55,12 @@ interface DoctorProfileView {
   languages: string[];
   licenseNumber: string | null;
   location: string | null;
+  permanent?: boolean;
   placeAddress: string | null;
   placeDescription: string | null;
   placeName: string | null;
   specialties: string[];
   stripeAccountEnabled: boolean | null;
-  permanent?: boolean;
 }
 
 interface DoctorEducationView {

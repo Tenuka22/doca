@@ -1,11 +1,5 @@
+import { doctorFileKindSchema } from "@zen-doc/db/schemas-types";
 import { z } from "zod";
-
-export const doctorFileKindSchema = z.enum([
-  "portrait",
-  "qualification",
-  "intro_video",
-  "other",
-]);
 
 export type DoctorFileKind = z.infer<typeof doctorFileKindSchema>;
 

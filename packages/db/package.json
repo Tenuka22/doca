@@ -5,6 +5,12 @@
     ".": {
       "default": "./src/index.ts"
     },
+    "./schemas-types": {
+      "default": "./src/schemas-types/index.ts"
+    },
+    "./schemas-types/*": {
+      "default": "./src/schemas-types/*.ts"
+    },
     "./*": {
       "default": "./src/*.ts"
     }

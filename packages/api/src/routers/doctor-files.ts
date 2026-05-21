@@ -1,42 +1,16 @@
 import { doctorFiles, doctorProfiles } from "@zen-doc/db";
+import {
+  createDoctorFileSchema,
+  doctorFileInputSchema,
+  fileKeySchema,
+  updateDoctorFileSchema,
+} from "@zen-doc/db/schemas-types";
 import { env } from "@zen-doc/env/server";
 import { and, eq } from "drizzle-orm";
-import { z } from "zod";
 
 import type { Context as ApiContext } from "../context";
 import { readDoctorMaterialFile } from "../doctor-materials";
 import { protectedProcedure, publicProcedure } from "../index";
-
-const doctorFileKindSchema = z.enum([
-  "portrait",
-  "qualification",
-  "intro_video",
-  "other",
-]);
-
-const doctorFileInputSchema = z.object({
-  doctorId: z.string().min(1),
-});
-
-const createDoctorFileSchema = z.object({
-  doctorId: z.string().min(1),
-  fileKind: doctorFileKindSchema,
-  caption: z.string().trim().max(280).optional(),
-  file: z.file(),
-});
-
-const updateDoctorFileSchema = z.object({
-  id: z.string().min(1),
-  fileName: z.string().min(1).optional(),
-  fileKind: doctorFileKindSchema.optional(),
-  caption: z.string().trim().max(280).nullable().optional(),
-  width: z.coerce.number().int().positive().nullable().optional(),
-  height: z.coerce.number().int().positive().nullable().optional(),
-});
-
-const fileKeySchema = z.object({
-  id: z.string().min(1),
-});
 
 type UploadableFile = {
   arrayBuffer: () => Promise<ArrayBuffer>;
