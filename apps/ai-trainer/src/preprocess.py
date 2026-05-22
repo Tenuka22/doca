@@ -5,6 +5,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.metrics import classification_report, confusion_matrix
 
+import log
+
 
 def subject_split(X, y, groups, random_state=42):
     gss1 = GroupShuffleSplit(n_splits=1, test_size=0.3, random_state=random_state)
@@ -77,15 +79,29 @@ def evaluate_model(name, model, X_test, y_test, le):
         preds = model.predict(X_test, batch_size=256)
     if preds.ndim == 2:
         preds = preds.argmax(axis=1)
-    print(f"\n  CLASSIFICATION REPORT")
-    print(classification_report(y_test, preds, target_names=le.classes_, digits=3))
-    print(f"  Confusion matrix:")
-    print(confusion_matrix(y_test, preds))
-    print("\n  Per-class accuracy:")
+
+    cm = confusion_matrix(y_test, preds)
+    total = cm.sum()
+    correct = cm.trace()
+    overall_acc = correct / total
+
+    log.header("EVALUATION")
+    log.info(f"Overall accuracy: {overall_acc:.4f}  ({correct}/{total})")
+
+    log.info("Per-class metrics:")
+    log.detail(f"{'Class':>18s}  {'Acc':>6s}  {'Prec':>6s}  {'Recall':>7s}  {'F1':>6s}  {'FP':>4s}  {'FN':>4s}  {'Support':>7s}")
     for i, cls in enumerate(le.classes_):
-        mask = y_test == i
-        acc = (preds[mask] == i).mean()
-        print(f"    {cls:>18s}: {acc:.3f}  (n={mask.sum()})")
+        tp = cm[i, i]
+        fp = cm[:, i].sum() - tp
+        fn = cm[i, :].sum() - tp
+        n = cm[i, :].sum()
+        acc_i = tp / n if n > 0 else 0.0
+        prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
+        log.detail(f"{cls:>18s}  {acc_i:>6.3f}  {prec:>6.3f}  {rec:>7.3f}  {f1:>6.3f}  {fp:>4d}  {fn:>4d}  {n:>7d}")
+
+
     return preds
 
 

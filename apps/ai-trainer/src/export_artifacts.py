@@ -1,10 +1,11 @@
+import json
 import os
 import tempfile
 from pathlib import Path
 
-import joblib
 import xgboost as xgb
 
+import log
 
 ARTIFACTS_ROOT = Path(__file__).resolve().parent.parent / "artifacts"
 
@@ -36,16 +37,17 @@ def save_artifacts(
     agg_names = _aggregated_feature_names(base_feature_names)
 
     model.save_model(str(out / "model.json"))
-    print(f"  [artifacts] XGBoost JSON -> {out / 'model.json'}")
-
-    joblib.dump(model, str(out / "model.joblib"))
-    print(f"  [artifacts] Joblib       -> {out / 'model.joblib'}")
+    log.ok(f"XGBoost JSON -> {out / 'model.json'}")
 
     _save_onnx(model, str(out / "model.onnx"), agg_names)
-    print(f"  [artifacts] ONNX         -> {out / 'model.onnx'}")
+    log.ok(f"ONNX         -> {out / 'model.onnx'}")
+
+    with open(out / "classes.json", "w") as f:
+        json.dump(classes, f)
+    log.ok(f"Classes      -> {out / 'classes.json'}")
 
     _write_desc(out, dataset, base_feature_names, classes, scaler, seq_len, step, extra_desc)
-    print(f"  [artifacts] Description  -> {out / 'desc.md'}")
+    log.detail(f"Description  -> {out / 'desc.md'}")
 
 
 def _save_onnx(booster: xgb.Booster, path: str, feature_names: list[str]):
@@ -69,7 +71,7 @@ def _save_onnx(booster: xgb.Booster, path: str, feature_names: list[str]):
 
         os.unlink(tmp_path)
     except Exception as e:
-        print(f"  [artifacts] WARNING: ONNX export skipped ({e})")
+        log.warn(f"ONNX export skipped ({e})")
 
 
 FEATURE_DESCRIPTIONS = {

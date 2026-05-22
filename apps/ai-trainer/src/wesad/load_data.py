@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
+import log
+
 MAX30102_BASES = sorted(
     [
         "MEAN_RR",
@@ -76,7 +78,7 @@ def filter_sensor_included_features(df: pd.DataFrame) -> pd.DataFrame:
     keep = [c for c in df.columns if is_max30102_feature(c)]
     missing = set(keep) - set(df.columns)
     if missing:
-        print(f"WARNING: {len(missing)} keep-columns not in dataset (typo?)")
+        log.warn(f"{len(missing)} keep-columns not in dataset (typo?)")
     return df[keep]
 
 
@@ -87,6 +89,6 @@ def get_X_y_groups(df: pd.DataFrame):
     y = le.fit_transform(df["condition"].values)
     groups = df["subject_id"].values
     feature_names = features.columns.tolist()
-    print(f"  Features used: {len(feature_names)}")
-    print(f"  Classes: {list(le.classes_)}  distribution: {np.bincount(y)}")
+    log.info(f"Features used: {len(feature_names)}")
+    log.info(f"Classes: {list(le.classes_)}  distribution: {np.bincount(y)}")
     return X, y, groups, le, feature_names

@@ -6,14 +6,15 @@ warnings.filterwarnings("ignore")
 
 import xgboost as xgb
 
-from ..preprocess import (
+import log
+from preprocess import (
     subject_split, scale_data, prepare_sequences,
     aggregate_sequences, evaluate_model,
     compute_class_weights, make_sample_weights,
     RANDOM_STATE,
 )
-from ..export_artifacts import save_artifacts
-from .load_data import load_swell, get_X_y_groups
+from export_artifacts import save_artifacts
+from swell.load_data import load_swell, get_X_y_groups
 
 DATASET = "swell"
 ARTIFACTS_DIR = Path(__file__).resolve().parent.parent.parent / "artifacts"
@@ -33,7 +34,7 @@ def load_params():
     if PARAMS_PATH.exists():
         with open(PARAMS_PATH) as f:
             p = json.load(f)
-        print(f"  Loaded best params from {PARAMS_PATH}")
+        log.ok(f"Loaded best params from {PARAMS_PATH}")
         return {
             "max_depth": p.get("max_depth", 6),
             "learning_rate": p.get("learning_rate", 0.1),
@@ -45,7 +46,7 @@ def load_params():
             "reg_alpha": p.get("reg_alpha", 0.2),
         }, p.get("num_boost_round", 500)
     else:
-        print("  WARNING: best_params.json not found, using defaults")
+        log.warn("best_params.json not found, using defaults")
         return {
             "max_depth": 6,
             "learning_rate": 0.1,
@@ -91,12 +92,14 @@ def main():
         **tree_params,
     }
 
+    log.info(f"Training XGBoost ({num_boost_round} rounds, early stopping 50)...")
     model = xgb.train(
         params, dtrain,
         num_boost_round=num_boost_round,
         evals=[(dtrain, "train"), (dval, "val")],
         early_stopping_rounds=50, verbose_eval=0,
     )
+    log.ok("Training complete")
 
     save_artifacts(
         dataset=DATASET,

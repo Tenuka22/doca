@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
+import log
+
 MAX30102_BASES = sorted(
     [
         "MEAN_RR",
@@ -75,7 +77,7 @@ def filter_sensor_included_features(swell: pd.DataFrame) -> pd.DataFrame:
     keep = [c for c in swell.columns if is_max30102_feature(c)]
     missing = set(keep) - set(swell.columns)
     if missing:
-        print(f"WARNING: {len(missing)} keep-columns not in dataset (typo?)")
+        log.warn(f"{len(missing)} keep-columns not in dataset (typo?)")
     return swell[keep]
 
 
@@ -86,6 +88,6 @@ def get_X_y_groups(swell: pd.DataFrame):
     y = le.fit_transform(swell["condition"].values)
     groups = swell["subject_id"].values
     feature_names = features.columns.tolist()
-    print(f"  Features used: {len(feature_names)}")
-    print(f"  Classes: {list(le.classes_)}  distribution: {np.bincount(y)}")
+    log.info(f"Features used: {len(feature_names)}")
+    log.info(f"Classes: {list(le.classes_)}  distribution: {np.bincount(y)}")
     return X, y, groups, le, feature_names
