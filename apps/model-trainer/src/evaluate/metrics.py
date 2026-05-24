@@ -35,6 +35,9 @@ def evaluate_model(model, X_test: np.ndarray, y_test: np.ndarray, seq_len: int):
     metrics = {
         "seq_len": seq_len,
         "threshold": threshold,
+        "mean_stress_probability": float(np.mean(y_prob)),
+        "max_stress_probability": float(np.max(y_prob)),
+        "min_stress_probability": float(np.min(y_prob)),
         "auc": float(auc),
         "accuracy": float(acc),
         "f1": float(f1),
@@ -49,6 +52,13 @@ def evaluate_model(model, X_test: np.ndarray, y_test: np.ndarray, seq_len: int):
     print(f"\nROC-AUC Score: {auc:.4f}")
     print(f"Decision Threshold: {threshold}")
     print(f"Accuracy: {acc:.4f}, F1: {f1:.4f}")
+    print(
+        "Stress probability summary - "
+        f"mean: {metrics['mean_stress_probability']:.4f}, "
+        f"min: {metrics['min_stress_probability']:.4f}, "
+        f"max: {metrics['max_stress_probability']:.4f}"
+    )
+    print(f"Sample stress probabilities: {np.array2string(y_prob[:10], precision=4)}")
 
     model_dir = TRAINING.models_dir / f"seq_{seq_len}"
     with open(model_dir / "results.json", "w") as f:

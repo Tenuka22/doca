@@ -1,13 +1,23 @@
 import argparse
 import json
+import os
+from collections.abc import Iterable
 from pathlib import Path
+import sys
 
 import numpy as np
+import modal
 
 from src.config import TRAINING
 from src.data.features import create_sequences
 from src.data.load import load_all_subjects
 from src.evaluate.metrics import plot_correlations
+
+os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
 
 
 def main():
@@ -34,58 +44,81 @@ def main():
     val_subjects = [s for s in subjects if s[0] in (14, 15)]
     test_subjects = [s for s in subjects if s[0] >= 16]
 
-    for seq_len in TRAINING.sequence_lengths:
-        print(f"\n{'=' * 60}")
-        print(f"Sensor sequence -> LSTM (seq_len={seq_len})")
-        print(
-            f"Input: ({seq_len}, {len(subjects[0][3])}) RRI features -> LSTM -> stress probability"
+    if args.online:
+        _train_online_all(
+            subjects,
+            train_subjects,
+            val_subjects,
+            test_subjects,
         )
-        print(f"{'=' * 60}")
-
-        def prepare_data(subj_list):
-            all_X, all_y = [], []
-            for _, v, l, _ in subj_list:
-                X_sub, y_sub = create_sequences(v, l, seq_len)
-                if len(X_sub) > 0:
-                    all_X.append(X_sub)
-                    all_y.append(y_sub)
-            return np.concatenate(all_X), np.concatenate(all_y)
-
-        X_train_seq, y_train_seq = prepare_data(train_subjects)
-        X_val_seq, y_val_seq = prepare_data(val_subjects)
-        X_test_seq, y_test_seq = prepare_data(test_subjects)
-
-        print(
-            f"Train sequences: {X_train_seq.shape}, Val: {X_val_seq.shape}, Test: {X_test_seq.shape}"
-        )
-        print(
-            f"Stress ratio - Train: {y_train_seq.mean():.3f}, Val: {y_val_seq.mean():.3f}, Test: {y_test_seq.mean():.3f}"
-        )
-
-        if args.online:
-            _train_online(
+    else:
+        for seq_len in TRAINING.sequence_lengths:
+            _train_local_sequence(
                 seq_len,
-                X_train_seq,
-                y_train_seq,
-                X_val_seq,
-                y_val_seq,
-                X_test_seq,
-                y_test_seq,
-            )
-        else:
-            _train_local(
-                seq_len,
-                X_train_seq,
-                y_train_seq,
-                X_val_seq,
-                y_val_seq,
-                X_test_seq,
-                y_test_seq,
+                subjects,
+                train_subjects,
+                val_subjects,
+                test_subjects,
             )
 
     print(f"\nAll models saved to: {TRAINING.models_dir}")
     print(
         "\nArchitecture: [RRI sensor readings] -> sequence -> LSTM -> stress prediction"
+    )
+
+
+def _prepare_data(
+    subj_list: Iterable[tuple[int, np.ndarray, np.ndarray, list[str]]],
+    seq_len: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    all_X, all_y = [], []
+    for _, v, l, _ in subj_list:
+        X_sub, y_sub = create_sequences(v, l, seq_len)
+        if len(X_sub) > 0:
+            all_X.append(X_sub)
+            all_y.append(y_sub)
+
+    if not all_X or not all_y:
+        raise ValueError(f"No training sequences could be created for seq_len={seq_len}")
+
+    X = np.concatenate(all_X).astype(np.float32, copy=False)
+    y = np.concatenate(all_y).astype(np.uint8, copy=False)
+    return X, y
+
+
+def _train_local_sequence(
+    seq_len: int,
+    subjects: list[tuple[int, np.ndarray, np.ndarray, list[str]]],
+    train_subjects: list[tuple[int, np.ndarray, np.ndarray, list[str]]],
+    val_subjects: list[tuple[int, np.ndarray, np.ndarray, list[str]]],
+    test_subjects: list[tuple[int, np.ndarray, np.ndarray, list[str]]],
+) -> None:
+    print(f"\n{'=' * 60}")
+    print(f"Sensor sequence -> LSTM (seq_len={seq_len})")
+    print(
+        f"Input: ({seq_len}, {len(subjects[0][3])}) RRI features -> LSTM -> stress probability"
+    )
+    print(f"{'=' * 60}")
+
+    X_train_seq, y_train_seq = _prepare_data(train_subjects, seq_len)
+    X_val_seq, y_val_seq = _prepare_data(val_subjects, seq_len)
+    X_test_seq, y_test_seq = _prepare_data(test_subjects, seq_len)
+
+    print(
+        f"Train sequences: {X_train_seq.shape}, Val: {X_val_seq.shape}, Test: {X_test_seq.shape}"
+    )
+    print(
+        f"Stress ratio - Train: {y_train_seq.mean():.3f}, Val: {y_val_seq.mean():.3f}, Test: {y_test_seq.mean():.3f}"
+    )
+
+    _train_local(
+        seq_len,
+        X_train_seq,
+        y_train_seq,
+        X_val_seq,
+        y_val_seq,
+        X_test_seq,
+        y_test_seq,
     )
 
 
@@ -106,40 +139,57 @@ def _train_local(
     print(f"\nClassification Report (seq_len={seq_len}):\n{report}")
 
 
-def _train_online(
-    seq_len: int,
-    X_train: np.ndarray,
-    y_train: np.ndarray,
-    X_val: np.ndarray,
-    y_val: np.ndarray,
-    X_test: np.ndarray,
-    y_test: np.ndarray,
-):
-    from src.remote.modal_app import train_remote
+def _train_online_all(
+    subjects: list[tuple[int, np.ndarray, np.ndarray, list[str]]],
+    train_subjects: list[tuple[int, np.ndarray, np.ndarray, list[str]]],
+    val_subjects: list[tuple[int, np.ndarray, np.ndarray, list[str]]],
+    test_subjects: list[tuple[int, np.ndarray, np.ndarray, list[str]]],
+) -> None:
+    from src.remote.modal_app import app, train_remote
 
-    n_features = X_train.shape[2]
-    print("Sending data to Modal for training...")
-    artifacts = train_remote.remote(
-        X_train,
-        y_train,
-        X_val,
-        y_val,
-        X_test,
-        y_test,
-        seq_len,
-        n_features,
-    )
+    print("Sending all sequence lengths to Modal for parallel training...")
 
+    jobs: dict[int, object] = {}
+    with modal.enable_output():
+        with app.run():
+            for seq_len in TRAINING.sequence_lengths:
+                print(f"Queueing remote training job for seq_len={seq_len}...")
+                X_train_seq, y_train_seq = _prepare_data(train_subjects, seq_len)
+                X_val_seq, y_val_seq = _prepare_data(val_subjects, seq_len)
+                X_test_seq, y_test_seq = _prepare_data(test_subjects, seq_len)
+                jobs[seq_len] = train_remote.spawn(
+                    X_train_seq,
+                    y_train_seq,
+                    X_val_seq,
+                    y_val_seq,
+                    X_test_seq,
+                    y_test_seq,
+                    seq_len,
+                    X_train_seq.shape[2],
+                )
+
+            for seq_len in TRAINING.sequence_lengths:
+                print(f"Waiting for remote artifacts for seq_len={seq_len}...")
+                artifacts = jobs[seq_len].get()
+                _save_remote_artifacts(seq_len, artifacts)
+                _print_remote_metrics(seq_len)
+
+
+def _save_remote_artifacts(seq_len: int, artifacts: dict[str, bytes]) -> None:
     model_dir = TRAINING.models_dir / f"seq_{seq_len}"
     model_dir.mkdir(parents=True, exist_ok=True)
 
-    for rel_path, data in artifacts.items():
+    for rel_path, data in sorted(artifacts.items()):
         dst = model_dir / rel_path
         dst.parent.mkdir(parents=True, exist_ok=True)
         dst.write_bytes(data)
         print(f"  Downloaded: {rel_path} ({len(data)} bytes)")
 
-    report_path = model_dir / "results.json"
+    print(f"  Saved artifacts to: {model_dir}")
+
+
+def _print_remote_metrics(seq_len: int) -> None:
+    report_path = TRAINING.models_dir / f"seq_{seq_len}" / "results.json"
     if report_path.exists():
         with open(report_path) as f:
             metrics = json.load(f)

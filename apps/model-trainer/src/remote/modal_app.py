@@ -19,7 +19,7 @@ image = (
 app = modal.App("train-wesad-lstm", image=image)
 
 
-@app.function(gpu="any", timeout=3600)
+@app.function(cpu=1.0, memory=5120, timeout=3600)
 def train_remote(
     X_train: np.ndarray,
     y_train: np.ndarray,
@@ -37,9 +37,14 @@ def train_remote(
     from src.training.trainer import train_model
     from src.evaluate.metrics import evaluate_model
 
+    print(
+        f"[remote] starting training seq_len={seq_len}, n_features={n_features}",
+        flush=True,
+    )
     model = train_model(seq_len, X_train, y_train, X_val, y_val)
+    print(f"[remote] training finished seq_len={seq_len}", flush=True)
     report = evaluate_model(model, X_test, y_test, seq_len)
-    print(f"\nClassification Report:\n{report}")
+    print(f"\n[remote] Classification Report (seq_len={seq_len}):\n{report}", flush=True)
 
     model_dir = Path("/tmp/models") / f"seq_{seq_len}"
     artifacts = {}
@@ -47,4 +52,6 @@ def train_remote(
         if f.is_file():
             rel = str(f.relative_to(model_dir))
             artifacts[rel] = f.read_bytes()
+            print(f"[remote] packaged artifact: {rel}", flush=True)
+    print(f"[remote] returning {len(artifacts)} artifacts for seq_len={seq_len}", flush=True)
     return artifacts
