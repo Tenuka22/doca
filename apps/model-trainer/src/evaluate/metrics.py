@@ -2,6 +2,8 @@ import json
 
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')  # Set backend before importing pyplot
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import (
@@ -95,4 +97,72 @@ def plot_correlations(features: np.ndarray, feature_names: list[str]):
     sns.heatmap(df.corr(), annot=True, cmap="coolwarm", fmt=".2f")
     plt.title("Feature Correlation Map")
     plt.savefig(TRAINING.models_dir / "feature_correlation.png")
+    plt.close()
+
+
+def plot_performance_summary(results: list[dict[str, float | int]]) -> None:
+    if not results:
+        return
+
+    model_dir = TRAINING.models_dir
+    model_dir.mkdir(parents=True, exist_ok=True)
+
+    seq_lens = [int(item["seq_len"]) for item in results]
+    x = np.arange(len(seq_lens))
+    width = 0.18
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.bar(x - 1.5 * width, [float(item["accuracy"]) for item in results], width, label="Accuracy")
+    ax.bar(x - 0.5 * width, [float(item["precision"]) for item in results], width, label="Precision")
+    ax.bar(x + 0.5 * width, [float(item["recall"]) for item in results], width, label="Recall")
+    ax.bar(x + 1.5 * width, [float(item["f1"]) for item in results], width, label="F1")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([f"seq_{seq}" for seq in seq_lens])
+    ax.set_ylim(0.0, 1.05)
+    ax.set_ylabel("Score")
+    ax.set_title("Model Performance by Sequence Length")
+    ax.legend()
+    ax.grid(axis="y", alpha=0.2)
+    plt.tight_layout()
+    plt.savefig(model_dir / "performance_summary.png")
+    plt.close()
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.bar(x - 1.5 * width, [int(item["tn"]) for item in results], width, label="TN")
+    ax.bar(x - 0.5 * width, [int(item["fp"]) for item in results], width, label="FP")
+    ax.bar(x + 0.5 * width, [int(item["fn"]) for item in results], width, label="FN")
+    ax.bar(x + 1.5 * width, [int(item["tp"]) for item in results], width, label="TP")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([f"seq_{seq}" for seq in seq_lens])
+    ax.set_ylabel("Window Count")
+    ax.set_title("Confusion Matrix Counts by Sequence Length")
+    ax.legend()
+    ax.grid(axis="y", alpha=0.2)
+    plt.tight_layout()
+    plt.savefig(model_dir / "confusion_counts_summary.png")
+    plt.close()
+
+
+def plot_modal_timing(run_log: list[dict[str, float | int]]) -> None:
+    if not run_log:
+        return
+
+    model_dir = TRAINING.models_dir
+    model_dir.mkdir(parents=True, exist_ok=True)
+
+    seq_lens = [int(item["seq_len"]) for item in run_log]
+    durations = [float(item["duration_seconds"]) for item in run_log]
+    wait_times = [float(item["wait_seconds"]) for item in run_log]
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.bar([f"seq_{seq}" for seq in seq_lens], durations, label="Training duration")
+    ax.plot([f"seq_{seq}" for seq in seq_lens], wait_times, marker="o", label="Queue-to-finish wait")
+    ax.set_ylabel("Seconds")
+    ax.set_title("Modal Run Timing by Sequence Length")
+    ax.legend()
+    ax.grid(axis="y", alpha=0.2)
+    plt.tight_layout()
+    plt.savefig(model_dir / "modal_timing_summary.png")
     plt.close()

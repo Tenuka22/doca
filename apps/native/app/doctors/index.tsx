@@ -8,12 +8,13 @@ import {
   Sparkles,
 } from "lucide-react-native";
 import { useState } from "react";
-import { Image, Text, useColorScheme, View } from "react-native";
+import { Image, Text, View } from "react-native";
 
 import { Card } from "@/components/ui/card";
 import { Screen } from "@/components/ui/screen";
 import { useDoctorMaterialPreviewUrl } from "@/utils/doctor-materials";
 import { orpc } from "@/utils/orpc";
+import { useThemeColor } from "@/utils/theme";
 
 const listChips = [
   { label: "Licensed", value: "license" },
@@ -25,8 +26,7 @@ const listChips = [
 ] as const;
 
 export default function DoctorsScreen() {
-  const colorScheme = useColorScheme();
-  const iconColor = colorScheme === "dark" ? "#fafafa" : "#09090b";
+  const colors = useThemeColor();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 6;
@@ -56,7 +56,7 @@ export default function DoctorsScreen() {
 
         <Card className="gap-4">
           <View className="flex-row items-center gap-3">
-            <Search color={iconColor} size={18} />
+            <Search color={colors.foreground} size={18} />
             <Text className="font-bold font-sans text-foreground text-sm">
               Public directory
             </Text>
@@ -129,10 +129,7 @@ export default function DoctorsScreen() {
               key={profile.userId}
             >
               <View className="flex-row items-start gap-4">
-                <PortraitThumb
-                  iconColor={iconColor}
-                  id={portrait?.id ?? null}
-                />
+                <PortraitThumb id={portrait?.id ?? null} />
 
                 <View className="flex-1 gap-2">
                   <View className="flex-row items-center justify-between gap-3">
@@ -155,7 +152,7 @@ export default function DoctorsScreen() {
                   <View className="flex-row flex-wrap gap-2">
                     {profile.specialties?.[0] ? (
                       <View className="flex-row items-center gap-1 rounded-full border-2 border-border bg-background px-2 py-1">
-                        <Sparkles color={iconColor} size={12} />
+                        <Sparkles color={colors.foreground} size={12} />
                         <Text className="font-bold font-sans text-[10px] text-foreground uppercase tracking-wide">
                           {profile.specialties[0]}
                         </Text>
@@ -163,7 +160,7 @@ export default function DoctorsScreen() {
                     ) : null}
                     {profile.location ? (
                       <View className="flex-row items-center gap-1 rounded-full border-2 border-border bg-background px-2 py-1">
-                        <MapPin color={iconColor} size={12} />
+                        <MapPin color={colors.foreground} size={12} />
                         <Text className="font-bold font-sans text-[10px] text-foreground uppercase tracking-wide">
                           {profile.location}
                         </Text>
@@ -171,7 +168,7 @@ export default function DoctorsScreen() {
                     ) : null}
                     {profile.consultationModes?.[0] ? (
                       <View className="flex-row items-center gap-1 rounded-full border-2 border-border bg-background px-2 py-1">
-                        <Languages color={iconColor} size={12} />
+                        <Languages color={colors.foreground} size={12} />
                         <Text className="font-bold font-sans text-[10px] text-foreground uppercase tracking-wide">
                           {profile.consultationModes[0]}
                         </Text>
@@ -179,7 +176,7 @@ export default function DoctorsScreen() {
                     ) : null}
                     {profile.education ? (
                       <View className="flex-row items-center gap-1 rounded-full border-2 border-border bg-background px-2 py-1">
-                        <Sparkles color={iconColor} size={12} />
+                        <Sparkles color={colors.foreground} size={12} />
                         <Text className="font-bold font-sans text-[10px] text-foreground uppercase tracking-wide">
                           Education
                         </Text>
@@ -187,7 +184,7 @@ export default function DoctorsScreen() {
                     ) : null}
                     {portrait ? (
                       <View className="flex-row items-center gap-1 rounded-full border-2 border-border bg-background px-2 py-1">
-                        <Sparkles color={iconColor} size={12} />
+                        <Sparkles color={colors.foreground} size={12} />
                         <Text className="font-bold font-sans text-[10px] text-foreground uppercase tracking-wide">
                           Profile media
                         </Text>
@@ -233,14 +230,9 @@ function ButtonRow({ onClear }: { onClear: () => void }) {
   );
 }
 
-function PortraitThumb({
-  id,
-  iconColor,
-}: {
-  id: string | null;
-  iconColor: string;
-}) {
+function PortraitThumb({ id }: { id: string | null }) {
   const previewUrl = useDoctorMaterialPreviewUrl(id);
+  const { foreground } = useThemeColor();
 
   if (previewUrl) {
     return (
@@ -253,7 +245,7 @@ function PortraitThumb({
 
   return (
     <View className="h-14 w-14 items-center justify-center rounded-2xl border-2 border-border bg-primary">
-      <Sparkles color={iconColor} size={22} />
+      <Sparkles color={foreground} size={22} />
     </View>
   );
 }

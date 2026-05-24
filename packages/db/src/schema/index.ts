@@ -51,6 +51,7 @@ export const doctorSessions = sqliteTable("doctor_sessions", {
   id: text("id").primaryKey(),
   doctorId: text("doctor_id").notNull(),
   patientId: text("patient_id").notNull(),
+  planId: text("plan_id"),
   startAt: text("start_at").notNull(),
   endAt: text("end_at").notNull(),
   status: text("status").notNull().default("scheduled"), // "scheduled" | "attended" | "cancelled"
@@ -155,6 +156,46 @@ export const userCredits = sqliteTable("user_credits", {
   updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
 });
 
+export const creditTransactions = sqliteTable("credit_transactions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  amount: integer("amount").notNull(),
+  type: text("type").notNull(),
+  referenceId: text("reference_id"),
+  description: text("description"),
+  createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+});
+
+export const paymentIntents = sqliteTable("payment_intents", {
+  id: text("id").primaryKey(),
+  sessionId: text("session_id").notNull(),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  amount: integer("amount").notNull(),
+  platformFee: integer("platform_fee").notNull(),
+  doctorAmount: integer("doctor_amount").notNull(),
+  status: text("status").notNull().default("pending"),
+  stripeTransferId: text("stripe_transfer_id"),
+  createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+  updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
+});
+
+export const doctorPlans = sqliteTable("doctor_plans", {
+  id: text("id").primaryKey(),
+  doctorId: text("doctor_id").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  credits: integer("credits").notNull().default(1),
+  durationMinutes: integer("duration_minutes").notNull(),
+  features: text("features"),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  isDefault: integer("is_default", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+  updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
+});
+
 export type DoctorProfile = typeof doctorProfiles.$inferSelect;
 export type DoctorSession = typeof doctorSessions.$inferSelect;
 export type DoctorFile = typeof doctorFiles.$inferSelect;
@@ -163,3 +204,6 @@ export type DoctorEducationEntry = typeof doctorEducationEntries.$inferSelect;
 export type PatientProfile = typeof patientProfiles.$inferSelect;
 export type GuardianProfile = typeof guardianProfiles.$inferSelect;
 export type UserCredit = typeof userCredits.$inferSelect;
+export type CreditTransaction = typeof creditTransactions.$inferSelect;
+export type PaymentIntent = typeof paymentIntents.$inferSelect;
+export type DoctorPlan = typeof doctorPlans.$inferSelect;

@@ -133,18 +133,34 @@ interface SessionItem {
   endAt: string;
   id: string;
   patientId: string;
+  payoutAmount?: number | null;
   payoutStatus: string;
-  payoutTransferId?: string | null;
   startAt: string;
   status: string;
 }
 
-function getPayoutColor(status: string): string {
+function formatPaymentLabel(status: string): string {
+  if (status === "paid") {
+    return "Payment completed";
+  }
+  if (status === "pending_payment") {
+    return "Awaiting payment";
+  }
+  if (status === "refunded") {
+    return "Refunded";
+  }
+  return status;
+}
+
+function getPaymentStatusColor(status: string): string {
   if (status === "paid") {
     return "text-emerald-500";
   }
-  if (status === "failed") {
-    return "text-rose-500";
+  if (status === "pending_payment") {
+    return "text-amber-500";
+  }
+  if (status === "refunded") {
+    return "text-muted-foreground";
   }
   return "text-muted-foreground";
 }
@@ -316,11 +332,11 @@ function BookedSessionsCard({
                         {session.status}
                       </span>
                       <span
-                        className={`font-medium text-[9px] ${getPayoutColor(
+                        className={`font-medium text-[9px] ${getPaymentStatusColor(
                           session.payoutStatus
                         )}`}
                       >
-                        Payout: {session.payoutStatus}
+                        {formatPaymentLabel(session.payoutStatus)}
                       </span>
                     </div>
                   </div>
@@ -331,19 +347,9 @@ function BookedSessionsCard({
                       disabled={isMarkingAttended}
                       onClick={() => onMarkAttended(session.id)}
                     >
-                      Confirm Attendance & Payout ($50)
+                      Confirm Attendance
                     </Button>
                   )}
-
-                  {session.status !== "scheduled" &&
-                    session.payoutTransferId && (
-                      <div className="mt-1 flex items-center justify-between rounded bg-muted/50 px-2 py-1 font-mono text-[10px] text-muted-foreground">
-                        <span>Transfer ID:</span>
-                        <span className="max-w-[150px] truncate">
-                          {session.payoutTransferId}
-                        </span>
-                      </div>
-                    )}
                 </div>
               );
             })}
@@ -500,14 +506,8 @@ function DoctorScheduleRoute() {
 
   const handleMarkAttended = async (sessionId: string) => {
     try {
-      const res = await markAttended.mutateAsync({ sessionId });
-      if (res.payoutStatus === "paid") {
-        toast.success("Session completed and payout successfully transferred!");
-      } else if (res.payoutStatus === "failed") {
-        toast.warning(`Session completed but payout suspended: ${res.error}`);
-      } else {
-        toast.success("Session completed successfully!");
-      }
+      await markAttended.mutateAsync({ sessionId });
+      toast.success("Session confirmed as attended!");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       toast.error(`Error confirming attendance: ${msg}`);

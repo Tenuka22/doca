@@ -1,80 +1,59 @@
 import { useQuery } from "@tanstack/react-query";
-import { Stack } from "expo-router";
-import { Calendar, Clock, User } from "lucide-react-native";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Calendar, Check, Clock, User, X } from "lucide-react-native";
+import { useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   Text,
-  useColorScheme,
   View,
 } from "react-native";
-
 import { Card } from "@/components/ui/card";
 import { Screen } from "@/components/ui/screen";
 import { orpc } from "@/utils/orpc";
+import { useThemeColor } from "@/utils/theme";
 
-const statusColorMap = {
+const statusColorMap: Record<
+  string,
+  { bg: string; border: string; text: string }
+> = {
   attended: {
-    dark: {
-      bg: "bg-emerald-500/10",
-      border: "border-emerald-500/20",
-      text: "text-emerald-600",
-    },
-    light: {
-      bg: "bg-emerald-500/10",
-      border: "border-emerald-500/20",
-      text: "text-emerald-600",
-    },
+    bg: "bg-success/20",
+    border: "border-success/30",
+    text: "text-success",
   },
   cancelled: {
-    dark: {
-      bg: "bg-red-500/10",
-      border: "border-red-500/20",
-      text: "text-red-600",
-    },
-    light: {
-      bg: "bg-red-500/10",
-      border: "border-red-500/20",
-      text: "text-red-600",
-    },
+    bg: "bg-destructive/15",
+    border: "border-destructive/30",
+    text: "text-destructive",
   },
   scheduled: {
-    dark: {
-      bg: "bg-amber-500/10",
-      border: "border-amber-500/20",
-      text: "text-amber-600",
-    },
-    light: {
-      bg: "bg-amber-500/10",
-      border: "border-amber-500/20",
-      text: "text-amber-600",
-    },
+    bg: "bg-warning/20",
+    border: "border-warning/30",
+    text: "text-warning",
   },
-} as const;
+};
 
 const defaultStatusColor = {
-  dark: {
-    bg: "bg-muted/30",
-    border: "border-border",
-    text: "text-muted-foreground",
-  },
-  light: {
-    bg: "bg-muted/20",
-    border: "border-border",
-    text: "text-muted-foreground",
-  },
-} as const;
+  bg: "bg-muted/20",
+  border: "border-border",
+  text: "text-muted-foreground",
+};
 
-function getStatusColor(status: string, isDark: boolean) {
-  const mode = isDark ? "dark" : "light";
-  const colors = statusColorMap[status as keyof typeof statusColorMap];
-  return colors ? colors[mode] : defaultStatusColor[mode];
+function getStatusColor(status: string) {
+  return statusColorMap[status] ?? defaultStatusColor;
 }
 
 export default function AppointmentsScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-  const iconColor = isDark ? "#fafafa" : "#09090b";
+  const colors = useThemeColor();
+  const router = useRouter();
+  const { bookingSuccess } = useLocalSearchParams<{
+    bookingSuccess?: string;
+  }>();
+  const [showSuccessBanner, setShowSuccessBanner] = useState(
+    bookingSuccess === "true"
+  );
 
   const profileQuery = useQuery(orpc.getPatientProfile.queryOptions());
 
@@ -110,7 +89,7 @@ export default function AppointmentsScreen() {
           </View>
 
           <Card className="gap-3">
-            <User color={iconColor} size={24} />
+            <User color={colors.foreground} size={24} />
             <Text className="font-bold font-sans text-base text-foreground">
               No patient profile
             </Text>
@@ -134,14 +113,36 @@ export default function AppointmentsScreen() {
             Appointments
           </Text>
           <Text className="max-w-[340px] font-bold font-sans text-muted-foreground text-sm leading-relaxed">
-            Your booked sessions with doctors. Once scheduled, appointments
-            cannot be cancelled.
+            Your booked sessions with doctors.
           </Text>
         </View>
 
+        {showSuccessBanner ? (
+          <View className="flex-row items-start gap-3 rounded-xl border-2 border-success bg-success/10 px-4 py-3">
+            <View className="mt-0.5 rounded-full bg-success p-1">
+              <Check color="#ffffff" size={14} />
+            </View>
+            <View className="flex-1">
+              <Text className="font-bold font-sans text-sm text-success-foreground">
+                Booking confirmed
+              </Text>
+              <Text className="font-sans text-success-foreground/80 text-xs">
+                Your session has been booked successfully.
+              </Text>
+            </View>
+            <Pressable
+              className="rounded-full p-1 active:opacity-60"
+              hitSlop={8}
+              onPress={() => setShowSuccessBanner(false)}
+            >
+              <X color={colors.foreground} size={16} />
+            </Pressable>
+          </View>
+        ) : null}
+
         {sessions.length === 0 ? (
           <Card className="gap-3">
-            <Calendar color={iconColor} size={24} />
+            <Calendar color={colors.foreground} size={24} />
             <Text className="font-bold font-sans text-base text-foreground">
               No appointments yet
             </Text>
@@ -162,13 +163,13 @@ export default function AppointmentsScreen() {
                   day: "numeric",
                 });
                 const timeLabel = `${startAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })} - ${endAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`;
-                const statusColors = getStatusColor(session.status, isDark);
+                const statusColors = getStatusColor(session.status);
 
                 return (
                   <Card className="gap-3" key={session.id}>
                     <View className="flex-row items-center justify-between">
                       <View className="flex-row items-center gap-2">
-                        <User color={iconColor} size={16} />
+                        <User color={colors.foreground} size={16} />
                         <Text className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">
                           Session
                         </Text>
@@ -187,14 +188,14 @@ export default function AppointmentsScreen() {
 
                     <View className="gap-2 rounded-xl border border-border/50 bg-muted/5 p-3">
                       <View className="flex-row items-center gap-2">
-                        <Calendar color={iconColor} size={14} />
+                        <Calendar color={colors.foreground} size={14} />
                         <Text className="font-medium font-sans text-foreground text-sm">
                           {dateLabel}
                         </Text>
                       </View>
 
                       <View className="flex-row items-center gap-2">
-                        <Clock color={iconColor} size={14} />
+                        <Clock color={colors.foreground} size={14} />
                         <Text className="font-medium font-sans text-foreground text-sm">
                           {timeLabel}
                         </Text>

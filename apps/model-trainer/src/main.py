@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import time
 from collections.abc import Iterable
 from pathlib import Path
 import sys
@@ -11,7 +12,11 @@ import modal
 from src.config import TRAINING
 from src.data.features import create_sequences
 from src.data.load import load_all_subjects
-from src.evaluate.metrics import plot_correlations
+from src.evaluate.metrics import (
+    plot_correlations,
+    plot_modal_timing,
+    plot_performance_summary,
+)
 
 os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 if hasattr(sys.stdout, "reconfigure"):
@@ -150,10 +155,13 @@ def _train_online_all(
     print("Sending all sequence lengths to Modal for parallel training...")
 
     jobs: dict[int, object] = {}
+    run_log: list[dict[str, float | int]] = []
+    launch_times: dict[int, float] = {}
     with modal.enable_output():
         with app.run():
             for seq_len in TRAINING.sequence_lengths:
                 print(f"Queueing remote training job for seq_len={seq_len}...")
+                launch_times[seq_len] = time.perf_counter()
                 X_train_seq, y_train_seq = _prepare_data(train_subjects, seq_len)
                 X_val_seq, y_val_seq = _prepare_data(val_subjects, seq_len)
                 X_test_seq, y_test_seq = _prepare_data(test_subjects, seq_len)
@@ -167,12 +175,26 @@ def _train_online_all(
                     seq_len,
                     X_train_seq.shape[2],
                 )
+                del X_train_seq, y_train_seq, X_val_seq, y_val_seq, X_test_seq, y_test_seq
 
             for seq_len in TRAINING.sequence_lengths:
                 print(f"Waiting for remote artifacts for seq_len={seq_len}...")
+                wait_start = time.perf_counter()
                 artifacts = jobs[seq_len].get()
                 _save_remote_artifacts(seq_len, artifacts)
-                _print_remote_metrics(seq_len)
+                metrics = _print_remote_metrics(seq_len)
+                finished_at = time.perf_counter()
+                run_log.append(
+                    {
+                        "seq_len": seq_len,
+                        "duration_seconds": finished_at - wait_start,
+                        "wait_seconds": finished_at - launch_times[seq_len],
+                        **(metrics or {}),
+                    }
+                )
+
+    plot_modal_timing(run_log)
+    plot_performance_summary([item for item in run_log if "accuracy" in item])
 
 
 def _save_remote_artifacts(seq_len: int, artifacts: dict[str, bytes]) -> None:
@@ -188,7 +210,7 @@ def _save_remote_artifacts(seq_len: int, artifacts: dict[str, bytes]) -> None:
     print(f"  Saved artifacts to: {model_dir}")
 
 
-def _print_remote_metrics(seq_len: int) -> None:
+def _print_remote_metrics(seq_len: int) -> dict[str, float | int] | None:
     report_path = TRAINING.models_dir / f"seq_{seq_len}" / "results.json"
     if report_path.exists():
         with open(report_path) as f:
@@ -198,6 +220,9 @@ def _print_remote_metrics(seq_len: int) -> None:
             f"F1: {metrics['f1']:.4f}, "
             f"AUC: {metrics['auc']:.4f}"
         )
+        return metrics
+
+    return None
 
 
 if __name__ == "__main__":

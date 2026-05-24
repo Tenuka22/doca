@@ -19,7 +19,7 @@ image = (
 app = modal.App("train-wesad-lstm", image=image)
 
 
-@app.function(cpu=1.0, memory=5120, timeout=3600)
+@app.function(cpu=1.0, memory=5120, timeout=3600, gpu="T4")
 def train_remote(
     X_train: np.ndarray,
     y_train: np.ndarray,

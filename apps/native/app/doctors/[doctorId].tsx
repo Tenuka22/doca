@@ -18,14 +18,7 @@ import {
 } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  Text,
-  useColorScheme,
-  View,
-} from "react-native";
+import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -40,6 +33,7 @@ import {
   specialtyLabels,
 } from "@/utils/doctor-profile";
 import { orpc } from "@/utils/orpc";
+import { useThemeColor } from "@/utils/theme";
 
 interface DoctorProfileView {
   approach: string | null;
@@ -122,13 +116,11 @@ function InfoRow({
 }
 
 function TagSection({
-  icon,
   label,
   values,
   labels,
   color,
 }: {
-  icon: ReactNode;
   label: string;
   values: string[];
   labels: Record<string, string>;
@@ -159,9 +151,7 @@ function TagSection({
 }
 
 export default function DoctorProfileScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-  const iconColor = isDark ? "#fafafa" : "#09090b";
+  const colors = useThemeColor();
   const [isFavorite, setIsFavorite] = useState(false);
   const router = useRouter();
   const { doctorId } = useLocalSearchParams<{ doctorId?: string }>();
@@ -178,6 +168,12 @@ export default function DoctorProfileScreen() {
   const education = doctorQuery.data?.education ?? [];
   const portraitId = doctorQuery.data?.portrait?.id ?? null;
   const portraitPreviewUrl = useDoctorMaterialPreviewUrl(portraitId);
+
+  const plansQuery = useQuery({
+    queryKey: ["doctor-plans", id],
+    queryFn: () => orpc.getDoctorPlans.call({ doctorId: id ?? "" }),
+    enabled: !!id && !!profile,
+  });
   const yearsOfExperience = useMemo(
     () => getYearsOfExperience(profile?.experienceStartYear ?? null),
     [profile?.experienceStartYear]
@@ -190,27 +186,27 @@ export default function DoctorProfileScreen() {
   const tagColors = useMemo(
     () => ({
       primary: {
-        bg: isDark ? "bg-primary/10" : "bg-primary/10",
+        bg: "bg-primary/10",
         text: "text-primary",
-        border: isDark ? "border-primary/20" : "border-primary/20",
+        border: "border-primary/20",
       },
       secondary: {
-        bg: isDark ? "bg-secondary/20" : "bg-secondary/20",
+        bg: "bg-secondary/20",
         text: "text-secondary-foreground",
         border: "border-border",
       },
       muted: {
-        bg: isDark ? "bg-muted/30" : "bg-muted/20",
+        bg: "bg-muted/20",
         text: "text-muted-foreground",
         border: "border-border",
       },
       accent: {
-        bg: isDark ? "bg-accent/20" : "bg-accent/10",
+        bg: "bg-accent/10",
         text: "text-accent-foreground",
         border: "border-border",
       },
     }),
-    [isDark]
+    []
   );
 
   if (doctorQuery.isLoading) {
@@ -242,7 +238,7 @@ export default function DoctorProfileScreen() {
             variant="secondary"
           >
             <View className="flex-row items-center gap-2">
-              <ArrowLeft color={iconColor} size={16} />
+              <ArrowLeft color={colors.foreground} size={16} />
               <Text className="font-bold font-sans text-foreground text-sm">
                 Back
               </Text>
@@ -276,20 +272,20 @@ export default function DoctorProfileScreen() {
                     <View
                       className={`flex-row items-center gap-1.5 rounded-full px-2.5 py-0.5 ${
                         profile.permanent
-                          ? "border border-emerald-500/20 bg-emerald-500/10"
-                          : "border border-amber-500/20 bg-amber-500/10"
+                          ? "border border-success/20 bg-success/10"
+                          : "border border-warning/20 bg-warning/10"
                       }`}
                     >
                       <View
                         className={`h-1.5 w-1.5 rounded-full ${
-                          profile.permanent ? "bg-emerald-500" : "bg-amber-500"
+                          profile.permanent ? "bg-success" : "bg-warning"
                         }`}
                       />
                       <Text
                         className={`font-semibold text-xs ${
                           profile.permanent
-                            ? "text-emerald-600"
-                            : "text-amber-600"
+                            ? "text-success-foreground"
+                            : "text-warning-foreground"
                         }`}
                       >
                         {profile.permanent ? "Approved" : "Pending"}
@@ -305,7 +301,7 @@ export default function DoctorProfileScreen() {
               <View className="flex-row flex-wrap gap-2">
                 {profile.location ? (
                   <View className="flex-row items-center gap-1 rounded-full border-2 border-border bg-background px-2 py-1">
-                    <MapPin color={iconColor} size={12} />
+                    <MapPin color={colors.foreground} size={12} />
                     <Text className="font-bold text-[10px] text-foreground uppercase tracking-wide">
                       {profile.location}
                     </Text>
@@ -313,7 +309,11 @@ export default function DoctorProfileScreen() {
                 ) : null}
                 {yearsOfExperience ? (
                   <View className="flex-row items-center gap-1 rounded-full border-2 border-border bg-background px-2 py-1">
-                    <Stethoscope color={iconColor} fill={iconColor} size={12} />
+                    <Stethoscope
+                      color={colors.foreground}
+                      fill={colors.foreground}
+                      size={12}
+                    />
                     <Text className="font-bold text-[10px] text-foreground uppercase tracking-wide">
                       {yearsOfExperience}+ years
                     </Text>
@@ -321,7 +321,7 @@ export default function DoctorProfileScreen() {
                 ) : null}
                 {profile.stripeAccountEnabled ? (
                   <View className="flex-row items-center gap-1 rounded-full border-2 border-border bg-background px-2 py-1">
-                    <ShieldCheck color={iconColor} size={12} />
+                    <ShieldCheck color={colors.foreground} size={12} />
                     <Text className="font-bold text-[10px] text-foreground uppercase tracking-wide">
                       Verified
                     </Text>
@@ -370,12 +370,12 @@ export default function DoctorProfileScreen() {
             {/* Practice Details */}
             <Card className="gap-4">
               <SectionHeader
-                icon={<Building color={iconColor} size={18} />}
+                icon={<Building color={colors.foreground} size={18} />}
                 title="Practice Details"
               />
               <View className="gap-4 rounded-xl border border-border/50 bg-muted/5 p-4">
                 <InfoRow
-                  icon={<Clock color={iconColor} size={14} />}
+                  icon={<Clock color={colors.foreground} size={14} />}
                   label="Experience"
                   value={
                     profile.experienceStartYear
@@ -384,12 +384,12 @@ export default function DoctorProfileScreen() {
                   }
                 />
                 <InfoRow
-                  icon={<MapPin color={iconColor} size={14} />}
+                  icon={<MapPin color={colors.foreground} size={14} />}
                   label="Location"
                   value={profile.location ?? "Not set"}
                 />
                 <InfoRow
-                  icon={<Building color={iconColor} size={14} />}
+                  icon={<Building color={colors.foreground} size={14} />}
                   label="Practice Address"
                   value={profile.placeAddress ?? "Not set"}
                 />
@@ -399,22 +399,22 @@ export default function DoctorProfileScreen() {
             {/* Professional Info */}
             <Card className="gap-4">
               <SectionHeader
-                icon={<Award color={iconColor} size={18} />}
+                icon={<Award color={colors.foreground} size={18} />}
                 title="Professional Info"
               />
               <View className="gap-4 rounded-xl border border-border/50 bg-muted/5 p-4">
                 <InfoRow
-                  icon={<FileText color={iconColor} size={14} />}
+                  icon={<FileText color={colors.foreground} size={14} />}
                   label="License Number"
                   value={profile.licenseNumber ?? "Not set"}
                 />
                 <InfoRow
-                  icon={<Building color={iconColor} size={14} />}
+                  icon={<Building color={colors.foreground} size={14} />}
                   label="Practice Name"
                   value={profile.placeName ?? "Not set"}
                 />
                 <InfoRow
-                  icon={<FileText color={iconColor} size={14} />}
+                  icon={<FileText color={colors.foreground} size={14} />}
                   label="Place Description"
                   value={profile.placeDescription ?? "No description added"}
                 />
@@ -424,34 +424,34 @@ export default function DoctorProfileScreen() {
             {/* At a Glance - Tags */}
             <Card className="gap-4">
               <SectionHeader
-                icon={<Sparkles color={iconColor} size={18} />}
+                icon={<Sparkles color={colors.foreground} size={18} />}
                 title="At a glance"
               />
               <View className="gap-4">
                 <TagSection
                   color={tagColors.primary}
-                  icon={<BookOpen color={iconColor} size={14} />}
+                  icon={<BookOpen color={colors.foreground} size={14} />}
                   label="Specialties"
                   labels={specialtyLabels}
                   values={profile.specialties}
                 />
                 <TagSection
                   color={tagColors.secondary}
-                  icon={<Languages color={iconColor} size={14} />}
+                  icon={<Languages color={colors.foreground} size={14} />}
                   label="Languages"
                   labels={languageLabels}
                   values={profile.languages}
                 />
                 <TagSection
                   color={tagColors.muted}
-                  icon={<Video color={iconColor} size={14} />}
+                  icon={<Video color={colors.foreground} size={14} />}
                   label="Consultation Modes"
                   labels={consultationModeLabels}
                   values={profile.consultationModes}
                 />
                 <TagSection
                   color={tagColors.accent}
-                  icon={<FileText color={iconColor} size={14} />}
+                  icon={<FileText color={colors.foreground} size={14} />}
                   label="Focus Areas"
                   labels={focusAreaLabels}
                   values={profile.focusAreas}
@@ -463,7 +463,7 @@ export default function DoctorProfileScreen() {
             {profile.approachSteps?.length > 0 && (
               <Card className="gap-4">
                 <SectionHeader
-                  icon={<Sparkles color={iconColor} size={18} />}
+                  icon={<Sparkles color={colors.foreground} size={18} />}
                   title="Therapeutic Approach"
                 />
                 <View className="gap-3">
@@ -488,7 +488,7 @@ export default function DoctorProfileScreen() {
             {education.length > 0 && (
               <Card className="gap-4">
                 <SectionHeader
-                  icon={<School2 color={iconColor} size={18} />}
+                  icon={<School2 color={colors.foreground} size={18} />}
                   title="Education & Credentials"
                 />
                 <View className="gap-3 overflow-hidden rounded-xl border border-border/40 bg-muted/5">
@@ -522,10 +522,67 @@ export default function DoctorProfileScreen() {
               </Card>
             )}
 
+            {/* Session Plans */}
+            {plansQuery.data?.plans && plansQuery.data.plans.length > 0 ? (
+              <Card className="gap-4">
+                <SectionHeader
+                  icon={<FileText color={colors.foreground} size={18} />}
+                  title="Session Plans"
+                />
+                <View className="gap-3">
+                  {plansQuery.data.plans.map((plan) => {
+                    const features: string[] = plan.features
+                      ? (JSON.parse(plan.features) as string[])
+                      : [];
+
+                    return (
+                      <View
+                        className="rounded-xl border border-border/50 bg-muted/5 p-3.5"
+                        key={plan.id}
+                      >
+                        <View className="mb-2 flex-row items-center justify-between">
+                          <Text className="font-bold text-base text-foreground">
+                            {plan.name}
+                          </Text>
+                          <View className="rounded-full bg-primary/10 px-2.5 py-0.5">
+                            <Text className="font-bold text-primary text-xs">
+                              {plan.credits} credit{plan.credits > 1 ? "s" : ""}
+                            </Text>
+                          </View>
+                        </View>
+                        {plan.description ? (
+                          <Text className="mb-2 text-muted-foreground text-sm">
+                            {plan.description}
+                          </Text>
+                        ) : null}
+                        <View className="flex-row items-center gap-2">
+                          <View className="rounded-full bg-muted/60 px-2 py-0.5">
+                            <Text className="font-medium text-muted-foreground text-xs">
+                              {plan.durationMinutes} min
+                            </Text>
+                          </View>
+                          {features.map((feature: string) => (
+                            <View
+                              className="rounded-full bg-primary/5 px-2 py-0.5"
+                              key={feature}
+                            >
+                              <Text className="text-muted-foreground text-xs">
+                                {feature}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              </Card>
+            ) : null}
+
             {/* Profile Resources */}
             <Card className="gap-4">
               <SectionHeader
-                icon={<Camera color={iconColor} size={18} />}
+                icon={<Camera color={colors.foreground} size={18} />}
                 title="Profile Resources"
               />
               {files.length === 0 ? (

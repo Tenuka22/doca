@@ -1,5 +1,11 @@
-import { doctorProfiles } from "@zen-doc/db";
-import { eq } from "drizzle-orm";
+import { doctorPlans, doctorProfiles } from "@zen-doc/db";
+import {
+  BASIC_PLAN_CREDITS,
+  BASIC_PLAN_DURATION_MINUTES,
+  BASIC_PLAN_FEATURES,
+  BASIC_PLAN_NAME,
+} from "@zen-doc/pricing";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAdmin } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -18,15 +24,46 @@ export const adminApproveDoctorRoute = protectedProcedure
       throw new Error("Profile not found");
     }
 
+    const now = new Date().toISOString();
+
     await context.db
       .update(doctorProfiles)
       .set({
         permanent: true,
-        updatedAt: new Date().toISOString(),
+        updatedAt: now,
       })
       .where(eq(doctorProfiles.userId, input.userId));
     await context.clerk.users.updateUserMetadata(input.userId, {
       publicMetadata: { role: "doctor" },
     });
+
+    const [existing] = await context.db
+      .select()
+      .from(doctorPlans)
+      .where(
+        and(
+          eq(doctorPlans.doctorId, input.userId),
+          eq(doctorPlans.isActive, true)
+        )
+      )
+      .limit(1);
+
+    if (!existing) {
+      await context.db.insert(doctorPlans).values({
+        id: crypto.randomUUID(),
+        doctorId: input.userId,
+        name: BASIC_PLAN_NAME,
+        description: "Standard consultation session",
+        credits: BASIC_PLAN_CREDITS,
+        durationMinutes: BASIC_PLAN_DURATION_MINUTES,
+        features: JSON.stringify(BASIC_PLAN_FEATURES),
+        isActive: true,
+        isDefault: true,
+        sortOrder: 1,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
     return { ok: true };
   });

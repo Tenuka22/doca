@@ -21,6 +21,7 @@
       "@/*": ["./src/*"],
       "@zen-doc/db": ["../../packages/db/src/index.ts"],
       "@zen-doc/db/*": ["../../packages/db/src/*"],
+      "@zen-doc/pricing": ["../../packages/pricing/src/index.ts"],
       "@zen-doc/ui/*": ["../../packages/ui/src/*"]
     }
   }

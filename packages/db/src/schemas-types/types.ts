@@ -1,8 +1,11 @@
 import type { z } from "zod";
 
 import type {
+  cancelSessionSchema,
   createDoctorFileSchema,
+  createDoctorPlanSchema,
   createScheduleEntrySchema,
+  deleteDoctorPlanSchema,
   doctorApproachStepSchema,
   doctorEducationEntrySchema,
   doctorFileInputSchema,
@@ -13,6 +16,7 @@ import type {
   paginationSchema,
   scheduleRangeSchema,
   updateDoctorFileSchema,
+  updateDoctorPlanSchema,
 } from "./index";
 
 export type DoctorApproachStep = z.infer<typeof doctorApproachStepSchema>;
@@ -28,6 +32,10 @@ export type ListScheduleEntriesInput = z.infer<
 >;
 export type PaginationInput = z.infer<typeof paginationSchema>;
 export type ListDoctorsInput = z.infer<typeof listDoctorsInputSchema>;
+export type CancelSessionInput = z.infer<typeof cancelSessionSchema>;
+export type CreateDoctorPlanInput = z.infer<typeof createDoctorPlanSchema>;
+export type UpdateDoctorPlanInput = z.infer<typeof updateDoctorPlanSchema>;
+export type DeleteDoctorPlanInput = z.infer<typeof deleteDoctorPlanSchema>;
 export type DoctorProfileInput = z.infer<typeof doctorProfileInputSchema>;
 export type CreateDoctorFileInput = z.infer<typeof createDoctorFileSchema>;
 export type UpdateDoctorFileInput = z.infer<typeof updateDoctorFileSchema>;

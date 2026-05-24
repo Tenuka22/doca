@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Pressable, Text, useColorScheme, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Screen } from "@/components/ui/screen";
 import { orpc } from "@/utils/orpc";
+import { useThemeColor } from "@/utils/theme";
 
 type OnboardingMode = "self" | "has_guardian" | "guardian" | null;
 
@@ -67,9 +68,7 @@ type GuardianForm = z.infer<typeof guardianSchema>;
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-  const iconColor = isDark ? "#ffffff" : "#09090b";
+  const { foreground } = useThemeColor();
 
   const [mode, setMode] = useState<OnboardingMode>(null);
   const [step, setStep] = useState<"select" | "form">("select");
@@ -160,21 +159,21 @@ export default function OnboardingScreen() {
           <View className="gap-4">
             <SelectableCard
               description="Manage your own appointments, medical records, and daily wellness tracking in one place."
-              icon={<FontAwesome color={iconColor} name="user" size={26} />}
+              icon={<FontAwesome color={foreground} name="user" size={26} />}
               onPress={() => handleModeSelect("self")}
               title="Manage for myself"
             />
             <SelectableCard
               description="Set up a guardian to manage your healthcare and appointments on your behalf."
               icon={
-                <FontAwesome color={iconColor} name="user-plus" size={26} />
+                <FontAwesome color={foreground} name="user-plus" size={26} />
               }
               onPress={() => handleModeSelect("has_guardian")}
               title="I have a guardian"
             />
             <SelectableCard
               description="Act as a guardian to manage healthcare and appointments for a family member or dependent."
-              icon={<FontAwesome color={iconColor} name="users" size={26} />}
+              icon={<FontAwesome color={foreground} name="users" size={26} />}
               onPress={() => handleModeSelect("guardian")}
               title="I'm a guardian"
             />

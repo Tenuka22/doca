@@ -96,6 +96,36 @@ export const completeOnboardingSchema = z.object({
   guardianPhone: z.string().optional(),
 });
 
+export const cancelSessionSchema = z.object({
+  sessionId: z.string().min(1),
+});
+
+export const createDoctorPlanSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  description: z.string().trim().max(500).optional(),
+  credits: z.coerce.number().int().min(1).max(100).default(1),
+  durationMinutes: z.coerce.number().int().min(15).max(240),
+  features: z.array(z.string().trim().min(1).max(200)).max(20).optional(),
+});
+
+export const updateDoctorPlanSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().trim().min(1).max(100).optional(),
+  description: z.string().trim().max(500).nullable().optional(),
+  credits: z.coerce.number().int().min(1).max(100).optional(),
+  durationMinutes: z.coerce.number().int().min(15).max(240).optional(),
+  isActive: z.coerce.boolean().optional(),
+  features: z
+    .array(z.string().trim().min(1).max(200))
+    .max(20)
+    .nullable()
+    .optional(),
+});
+
+export const deleteDoctorPlanSchema = z.object({
+  id: z.string().min(1),
+});
+
 export const createDoctorFileSchema = z.object({
   doctorId: z.string().min(1),
   fileKind: doctorFileKindSchema,

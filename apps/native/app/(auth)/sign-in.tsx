@@ -2,24 +2,23 @@ import { useSignIn } from "@clerk/expo";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Text, useColorScheme, View } from "react-native";
+import { Text, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Screen } from "@/components/ui/screen";
 import { TextLink } from "@/components/ui/text-link";
 import { OAUTH_STRATEGIES, pushDecoratedUrl } from "@/utils/auth";
+import { useThemeColor } from "@/utils/theme";
 
 export default function Page() {
   const { signIn, errors, fetchStatus } = useSignIn();
   const router = useRouter();
-  const colorScheme = useColorScheme();
+  const { mutedForeground } = useThemeColor();
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-
-  const placeholderTextColor = colorScheme === "dark" ? "#9ca3af" : "#6b7280";
 
   const emailCodeFactor = signIn.supportedSecondFactors.find(
     (factor) => factor.strategy === "email_code"
@@ -140,7 +139,7 @@ export default function Page() {
                 keyboardType: "numeric",
                 onChangeText: setCode,
                 placeholder: "Enter your verification code",
-                placeholderTextColor,
+                placeholderTextColor: mutedForeground,
                 value: code,
               }}
               label="Verification code"
@@ -179,7 +178,7 @@ export default function Page() {
                 keyboardType: "email-address",
                 onChangeText: setEmailAddress,
                 placeholder: "Enter email",
-                placeholderTextColor,
+                placeholderTextColor: mutedForeground,
                 value: emailAddress,
               }}
               label="Email address"
@@ -190,7 +189,7 @@ export default function Page() {
               inputProps={{
                 onChangeText: setPassword,
                 placeholder: "Enter password",
-                placeholderTextColor,
+                placeholderTextColor: mutedForeground,
                 secureTextEntry: true,
                 value: password,
               }}
@@ -222,7 +221,7 @@ export default function Page() {
 
               <View className="mt-4 gap-3">
                 {OAUTH_STRATEGIES.map((provider) => {
-                  const textColor = placeholderTextColor;
+                  const textColor = mutedForeground;
 
                   return (
                     <Button

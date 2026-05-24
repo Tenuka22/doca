@@ -63,35 +63,65 @@ export function DayCell({
         ) : null}
       </div>
       <div className="space-y-1">
-        {entries.slice(0, MAX_VISIBLE_EVENTS).map((entry) => (
-          <div
-            className={cn(
-              "rounded-md border px-2 py-1 text-[11px]",
-              entry.kind === "open" &&
-                "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-              entry.kind === "block" &&
-                "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300",
-              entry.kind === "session" &&
-                "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300"
-            )}
-            key={entry.id}
-          >
-            <div className="truncate font-medium">
-              {new Date(entry.startAt).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}{" "}
-              -{" "}
-              {new Date(entry.endAt).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+        {entries.slice(0, MAX_VISIBLE_EVENTS).map((entry) => {
+          const isSession = entry.kind === "session";
+          const sessionStatus = entry.session?.status;
+          const isPending = isSession && sessionStatus === "scheduled";
+          const isConfirmed = isSession && sessionStatus === "attended";
+          const isCancelled = isSession && sessionStatus === "cancelled";
+
+          return (
+            <div
+              className={cn(
+                "rounded-md border px-2 py-1 text-[11px]",
+                entry.kind === "open" &&
+                  "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+                entry.kind === "block" &&
+                  "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300",
+                isPending &&
+                  "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+                isConfirmed &&
+                  "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+                isCancelled &&
+                  "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300",
+                isSession &&
+                  !isPending &&
+                  !isConfirmed &&
+                  !isCancelled &&
+                  "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300"
+              )}
+              key={entry.id}
+            >
+              <div className="truncate font-medium">
+                {new Date(entry.startAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}{" "}
+                -{" "}
+                {new Date(entry.endAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
+              <div className="truncate opacity-80">
+                {isSession
+                  ? (() => {
+                      if (isPending) {
+                        return "Pending";
+                      }
+                      if (isConfirmed) {
+                        return "Confirmed";
+                      }
+                      if (isCancelled) {
+                        return "Cancelled";
+                      }
+                      return "Session";
+                    })()
+                  : (entry.noteKind ?? entry.kind)}
+              </div>
             </div>
-            <div className="truncate opacity-80">
-              {entry.noteKind ?? (entry.session ? "session" : entry.kind)}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       {entries.length > MAX_VISIBLE_EVENTS && (
         <p className="font-semibold text-muted-foreground text-xs">

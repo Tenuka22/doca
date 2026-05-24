@@ -9,11 +9,10 @@ import { Stack, useRouter } from "expo-router";
 import { hideAsync, preventAutoHideAsync } from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 import { orpc, queryClient } from "@/utils/orpc";
+import { useThemeColor } from "@/utils/theme";
 
 preventAutoHideAsync().catch(() => undefined);
 
@@ -68,8 +67,7 @@ function OnboardingCheck() {
 }
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { background, foreground, mutedForeground } = useThemeColor();
   const [fontsLoaded, fontError] = useFonts(satoshiFonts);
 
   useEffect(() => {
@@ -93,14 +91,14 @@ export default function RootLayout() {
           <Stack
             screenOptions={{
               headerStyle: {
-                backgroundColor: isDark ? "#09090b" : "#ffffff",
+                backgroundColor: background,
               },
               headerTitleStyle: {
                 fontFamily: "Satoshi",
                 fontWeight: "500",
-                color: isDark ? "#fafafa" : "#09090b",
+                color: foreground,
               },
-              headerTintColor: isDark ? "#fafafa" : "#09090b",
+              headerTintColor: foreground,
               headerShadowVisible: false,
             }}
           >
@@ -112,7 +110,7 @@ export default function RootLayout() {
             <Stack.Screen name="test" options={{ headerShown: false }} />
           </Stack>
           <OnboardingCheck />
-          <StatusBar style={isDark ? "light" : "dark"} />
+          <StatusBar style="auto" />
         </GestureHandlerRootView>
       </QueryClientProvider>
     </ClerkProvider>

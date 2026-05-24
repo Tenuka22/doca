@@ -19,7 +19,7 @@ def filter_hardware_features(
 
 
 def extract_features(values: np.ndarray):
-    v = values.flatten()
+    v = values.flatten().astype(np.float32, copy=False)
 
     f1 = v
     diffs = np.diff(v, prepend=v[0])
@@ -29,7 +29,7 @@ def extract_features(values: np.ndarray):
     f4 = pd.Series(v).rolling(window=10, min_periods=1).std().fillna(0).values
     f5 = 1.0 / (v + 1e-8)
 
-    all_features = np.stack([f1, diffs, f3, f4, f5], axis=1)
+    all_features = np.stack([f1, diffs, f3, f4, f5], axis=1).astype(np.float32, copy=False)
     all_names = ["RRI", "RRI_Diff", "RMSSD_Local", "SDNN_Local", "HR_Proxy"]
 
     return all_features, all_names
@@ -42,4 +42,4 @@ def create_sequences(
     for i in range(0, len(features) - seq_len + 1):
         X.append(features[i : i + seq_len])
         y.append(labels[i + seq_len - 1])
-    return np.array(X), np.array(y)
+    return np.asarray(X, dtype=np.float32), np.asarray(y, dtype=np.uint8)

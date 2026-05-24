@@ -23,6 +23,7 @@
     "@tanstack/react-start": "^1.167.41",
     "@zen-doc/api": "workspace:*",
     "@zen-doc/env": "workspace:*",
+    "@zen-doc/pricing": "workspace:*",
     "@zen-doc/ui": "workspace:*",
     "alchemy": "^0.93.7",
     "class-variance-authority": "^0.7.1",

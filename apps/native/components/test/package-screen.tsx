@@ -175,11 +175,11 @@ export const PackageScreen = ({ item }: PackageScreenProps) => {
       badgeColor = "bg-primary";
       textColor = "text-primary";
     } else if (connectionStatus === "connected") {
-      badgeColor = "bg-emerald-500";
-      textColor = "text-emerald-600 dark:text-emerald-400";
+      badgeColor = "bg-success";
+      textColor = "text-success";
     } else if (connectionStatus === "connecting") {
-      badgeColor = "bg-amber-500";
-      textColor = "text-amber-600 dark:text-amber-400";
+      badgeColor = "bg-warning";
+      textColor = "text-warning";
     } else if (connectionStatus === "error") {
       badgeColor = "bg-destructive";
       textColor = "text-destructive";

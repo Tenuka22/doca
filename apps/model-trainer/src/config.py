@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -22,14 +25,22 @@ class ModelConfig:
 
 @dataclass(frozen=True)
 class TrainingConfig:
-    sequence_lengths: tuple[int, ...] = (30, 60, 90)
-    epochs: int = 10
+    sequence_lengths: tuple[int, ...] = (30,)
+    epochs: int = 30
     batch_size: int = 64
-    patience: int = 4
-    reduce_lr_patience: int = 2
+
+    patience: int = 5
+    reduce_lr_patience: int = 3
     reduce_lr_factor: float = 0.5
     min_lr: float = 1e-6
+
     models_dir: Path = Path(os.environ.get("MODELS_DIR_OVERRIDE", "models/wesad_lstm"))
+
+    def model_dir(self, seq_len: int) -> Path:
+        """Return (and create) the output directory for a given sequence length."""
+        d = self.models_dir / f"seq_{seq_len}"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
 
 
 DATA = DataConfig()

@@ -1,4 +1,4 @@
-import { userCredits } from "@zen-doc/db";
+import { creditTransactions, userCredits } from "@zen-doc/db";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -29,6 +29,16 @@ export const getUserCreditsRoute = protectedProcedure.handler(
           createdAt: now,
           updatedAt: now,
         });
+
+        await context.db.insert(creditTransactions).values({
+          id: crypto.randomUUID(),
+          userId,
+          amount: 1,
+          type: "trial_grant",
+          description: "Free trial credit granted",
+          createdAt: now,
+        });
+
         return { balance: 1, isAdmin: false };
       }
 

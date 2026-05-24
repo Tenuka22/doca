@@ -1,0 +1,1 @@
+ALTER TABLE `doctor_sessions` ADD `plan_id` text;

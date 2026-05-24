@@ -1,0 +1,13 @@
+{
+  "name": "@zen-doc/pricing",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    }
+  },
+  "devDependencies": {
+    "@zen-doc/config": "workspace:*",
+    "typescript": "^6"
+  }
+}
