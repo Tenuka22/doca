@@ -5,6 +5,7 @@ import { getPatientProfileRoute } from "./routes/get-patient-profile";
 import { getPendingGuardianRequestsRoute } from "./routes/get-pending-guardian-requests";
 import { getUserCreditsRoute } from "./routes/get-user-credits";
 import { ingestModelFeaturesRoute } from "./routes/ingest-model-features";
+import { purchaseCreditsRoute } from "./routes/purchase-credits";
 
 export const patientRouter = {
   getPatientProfile: getPatientProfileRoute,
@@ -14,4 +15,5 @@ export const patientRouter = {
   completeOnboarding: completeOnboardingRoute,
   ingestModelFeatures: ingestModelFeaturesRoute,
   getUserCredits: getUserCreditsRoute,
+  purchaseCredits: purchaseCreditsRoute,
 };

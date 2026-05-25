@@ -4,6 +4,7 @@ import { Calendar, Stethoscope } from "lucide-react-native";
 import { Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
+import { CreditHeaderButton } from "@/components/ui/credit-header-button";
 import { Screen } from "@/components/ui/screen";
 import { TextLink } from "@/components/ui/text-link";
 import { useThemeColor } from "@/utils/theme";
@@ -28,6 +29,7 @@ export default function HomeScreen() {
         </Text>
         {isSignedIn ? (
           <View className="flex-row items-center gap-2">
+            <CreditHeaderButton />
             <Button
               href="/appointments"
               icon={<Calendar color={colors.foreground} size={16} />}

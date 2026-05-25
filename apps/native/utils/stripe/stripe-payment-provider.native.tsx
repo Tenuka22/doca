@@ -4,11 +4,10 @@ import {
   createContext,
   type PropsWithChildren,
   useContext,
-  useMemo,
 } from "react";
 
 interface PaymentSheetResult {
-  error?: { message: string; code?: string };
+  error?: { code?: string; message?: string };
 }
 
 interface PaymentSheetContextValue {
@@ -26,16 +25,17 @@ const PaymentSheetContext = createContext<PaymentSheetContextValue | null>(
 function PaymentSheetProviderInner({ children }: PropsWithChildren) {
   const stripe = useStripe();
 
-  const value = useMemo<PaymentSheetContextValue>(
-    () => ({
-      initPaymentSheet: stripe.initPaymentSheet,
-      presentPaymentSheet: stripe.presentPaymentSheet,
-    }),
-    [stripe.initPaymentSheet, stripe.presentPaymentSheet]
-  );
-
   return (
-    <PaymentSheetContext.Provider value={value}>
+    <PaymentSheetContext.Provider
+      value={{
+        initPaymentSheet: async (params) =>
+          stripe.initPaymentSheet({
+            ...params,
+            merchantDisplayName: params.merchantDisplayName ?? "Zen Doc",
+          }),
+        presentPaymentSheet: async () => stripe.presentPaymentSheet(),
+      }}
+    >
       {children}
     </PaymentSheetContext.Provider>
   );

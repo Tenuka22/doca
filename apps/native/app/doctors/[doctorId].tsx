@@ -123,7 +123,6 @@ function PlanCard({
     id: string;
     name: string;
     description?: string | null;
-    price: number;
     durationMinutes: number;
     features?: string | null;
   };
@@ -140,7 +139,7 @@ function PlanCard({
         </Text>
         <View className="rounded-chip border-2 border-success bg-success/10 px-3 py-1">
           <Text className="font-black font-sans text-sm text-success uppercase tracking-widest">
-            ${(plan.price / 100).toFixed(2)}
+            1 Credit
           </Text>
         </View>
       </View>

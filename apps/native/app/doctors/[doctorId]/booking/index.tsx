@@ -125,7 +125,6 @@ function PlanCard({
     features: string | null;
     id: string;
     name: string;
-    price: number;
   };
 }) {
   const features: string[] = plan.features
@@ -145,7 +144,7 @@ function PlanCard({
         </Text>
         <View className="rounded-full bg-primary/10 px-2.5 py-0.5">
           <Text className="font-black font-sans text-primary text-xs">
-            ${(plan.price / 100).toFixed(2)}
+            1 Credit
           </Text>
         </View>
       </View>
@@ -239,7 +238,7 @@ function SummaryContent({
   bookingStep: string;
   handleBook: () => void;
   selectedPlan:
-    | { durationMinutes: number; name: string; price: number }
+    | { durationMinutes: number; name: string }
     | undefined;
   selectedSlotId: string | null;
 }) {
