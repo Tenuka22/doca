@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 import { orpc, queryClient } from "@/utils/orpc";
+import { StripePaymentProvider } from "@/utils/stripe";
 import { useThemeColor } from "@/utils/theme";
 
 preventAutoHideAsync().catch(() => undefined);
@@ -67,7 +68,7 @@ function OnboardingCheck() {
 }
 
 export default function RootLayout() {
-  const { background, foreground, mutedForeground } = useThemeColor();
+  const { background, foreground } = useThemeColor();
   const [fontsLoaded, fontError] = useFonts(satoshiFonts);
 
   useEffect(() => {
@@ -88,29 +89,31 @@ export default function RootLayout() {
       <ClerkApiAuthBridge />
       <QueryClientProvider client={queryClient}>
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <Stack
-            screenOptions={{
-              headerStyle: {
-                backgroundColor: background,
-              },
-              headerTitleStyle: {
-                fontFamily: "Satoshi",
-                fontWeight: "500",
-                color: foreground,
-              },
-              headerTintColor: foreground,
-              headerShadowVisible: false,
-            }}
-          >
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="(onboarding)"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen name="test" options={{ headerShown: false }} />
-          </Stack>
-          <OnboardingCheck />
-          <StatusBar style="auto" />
+          <StripePaymentProvider>
+            <Stack
+              screenOptions={{
+                headerStyle: {
+                  backgroundColor: background,
+                },
+                headerTitleStyle: {
+                  fontFamily: "Satoshi",
+                  fontWeight: "500",
+                  color: foreground,
+                },
+                headerTintColor: foreground,
+                headerShadowVisible: false,
+              }}
+            >
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="(onboarding)"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen name="test" options={{ headerShown: false }} />
+            </Stack>
+            <OnboardingCheck />
+            <StatusBar style="auto" />
+          </StripePaymentProvider>
         </GestureHandlerRootView>
       </QueryClientProvider>
     </ClerkProvider>

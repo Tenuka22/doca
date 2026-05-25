@@ -8,7 +8,7 @@ ZenDoc is a privacy-first mental health and wellness platform with three surface
 - Web app for doctors, using a laptop/tablet-style interface.
 - Web admin panel for operations, moderation, and oversight, also optimized for laptop/tablet use.
 
-The product centers on anonymous access, licensed care, wellness tooling, credit-based bookings, and crisis safety.
+The product centers on anonymous access, licensed care, wellness tooling, plan-based bookings, and crisis safety.
 
 ## Product Rules
 
@@ -43,7 +43,7 @@ The product centers on anonymous access, licensed care, wellness tooling, credit
 
 - User and doctor administration.
 - Consent and audit review.
-- Subscription and credit oversight.
+- Subscription and plan oversight.
 - Crisis event review and escalation monitoring.
 - Platform configuration and operational controls.
 
@@ -55,7 +55,7 @@ The product centers on anonymous access, licensed care, wellness tooling, credit
 4. User optionally connects a smartwatch.
 5. User enters the app shell with Home, Activities, Doctors, and Profile.
 6. Doctor mode onboarding happens in the web app.
-7. User uses free trial or credit-based plans to book sessions.
+7. User uses free trial or plan-based bookings to book sessions.
 8. Doctor manages sessions from the web panel.
 9. Admin monitors platform health, compliance, and crisis events from the web panel.
 
@@ -71,7 +71,7 @@ The product centers on anonymous access, licensed care, wellness tooling, credit
 ### Booking And Sessions
 
 - Doctor discovery.
-- Credit-based booking.
+- Plan-based booking.
 - Session history.
 - Appointment lifecycle management.
 - Session notes and outcomes.
@@ -95,7 +95,7 @@ The product centers on anonymous access, licensed care, wellness tooling, credit
 ### Billing
 
 - Trial access.
-- Credit plans.
+- Doctor plans.
 - Subscription tracking.
 - Session redemption.
 
@@ -110,7 +110,7 @@ Planned core entities include:
 - guardian or relative links
 - subscription plans
 - user subscriptions
-- user credits
+
 - appointments
 - schedules
 - schedule blocks
@@ -157,4 +157,4 @@ The AI system should stay conservative.
 - Doctor web workflows need final screen-by-screen definition.
 - Admin panel permissions and roles need final scope.
 - Crisis escalation policy needs region-specific operational detail.
-- Booking, credits, and subscription rules need final product thresholds.
+- Booking, plans, and subscription rules need final product thresholds.

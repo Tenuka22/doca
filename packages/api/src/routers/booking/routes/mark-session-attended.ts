@@ -35,6 +35,10 @@ export const markSessionAttendedRoute = protectedProcedure
       };
     }
 
+    if (session.status !== "scheduled") {
+      throw new Error("Can only mark scheduled sessions as attended");
+    }
+
     const now = new Date().toISOString();
 
     await context.db

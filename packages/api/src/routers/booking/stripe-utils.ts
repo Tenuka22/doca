@@ -1,9 +1,5 @@
 import { env } from "@zen-doc/env/server";
-import {
-  CREDIT_PRICE_CENTS,
-  PLATFORM_NET_PER_CREDIT_CENTS,
-  TAX_PER_CREDIT_CENTS,
-} from "@zen-doc/pricing";
+import { TAX_RATE } from "@zen-doc/pricing";
 import Stripe from "stripe";
 
 let stripeInstance: Stripe | null = null;
@@ -16,14 +12,15 @@ export function getStripe(): Stripe {
   return stripeInstance;
 }
 
-export function getPayoutAmount(credits: number): {
+export function getPayoutAmount(priceCents: number): {
   total: number;
   platformFee: number;
   doctorNet: number;
 } {
-  const total = credits * CREDIT_PRICE_CENTS;
-  const platformFee = credits * TAX_PER_CREDIT_CENTS;
-  const doctorNet = credits * PLATFORM_NET_PER_CREDIT_CENTS;
+  const tax = Math.round(priceCents * TAX_RATE);
+  const total = priceCents + tax;
+  const platformFee = tax;
+  const doctorNet = priceCents;
   return { total, platformFee, doctorNet };
 }
 

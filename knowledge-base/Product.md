@@ -1,6 +1,6 @@
 # ZenDoc Product
 
-ZenDoc is an Android mobile mental health and wellness app that connects users anonymously with licensed doctors and therapists. The product combines privacy-first onboarding, wellness activities, smartwatch health integration, session booking, credit-based pricing, and a high-priority crisis safety system.
+ZenDoc is an Android mobile mental health and wellness app that connects users anonymously with licensed doctors and therapists. The product combines privacy-first onboarding, wellness activities, smartwatch health integration, session booking, plan-based pricing, and a high-priority crisis safety system.
 
 ## What The Product Does
 
@@ -8,7 +8,7 @@ ZenDoc is an Android mobile mental health and wellness app that connects users a
 - Lets users book therapy anonymously using alias-based profiles.
 - Provides guided wellness activities like breathing, yoga, grounding, journaling, and body scan.
 - Connects optional smartwatch data for health monitoring and crisis detection.
-- Uses credit-based session plans and a free trial with payment info required.
+- Uses plan-based bookings and a free trial with payment info required.
 - Captures consent and crisis logs for safety and audit purposes.
 - Supports a bold New Brutalism mobile UI with high contrast and thick borders.
 
@@ -19,7 +19,7 @@ ZenDoc is an Android mobile mental health and wellness app that connects users a
 3. Onboarding collects mode selection, relative details if needed, and alias setup.
 4. The user optionally connects a smartwatch.
 5. Logged-in users enter the bottom-tab app shell with Home, Activities, Doctors, and Profile.
-6. Credit plans or trial access unlock bookings.
+6. Doctor plans or trial access unlock bookings.
 7. Crisis monitoring uses smartwatch signals and app state to trigger alerts and escalation.
 
 ## Current Architecture
@@ -33,14 +33,14 @@ ZenDoc is an Android mobile mental health and wellness app that connects users a
 
 ### Backend
 
-- Mobile app backend provides auth, booking, session history, credits, notifications, and crisis escalation.
+- Mobile app backend provides auth, booking, session history, plans, notifications, and crisis escalation.
 - Crisis and health data are stored with strict privacy controls.
 
 ### Shared Logic
 
 - Alias-based identity.
 - Relative/guardian relationships.
-- Subscription credits and trial access.
+- Subscription plans and trial access.
 - Smartwatch telemetry ingestion.
 
 ## Identity And Authorization
@@ -49,7 +49,7 @@ ZenDoc is an Android mobile mental health and wellness app that connects users a
 - Public-facing profiles use aliases only.
 - Real names are not required publicly.
 - Doctors are shown anonymously in previews.
-- Guarded booking and session access depend on credits or trial status.
+- Guarded booking and session access depend on plan selection or trial status.
 
 ## Screen Model
 
@@ -95,7 +95,7 @@ The app model includes the foundation for:
 - relative or guardian relationships
 - doctor profiles
 - subscription plans
-- user credits
+
 - appointments
 - session history
 - activity completion logs
@@ -109,8 +109,7 @@ The app model includes the foundation for:
 - alias profiles: public identity used throughout the app.
 - relative or guardian relationships: linked monitoring profile.
 - doctor profiles: anonymized clinician records.
-- subscription plans: credit-based pricing tiers and trial access.
-- user credits: bookable session balance.
+- subscription plans: plan-based pricing tiers and trial access.
 - appointments: booked doctor sessions.
 - session history: past consultations and durations.
 - activity completion logs: completed wellness content.
@@ -127,7 +126,7 @@ The app model includes the foundation for:
 - alias and mode updates
 - relative profile updates
 - doctor discovery
-- booking and credit redemption
+- booking and plan selection
 - session history retrieval
 - crisis signal ingestion
 
@@ -151,7 +150,7 @@ The crisis system uses smartwatch biometrics and app context to detect risk patt
 
 - Product direction is mobile-first and Android-only.
 - The public marketing flow and logged-in tab shell are the core experience.
-- Credit-based booking, smartwatch integration, and crisis escalation are product requirements.
+- Plan-based booking, smartwatch integration, and crisis escalation are product requirements.
 - Privacy and anonymity are required throughout the app.
 
 ## Important Product Rules

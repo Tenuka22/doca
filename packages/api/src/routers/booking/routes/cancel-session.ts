@@ -1,9 +1,7 @@
 import {
-  creditTransactions,
   doctorScheduleEntries,
   doctorSessions,
   paymentIntents,
-  userCredits,
 } from "@zen-doc/db";
 import { cancelSessionSchema } from "@zen-doc/db/schemas-types";
 import { eq } from "drizzle-orm";
@@ -33,7 +31,7 @@ export const cancelSessionRoute = protectedProcedure
       throw new Error("Only the doctor can cancel this session");
     }
 
-    if (session.status !== "scheduled") {
+    if (session.status !== "pending" && session.status !== "scheduled") {
       throw new Error(
         "Cannot cancel a session that has already been attended or cancelled"
       );
@@ -101,57 +99,13 @@ export const cancelSessionRoute = protectedProcedure
         await context.db
           .update(paymentIntents)
           .set({
-            status: "refunded",
+            status: "cancelled",
             updatedAt: now,
           })
           .where(eq(paymentIntents.id, paymentRecord.id));
       } catch {
         // Payment intent may already have been canceled
       }
-    }
-
-    if (!isAdmin) {
-      let [creditRecord] = await context.db
-        .select()
-        .from(userCredits)
-        .where(eq(userCredits.userId, session.patientId))
-        .limit(1);
-
-      if (!creditRecord) {
-        const creditId = crypto.randomUUID();
-        await context.db.insert(userCredits).values({
-          id: creditId,
-          userId: session.patientId,
-          balance: 1,
-          createdAt: now,
-          updatedAt: now,
-        });
-        creditRecord = {
-          id: creditId,
-          userId: session.patientId,
-          balance: 1,
-          createdAt: now,
-          updatedAt: now,
-        };
-      }
-
-      await context.db
-        .update(userCredits)
-        .set({
-          balance: creditRecord.balance + 1,
-          updatedAt: now,
-        })
-        .where(eq(userCredits.id, creditRecord.id));
-
-      await context.db.insert(creditTransactions).values({
-        id: crypto.randomUUID(),
-        userId: session.patientId,
-        amount: 1,
-        type: "cancellation_refund",
-        referenceId: input.sessionId,
-        description: "Session cancelled by doctor, credit refunded",
-        createdAt: now,
-      });
     }
 
     return { ok: true };

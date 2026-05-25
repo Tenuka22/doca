@@ -23,6 +23,9 @@
     "db:generate": {
       "cache": false
     },
+    "stripe:listen": {
+      "cache": false
+    },
     "deploy": {
       "cache": false
     },

@@ -9,7 +9,11 @@ interface FallbackEnv {
   CORS_ORIGIN: string;
   DB: D1Database;
   DOCTOR_MATERIALS_BUCKET: R2Bucket;
+  MODEL_FEATURES_KV: KVNamespace;
   STRIPE_SECRET_KEY: string;
+  STRIPE_WEBHOOK_SECRET: string;
+  SVIX_API_TOKEN: string;
+  SVIX_APP_ID: string;
 }
 
 export type CloudflareEnv = typeof server.Env & FallbackEnv;

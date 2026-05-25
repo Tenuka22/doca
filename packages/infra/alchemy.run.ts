@@ -1,6 +1,7 @@
 import alchemy from "alchemy";
 import {
   D1Database,
+  KVNamespace,
   R2Bucket,
   TanStackStart,
   Worker,
@@ -21,6 +22,8 @@ const doctorMaterialsBucket = await R2Bucket("doctor-materials", {
   name: "doctor-materials",
 });
 
+const modelFeaturesKv = await KVNamespace("model-features");
+
 export const server = await Worker("server", {
   cwd: "../../apps/server",
   entrypoint: "src/index.ts",
@@ -28,11 +31,14 @@ export const server = await Worker("server", {
   bindings: {
     DB: db,
     DOCTOR_MATERIALS_BUCKET: doctorMaterialsBucket,
+    MODEL_FEATURES_KV: modelFeaturesKv,
     CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
     CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
     CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
     STRIPE_SECRET_KEY: alchemy.secret.env.STRIPE_SECRET_KEY!,
+    STRIPE_WEBHOOK_SECRET: alchemy.secret.env.STRIPE_WEBHOOK_SECRET!,
   },
+  crons: ["*/10 * * * *"],
   dev: {
     port: 3000,
   },

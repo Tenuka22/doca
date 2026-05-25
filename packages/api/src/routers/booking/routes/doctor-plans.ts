@@ -62,7 +62,7 @@ export const createDoctorPlanRoute = protectedProcedure
       doctorId,
       name: input.name,
       description: input.description ?? null,
-      credits: input.credits,
+      price: input.price,
       durationMinutes: input.durationMinutes,
       features: input.features ? JSON.stringify(input.features) : null,
       isActive: true,
@@ -103,8 +103,8 @@ export const updateDoctorPlanRoute = protectedProcedure
     if (input.description !== undefined) {
       updateData.description = input.description;
     }
-    if (input.credits !== undefined) {
-      updateData.credits = input.credits;
+    if (input.price !== undefined) {
+      updateData.price = input.price;
     }
     if (input.durationMinutes !== undefined) {
       updateData.durationMinutes = input.durationMinutes;

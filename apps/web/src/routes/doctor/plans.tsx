@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { CREDIT_PRICE_USD } from "@zen-doc/pricing";
+import { TAX_RATE } from "@zen-doc/pricing";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,15 +31,8 @@ import {
 } from "@zen-doc/ui/components/dialog";
 import { Input } from "@zen-doc/ui/components/input";
 import { Label } from "@zen-doc/ui/components/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@zen-doc/ui/components/select";
 import { Textarea } from "@zen-doc/ui/components/textarea";
-import { Check, Loader2, Pencil, PlusIcon, X } from "lucide-react";
+import { Check, Loader2, Pencil, PlusIcon, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { orpc } from "@/utils/orpc";
@@ -49,7 +42,6 @@ export const Route = createFileRoute("/doctor/plans")({
 });
 
 interface DoctorPlan {
-  credits: number;
   description: string | null;
   durationMinutes: number;
   features: string | null;
@@ -57,6 +49,7 @@ interface DoctorPlan {
   isActive: boolean;
   isDefault: boolean;
   name: string;
+  price: number;
   sortOrder: number;
 }
 
@@ -66,15 +59,167 @@ const defaultFeatures = [
   "Session notes included",
 ];
 
+function formatPrice(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+function DollarInput({
+  value,
+  onChange,
+  id,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  id: string;
+}) {
+  const dollars = Number(value) || 0;
+  const cents = Math.round(dollars * 100);
+  const tax = Math.round(cents * TAX_RATE);
+  const total = cents + tax;
+
+  return (
+    <div className="grid gap-2">
+      <Label htmlFor={id}>Session Price ($)</Label>
+      <div className="relative">
+        <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">
+          $
+        </span>
+        <Input
+          className="pl-7"
+          id={id}
+          min={1}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/[^0-9]/g, "");
+            onChange(raw);
+          }}
+          placeholder="0"
+          type="text"
+          value={value}
+        />
+      </div>
+      {dollars > 0 ? (
+        <div className="space-y-0.5 text-muted-foreground text-xs">
+          <p>
+            + {formatPrice(tax)} fee ({TAX_RATE * 100}%)
+          </p>
+          <p className="font-medium text-foreground">
+            Patient total: {formatPrice(total)}
+          </p>
+        </div>
+      ) : (
+        <p className="text-muted-foreground text-xs">
+          Enter a price to see the {TAX_RATE * 100}% fee breakdown
+        </p>
+      )}
+    </div>
+  );
+}
+
+function DurationInput({
+  value,
+  onChange,
+  id,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  id: string;
+}) {
+  const num = Number(value);
+
+  return (
+    <div className="grid gap-2">
+      <Label htmlFor={id}>Duration (minutes)</Label>
+      <Input
+        id={id}
+        max={360}
+        min={60}
+        onChange={(e) => {
+          const raw = e.target.value.replace(/[^0-9]/g, "");
+          onChange(raw);
+        }}
+        placeholder="60"
+        type="text"
+        value={value}
+      />
+      {num >= 60 && num <= 360 ? null : (
+        <p className="text-destructive text-xs">Must be between 60 and 360</p>
+      )}
+    </div>
+  );
+}
+
+function FeatureInput({
+  features,
+  onChange,
+}: {
+  features: string[];
+  onChange: (features: string[]) => void;
+}) {
+  function addFeature() {
+    onChange([...features, ""]);
+  }
+
+  function removeFeature(index: number) {
+    onChange(features.filter((_, i) => i !== index));
+  }
+
+  function updateFeature(index: number, value: string) {
+    const next = [...features];
+    next[index] = value;
+    onChange(next);
+  }
+
+  return (
+    <div className="grid gap-2">
+      <div className="flex items-center justify-between">
+        <Label>Features</Label>
+        <Button onClick={addFeature} size="sm" type="button" variant="outline">
+          <PlusIcon className="mr-1 h-3 w-3" />
+          Add feature
+        </Button>
+      </div>
+      <div className="space-y-2">
+        {features.length === 0 ? (
+          <p className="py-1 text-muted-foreground text-xs">
+            No features added yet
+          </p>
+        ) : (
+          features.map((feature, index) => (
+            <div className="flex items-center gap-2" key={index}>
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                <Check className="h-3 w-3 text-primary" />
+              </div>
+              <Input
+                onChange={(e) => updateFeature(index, e.target.value)}
+                placeholder={`Feature ${index + 1}`}
+                value={feature}
+              />
+              <Button
+                className="shrink-0"
+                onClick={() => removeFeature(index)}
+                size="icon"
+                type="button"
+                variant="ghost"
+              >
+                <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+              </Button>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 function DoctorPlansRoute() {
   const [showCreate, setShowCreate] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [editTarget, setEditTarget] = useState<DoctorPlan | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [credits, setCredits] = useState("1");
-  const [durationMinutes, setDurationMinutes] = useState("50");
-  const [featuresText, setFeaturesText] = useState(defaultFeatures.join("\n"));
+  const [price, setPrice] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState("");
+  const [features, setFeatures] = useState<string[]>(defaultFeatures);
 
   const plansQuery = useQuery({
     queryKey: orpc.listDoctorPlans.queryKey(),
@@ -133,55 +278,54 @@ function DoctorPlansRoute() {
   function resetForm() {
     setName("");
     setDescription("");
-    setCredits("1");
-    setDurationMinutes("50");
-    setFeaturesText(defaultFeatures.join("\n"));
+    setPrice("");
+    setDurationMinutes("");
+    setFeatures(defaultFeatures);
+  }
+
+  function isValid(): boolean {
+    const dur = Number(durationMinutes);
+    const priceCents = Math.round(Number(price) * 100);
+    return (
+      name.trim().length > 0 && priceCents >= 100 && dur >= 60 && dur <= 360
+    );
   }
 
   function handleCreate() {
-    const features = featuresText
-      .split("\n")
-      .map((f) => f.trim())
-      .filter(Boolean);
+    if (!isValid()) {
+      return;
+    }
 
     createPlan.mutate({
       name,
       description: description || undefined,
-      credits: Number(credits),
+      price: Math.round(Number(price) * 100),
       durationMinutes: Number(durationMinutes),
-      features,
+      features: features.filter(Boolean),
     });
   }
 
   function handleEdit(plan: DoctorPlan) {
     setName(plan.name);
     setDescription(plan.description ?? "");
-    setCredits(String(plan.credits));
+    setPrice(String(plan.price / 100));
     setDurationMinutes(String(plan.durationMinutes));
-    const parsed: string[] = plan.features
-      ? (JSON.parse(plan.features) as string[])
-      : [];
-    setFeaturesText(parsed.join("\n"));
+    setFeatures(plan.features ? (JSON.parse(plan.features) as string[]) : []);
     setEditTarget(plan);
   }
 
   function handleUpdate() {
-    if (!editTarget) {
+    if (!(editTarget && isValid())) {
       return;
     }
-
-    const features = featuresText
-      .split("\n")
-      .map((f) => f.trim())
-      .filter(Boolean);
 
     updatePlan.mutate({
       id: editTarget.id,
       name,
       description: description || null,
-      credits: Number(credits),
+      price: Math.round(Number(price) * 100),
       durationMinutes: Number(durationMinutes),
-      features: features.length > 0 ? features : null,
+      features: features.filter(Boolean),
     });
   }
 
@@ -193,8 +337,8 @@ function DoctorPlansRoute() {
             Session Plans
           </h1>
           <p className="text-muted-foreground text-sm">
-            Define your session offerings. The default plan is required; you can
-            create as many custom plans as you like.
+            Define your session offerings and pricing. The default plan is
+            required; you can create as many custom plans as you like.
           </p>
         </div>
 
@@ -209,7 +353,8 @@ function DoctorPlansRoute() {
             <DialogHeader>
               <DialogTitle>Create Session Plan</DialogTitle>
               <DialogDescription>
-                Each credit costs ${CREDIT_PRICE_USD}.
+                Set your session price. A {TAX_RATE * 100}% service fee is added
+                at checkout.
               </DialogDescription>
             </DialogHeader>
 
@@ -234,64 +379,15 @@ function DoctorPlansRoute() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="plan-credits">Credits</Label>
-                  <Select
-                    onValueChange={(value) => {
-                      if (value) {
-                        setCredits(value);
-                      }
-                    }}
-                    value={credits}
-                  >
-                    <SelectTrigger id="plan-credits">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[1, 2, 3, 4, 5].map((n) => (
-                        <SelectItem key={n} value={String(n)}>
-                          {n} credit{n > 1 ? "s" : ""} ($
-                          {(n * CREDIT_PRICE_USD).toFixed(2)})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <DollarInput id="plan-price" onChange={setPrice} value={price} />
 
-                <div className="grid gap-2">
-                  <Label htmlFor="plan-duration">Duration (minutes)</Label>
-                  <Select
-                    onValueChange={(value) => {
-                      if (value) {
-                        setDurationMinutes(value);
-                      }
-                    }}
-                    value={durationMinutes}
-                  >
-                    <SelectTrigger id="plan-duration">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[30, 50, 60, 90, 120].map((n) => (
-                        <SelectItem key={n} value={String(n)}>
-                          {n} min
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              <DurationInput
+                id="plan-duration"
+                onChange={setDurationMinutes}
+                value={durationMinutes}
+              />
 
-              <div className="grid gap-2">
-                <Label htmlFor="plan-features">Features (one per line)</Label>
-                <Textarea
-                  id="plan-features"
-                  onChange={(e) => setFeaturesText(e.target.value)}
-                  placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
-                  value={featuresText}
-                />
-              </div>
+              <FeatureInput features={features} onChange={setFeatures} />
             </div>
 
             <DialogFooter>
@@ -299,7 +395,7 @@ function DoctorPlansRoute() {
                 Cancel
               </Button>
               <Button
-                disabled={!name.trim() || createPlan.isPending}
+                disabled={!isValid() || createPlan.isPending}
                 onClick={handleCreate}
               >
                 {createPlan.isPending ? (
@@ -350,64 +446,15 @@ function DoctorPlansRoute() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-credits">Credits</Label>
-                <Select
-                  onValueChange={(value) => {
-                    if (value) {
-                      setCredits(value);
-                    }
-                  }}
-                  value={credits}
-                >
-                  <SelectTrigger id="edit-credits">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <SelectItem key={n} value={String(n)}>
-                        {n} credit{n > 1 ? "s" : ""} ($
-                        {(n * CREDIT_PRICE_USD).toFixed(2)})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <DollarInput id="edit-price" onChange={setPrice} value={price} />
 
-              <div className="grid gap-2">
-                <Label htmlFor="edit-duration">Duration (minutes)</Label>
-                <Select
-                  onValueChange={(value) => {
-                    if (value) {
-                      setDurationMinutes(value);
-                    }
-                  }}
-                  value={durationMinutes}
-                >
-                  <SelectTrigger id="edit-duration">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[30, 50, 60, 90, 120].map((n) => (
-                      <SelectItem key={n} value={String(n)}>
-                        {n} min
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <DurationInput
+              id="edit-duration"
+              onChange={setDurationMinutes}
+              value={durationMinutes}
+            />
 
-            <div className="grid gap-2">
-              <Label htmlFor="edit-features">Features (one per line)</Label>
-              <Textarea
-                id="edit-features"
-                onChange={(e) => setFeaturesText(e.target.value)}
-                placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
-                value={featuresText}
-              />
-            </div>
+            <FeatureInput features={features} onChange={setFeatures} />
           </div>
 
           <DialogFooter>
@@ -415,7 +462,7 @@ function DoctorPlansRoute() {
               Cancel
             </Button>
             <Button
-              disabled={!name.trim() || updatePlan.isPending}
+              disabled={!isValid() || updatePlan.isPending}
               onClick={handleUpdate}
             >
               {updatePlan.isPending ? (
@@ -446,6 +493,8 @@ function DoctorPlansRoute() {
             const parsedFeatures: string[] = plan.features
               ? (JSON.parse(plan.features) as string[])
               : [];
+            const taxAmount = Math.round(plan.price * TAX_RATE);
+            const totalPrice = plan.price + taxAmount;
 
             return (
               <Card
@@ -474,14 +523,15 @@ function DoctorPlansRoute() {
                 <CardContent className="flex flex-1 flex-col gap-6">
                   <div className="text-center">
                     <span className="font-bold text-4xl text-foreground">
-                      {plan.credits}
+                      {formatPrice(plan.price)}
                     </span>
-                    <span className="text-muted-foreground text-sm">
-                      {" "}
-                      credit{plan.credits > 1 ? "s" : ""}
-                    </span>
-                    <div className="mt-1 text-muted-foreground text-xs">
-                      ${(plan.credits * CREDIT_PRICE_USD).toFixed(2)}
+                    <div className="mt-1 space-y-0.5">
+                      <div className="text-muted-foreground text-xs">
+                        + {formatPrice(taxAmount)} fee ({TAX_RATE * 100}%)
+                      </div>
+                      <div className="font-medium text-muted-foreground text-sm">
+                        Total: {formatPrice(totalPrice)}
+                      </div>
                     </div>
                     <div className="mt-2">
                       <Badge className="bg-muted" variant="outline">

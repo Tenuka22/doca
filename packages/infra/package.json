@@ -8,7 +8,11 @@
     "destroy": "alchemy destroy"
   },
   "dependencies": {
+    "@zen-doc/db": "workspace:*",
+    "@zen-doc/pricing": "workspace:*",
     "dotenv": "catalog:",
+    "drizzle-orm": "^0.45.2",
+    "stripe": "^18.5.0",
     "zod": "catalog:"
   },
   "devDependencies": {

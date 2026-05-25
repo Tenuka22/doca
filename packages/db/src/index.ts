@@ -2,8 +2,6 @@ import { env } from "@zen-doc/env/server";
 import { drizzle } from "drizzle-orm/d1";
 
 import {
-  type CreditTransaction as CreditTransactionSchema,
-  creditTransactions as creditTransactionsTable,
   type DoctorEducationEntry as DoctorEducationEntrySchema,
   type DoctorFile as DoctorFileSchema,
   type DoctorPlan as DoctorPlanSchema,
@@ -22,8 +20,6 @@ import {
   type PaymentIntent as PaymentIntentSchema,
   patientProfiles as patientProfilesTable,
   paymentIntents as paymentIntentsTable,
-  type UserCredit as UserCreditSchema,
-  userCredits as userCreditsTable,
 } from "./schema";
 
 export {
@@ -44,8 +40,6 @@ export const doctorSessions = doctorSessionsTable;
 export const doctorScheduleEntries = doctorScheduleEntriesTable;
 export const patientProfiles = patientProfilesTable;
 export const guardianProfiles = guardianProfilesTable;
-export const userCredits = userCreditsTable;
-export const creditTransactions = creditTransactionsTable;
 export const paymentIntents = paymentIntentsTable;
 export const doctorPlans = doctorPlansTable;
 export type DoctorProfile = DoctorProfileSchema;
@@ -55,8 +49,6 @@ export type DoctorScheduleEntry = DoctorScheduleEntrySchema;
 export type DoctorEducationEntry = DoctorEducationEntrySchema;
 export type PatientProfile = PatientProfileSchema;
 export type GuardianProfile = GuardianProfileSchema;
-export type UserCredit = UserCreditSchema;
-export type CreditTransaction = CreditTransactionSchema;
 export type PaymentIntent = PaymentIntentSchema;
 export type DoctorPlan = DoctorPlanSchema;
 
@@ -69,8 +61,6 @@ export function createDb() {
       doctorScheduleEntries,
       patientProfiles,
       guardianProfiles,
-      userCredits,
-      creditTransactions,
       paymentIntents,
       doctorPlans,
     },

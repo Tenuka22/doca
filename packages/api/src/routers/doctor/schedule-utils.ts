@@ -1,6 +1,6 @@
 import type { DoctorScheduleEntry } from "@zen-doc/db";
 import { doctorScheduleEntries, doctorSessions } from "@zen-doc/db";
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, eq, gte, lte, or } from "drizzle-orm";
 import type { Context } from "../../context";
 
 export interface TimeInterval {
@@ -205,14 +205,31 @@ export async function getOpenScheduleSlotsForDoctor(
   to: string
 ) {
   const openSlots = await db
-    .select()
+    .select({
+      id: doctorScheduleEntries.id,
+      doctorId: doctorScheduleEntries.doctorId,
+      kind: doctorScheduleEntries.kind,
+      startAt: doctorScheduleEntries.startAt,
+      endAt: doctorScheduleEntries.endAt,
+      sessionId: doctorScheduleEntries.sessionId,
+    })
     .from(doctorScheduleEntries)
+    .leftJoin(
+      doctorSessions,
+      eq(doctorScheduleEntries.sessionId, doctorSessions.id)
+    )
     .where(
       and(
         eq(doctorScheduleEntries.doctorId, doctorId),
-        eq(doctorScheduleEntries.kind, "open"),
         gte(doctorScheduleEntries.startAt, from),
-        lte(doctorScheduleEntries.endAt, to)
+        lte(doctorScheduleEntries.endAt, to),
+        or(
+          eq(doctorScheduleEntries.kind, "open"),
+          and(
+            eq(doctorScheduleEntries.kind, "session"),
+            eq(doctorSessions.status, "cancelled")
+          )
+        )
       )
     )
     .orderBy(doctorScheduleEntries.startAt);

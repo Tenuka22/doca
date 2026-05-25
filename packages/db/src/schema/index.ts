@@ -54,7 +54,7 @@ export const doctorSessions = sqliteTable("doctor_sessions", {
   planId: text("plan_id"),
   startAt: text("start_at").notNull(),
   endAt: text("end_at").notNull(),
-  status: text("status").notNull().default("scheduled"), // "scheduled" | "attended" | "cancelled"
+  status: text("status").notNull().default("pending"), // "pending" | "scheduled" | "attended" | "cancelled"
   payoutStatus: text("payout_status").notNull().default("none"), // "none" | "pending" | "paid" | "failed"
   payoutTransferId: text("payout_transfer_id"),
   payoutAmount: integer("payout_amount"),
@@ -148,24 +148,6 @@ export const guardianProfiles = sqliteTable(
   })
 );
 
-export const userCredits = sqliteTable("user_credits", {
-  id: text("id").primaryKey(),
-  userId: text("user_id").notNull(),
-  balance: integer("balance").notNull().default(0),
-  createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
-  updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
-});
-
-export const creditTransactions = sqliteTable("credit_transactions", {
-  id: text("id").primaryKey(),
-  userId: text("user_id").notNull(),
-  amount: integer("amount").notNull(),
-  type: text("type").notNull(),
-  referenceId: text("reference_id"),
-  description: text("description"),
-  createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
-});
-
 export const paymentIntents = sqliteTable("payment_intents", {
   id: text("id").primaryKey(),
   sessionId: text("session_id").notNull(),
@@ -184,7 +166,7 @@ export const doctorPlans = sqliteTable("doctor_plans", {
   doctorId: text("doctor_id").notNull(),
   name: text("name").notNull(),
   description: text("description"),
-  credits: integer("credits").notNull().default(1),
+  price: integer("price").notNull().default(5000),
   durationMinutes: integer("duration_minutes").notNull(),
   features: text("features"),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
@@ -203,7 +185,5 @@ export type DoctorScheduleEntry = typeof doctorScheduleEntries.$inferSelect;
 export type DoctorEducationEntry = typeof doctorEducationEntries.$inferSelect;
 export type PatientProfile = typeof patientProfiles.$inferSelect;
 export type GuardianProfile = typeof guardianProfiles.$inferSelect;
-export type UserCredit = typeof userCredits.$inferSelect;
-export type CreditTransaction = typeof creditTransactions.$inferSelect;
 export type PaymentIntent = typeof paymentIntents.$inferSelect;
 export type DoctorPlan = typeof doctorPlans.$inferSelect;

@@ -1,25 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 import {
   ArrowLeft,
   Award,
   BookOpen,
+  BriefcaseMedical,
   Building,
   Camera,
   Clock,
   FileText,
-  Languages,
+  GraduationCap,
+  Heart,
   MapPin,
   School2,
-  ShieldCheck,
   Sparkles,
   Stethoscope,
-  Video,
 } from "lucide-react-native";
-import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
-import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
-
+import { ActivityIndicator, Image, Text, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Screen } from "@/components/ui/screen";
@@ -35,79 +33,80 @@ import {
 import { orpc } from "@/utils/orpc";
 import { useThemeColor } from "@/utils/theme";
 
-interface DoctorProfileView {
-  approach: string | null;
-  approachSteps: { id: string; text: string }[];
-  bio: string | null;
-  consultationModes: string[];
-  createdAt: string;
-  displayName: string | null;
-  education: string | null;
-  experienceStartYear: number | null;
-  focusAreas: string[];
-  headline: string | null;
-  languages: string[];
-  licenseNumber: string | null;
-  location: string | null;
-  permanent?: boolean;
-  placeAddress: string | null;
-  placeDescription: string | null;
-  placeName: string | null;
-  specialties: string[];
-  stripeAccountEnabled: boolean | null;
-}
-
-interface DoctorEducationView {
-  degree: string;
-  id: string;
-  institution: string;
-  year: number | null;
-}
+/* ─── Tag Chip ─────────────────────────────────────────────────────────────── */
 
 function Tag({
   label,
-  color,
+  variant = "default",
 }: {
   label: string;
-  color: { bg: string; text: string; border: string };
+  variant?: "primary" | "secondary" | "success" | "muted";
 }) {
+  const colorMap = {
+    primary: "border-primary bg-primary" as const,
+    secondary: "border-border bg-secondary" as const,
+    success: "border-success bg-success/10" as const,
+    muted: "border-border/50 bg-card" as const,
+  };
+
+  const textMap = {
+    primary: "text-primary-foreground" as const,
+    secondary: "text-foreground" as const,
+    success: "text-success" as const,
+    muted: "text-muted-foreground" as const,
+  };
+
   return (
     <View
-      className={`rounded-full border px-3 py-1 ${color.bg} ${color.border}`}
+      className={`flex-row items-center gap-1.5 rounded-chip border-2 ${colorMap[variant]} px-3 py-1.5`}
     >
-      <Text className={`font-bold text-xs ${color.text}`}>{label}</Text>
+      <Text
+        className={`font-black font-sans text-[10px] uppercase tracking-widest ${textMap[variant]}`}
+      >
+        {label}
+      </Text>
     </View>
   );
 }
 
-function SectionHeader({ icon, title }: { icon: ReactNode; title: string }) {
+/* ─── Section Header ────────────────────────────────────────────────────────── */
+
+function SectionHeader({
+  icon,
+  title,
+}: {
+  icon: React.ReactNode;
+  title: string;
+}) {
   return (
-    <View className="mb-3 flex-row items-center gap-2">
-      {icon}
-      <Text className="font-black text-foreground text-lg uppercase tracking-tight">
+    <View className="flex-row items-center gap-3 border-border border-b pb-3">
+      <View className="rounded-card bg-primary/10 p-2">{icon}</View>
+      <Text className="font-black font-sans text-foreground text-lg uppercase tracking-tight">
         {title}
       </Text>
     </View>
   );
 }
 
-function InfoRow({
+/* ─── Info Chip ──────────────────────────────────────────────────────────────── */
+
+function InfoChip({
   icon,
   label,
   value,
 }: {
-  icon: ReactNode;
+  icon: React.ReactNode;
   label: string;
   value: string;
 }) {
   return (
-    <View className="flex-row items-start gap-3">
-      <View className="mt-0.5">{icon}</View>
+    <View className="flex-row items-center gap-2.5 rounded-card border-2 border-border bg-card p-3">
+      <View className="rounded-card bg-primary/10 p-2">{icon}</View>
       <View className="flex-1 gap-0.5">
-        <Text className="font-bold text-[10px] text-muted-foreground uppercase tracking-wider">
+        <Text className="font-bold font-sans text-[9px] text-muted-foreground uppercase tracking-widest">
           {label}
         </Text>
-        <Text className="font-semibold text-foreground/80 text-sm">
+        <Text className="font-black font-sans text-foreground text-xs uppercase tracking-tight">
           {value}
         </Text>
       </View>
@@ -115,45 +114,633 @@ function InfoRow({
   );
 }
 
-function TagSection({
-  label,
-  values,
-  labels,
-  color,
+/* ─── Plan Card ──────────────────────────────────────────────────────────────── */
+
+function PlanCard({
+  plan,
 }: {
-  label: string;
-  values: string[];
-  labels: Record<string, string>;
-  color: { bg: string; text: string; border: string };
+  plan: {
+    id: string;
+    name: string;
+    description?: string | null;
+    price: number;
+    durationMinutes: number;
+    features?: string | null;
+  };
 }) {
+  const features: string[] = plan.features
+    ? (JSON.parse(plan.features) as string[])
+    : [];
+
   return (
-    <View className="gap-2">
-      <Text className="font-bold text-[10px] text-muted-foreground uppercase tracking-wider">
-        {label}
-      </Text>
-      <View className="flex-row flex-wrap gap-1.5">
-        {values.length > 0 ? (
-          values.map((value) => (
-            <Tag
-              color={color}
-              key={value}
-              label={labels[value] ?? capitalizeWords(value)}
-            />
-          ))
-        ) : (
-          <Text className="font-medium text-muted-foreground text-xs italic">
-            Not configured
+    <View className="rounded-card border-2 border-border bg-card p-card">
+      <View className="mb-3 flex-row items-center justify-between">
+        <Text className="flex-1 font-black font-sans text-foreground text-lg uppercase tracking-tight">
+          {plan.name}
+        </Text>
+        <View className="rounded-chip border-2 border-success bg-success/10 px-3 py-1">
+          <Text className="font-black font-sans text-sm text-success uppercase tracking-widest">
+            ${(plan.price / 100).toFixed(2)}
           </Text>
-        )}
+        </View>
+      </View>
+      {plan.description && (
+        <Text className="mb-4 font-medium font-sans text-muted-foreground text-sm leading-relaxed">
+          {plan.description}
+        </Text>
+      )}
+      <View className="flex-row flex-wrap gap-2">
+        <Tag label={`${plan.durationMinutes} min`} variant="secondary" />
+        {features.map((feature) => (
+          <Tag key={feature} label={feature} variant="muted" />
+        ))}
       </View>
     </View>
   );
 }
 
-export default function DoctorProfileScreen() {
+/* ─── Loading State ──────────────────────────────────────────────────────────── */
+
+function LoadingState() {
   const colors = useThemeColor();
+
+  return (
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <Screen contentClassName="items-center justify-center px-page py-page">
+        <Card className="items-center gap-4 px-8 py-12">
+          <ActivityIndicator color={colors.primary} size="large" />
+          <Text className="font-black font-sans text-foreground text-lg uppercase tracking-widest">
+            Loading profile...
+          </Text>
+        </Card>
+      </Screen>
+    </>
+  );
+}
+
+/* ─── Not Found State ────────────────────────────────────────────────────────── */
+
+function NotFoundState() {
+  return (
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <Screen contentClassName="px-page py-page">
+        <BackButton />
+        <Card className="items-center gap-3 px-8 py-12">
+          <View className="h-14 w-14 items-center justify-center rounded-full bg-secondary">
+            <Stethoscope size={28} strokeWidth={2} />
+          </View>
+          <Text className="font-black font-sans text-2xl text-foreground uppercase tracking-tight">
+            Not Found
+          </Text>
+          <Text className="text-center font-bold font-sans text-muted-foreground text-xs uppercase tracking-wider">
+            That public profile does not exist yet.
+          </Text>
+        </Card>
+      </Screen>
+    </>
+  );
+}
+
+/* ─── Back Button ────────────────────────────────────────────────────────────── */
+
+function BackButton() {
+  const colors = useThemeColor();
+
+  return (
+    <View className="pb-4">
+      <Button
+        className="self-start"
+        href="/doctors"
+        icon={
+          <ArrowLeft color={colors.foreground} size={18} strokeWidth={2.5} />
+        }
+        variant="secondary"
+      >
+        BACK
+      </Button>
+    </View>
+  );
+}
+
+/* ─── Profile Header ─────────────────────────────────────────────────────────── */
+
+function ProfileHeader({
+  profile,
+  portraitPreviewUrl,
+  initials,
+  yearsOfExperience,
+}: {
+  profile: {
+    displayName?: string;
+    headline?: string;
+    permanent?: boolean;
+    location?: string;
+    stripeAccountEnabled?: boolean;
+    experienceStartYear?: number;
+  };
+  portraitPreviewUrl: string | null;
+  initials: string;
+  yearsOfExperience: number | null;
+}) {
+  const colors = useThemeColor();
+
+  return (
+    <Card className="gap-0 overflow-hidden p-0">
+      <View className="items-center gap-4 bg-primary/5 p-6">
+        {portraitPreviewUrl ? (
+          <View className="h-20 w-20 overflow-hidden rounded-full border-2 border-border bg-muted">
+            <Image
+              className="h-full w-full"
+              source={{ uri: portraitPreviewUrl }}
+              style={{ resizeMode: "cover" }}
+            />
+          </View>
+        ) : (
+          <View className="h-20 w-20 items-center justify-center rounded-full border-2 border-border bg-primary">
+            <Text className="font-black font-sans text-2xl text-primary-foreground tracking-tighter">
+              {initials}
+            </Text>
+          </View>
+        )}
+
+        <View className="flex items-center gap-2">
+          <Text className="text-center font-black font-sans text-3xl text-foreground uppercase leading-none tracking-tight">
+            {profile.displayName ?? "Clinician"}
+          </Text>
+          <Tag
+            label={profile.permanent ? "Licensed" : "Pending"}
+            variant={profile.permanent ? "success" : "secondary"}
+          />
+        </View>
+
+        {profile.headline && (
+          <Text className="max-w-[320px] text-center font-medium font-sans text-muted-foreground text-sm leading-snug">
+            {profile.headline}
+          </Text>
+        )}
+      </View>
+
+      <View className="flex-row flex-wrap justify-center gap-2 p-4">
+        {profile.location && (
+          <View className="flex-row items-center gap-1.5 rounded-chip border-2 border-border bg-card px-3 py-1.5">
+            <MapPin color={colors.foreground} size={14} strokeWidth={2.5} />
+            <Text className="font-bold font-sans text-[10px] text-foreground uppercase tracking-widest">
+              {profile.location}
+            </Text>
+          </View>
+        )}
+        {yearsOfExperience && (
+          <View className="flex-row items-center gap-1.5 rounded-chip border-2 border-border bg-secondary px-3 py-1.5">
+            <GraduationCap
+              color={colors.foreground}
+              size={14}
+              strokeWidth={2.5}
+            />
+            <Text className="font-bold font-sans text-[10px] text-foreground uppercase tracking-widest">
+              {yearsOfExperience}+ years
+            </Text>
+          </View>
+        )}
+      </View>
+    </Card>
+  );
+}
+
+/* ─── Action Buttons ─────────────────────────────────────────────────────────── */
+
+function ActionButtons({ doctorId }: { doctorId: string }) {
   const [isFavorite, setIsFavorite] = useState(false);
-  const router = useRouter();
+  const colors = useThemeColor();
+
+  return (
+    <View className="flex-row gap-3">
+      <Button
+        className="flex-1"
+        icon={
+          <Heart
+            color={colors.foreground}
+            fill={isFavorite ? colors.foreground : "transparent"}
+            size={16}
+            strokeWidth={2.5}
+          />
+        }
+        onPress={() => setIsFavorite((current) => !current)}
+        variant="secondary"
+      >
+        {isFavorite ? "SAVED" : "SAVE"}
+      </Button>
+      <Button className="flex-1" href={`/doctors/${doctorId}/booking`}>
+        BOOK CONSULT
+      </Button>
+    </View>
+  );
+}
+
+/* ─── Bio Section ────────────────────────────────────────────────────────────── */
+
+function BioSection({ bio }: { bio?: string | null }) {
+  const colors = useThemeColor();
+
+  if (!bio) {
+    return null;
+  }
+
+  return (
+    <Card className="gap-0 overflow-hidden p-0">
+      <View className="bg-primary/10 p-card">
+        <View className="flex-row items-start gap-3">
+          <View className="rounded-card bg-primary p-2">
+            <BookOpen
+              color={colors.primaryForeground}
+              size={18}
+              strokeWidth={2.5}
+            />
+          </View>
+          <View className="flex-1 gap-1">
+            <Text className="font-black font-sans text-primary text-xs uppercase tracking-widest">
+              About
+            </Text>
+            <Text className="font-medium font-sans text-foreground text-sm leading-relaxed">
+              {bio}
+            </Text>
+          </View>
+        </View>
+      </View>
+    </Card>
+  );
+}
+
+/* ─── Details Section ──────────────────────────────────────────────────────── */
+
+function DetailsSection({
+  profile,
+}: {
+  profile: {
+    experienceStartYear?: number | null;
+    location?: string | null;
+    placeAddress?: string | null;
+    placeName?: string | null;
+    licenseNumber?: string | null;
+  };
+}) {
+  const colors = useThemeColor();
+
+  return (
+    <Card className="gap-section">
+      <SectionHeader
+        icon={<Award color={colors.foreground} size={18} strokeWidth={2.5} />}
+        title="Details"
+      />
+      <View className="gap-2">
+        <View className="flex-row gap-2">
+          <View className="flex-1">
+            <InfoChip
+              icon={
+                <Clock color={colors.foreground} size={16} strokeWidth={2.5} />
+              }
+              label="Experience"
+              value={
+                profile.experienceStartYear
+                  ? `Since ${profile.experienceStartYear}`
+                  : "Not set"
+              }
+            />
+          </View>
+          <View className="flex-1">
+            <InfoChip
+              icon={
+                <MapPin color={colors.foreground} size={16} strokeWidth={2.5} />
+              }
+              label="Location"
+              value={profile.location ?? "Not set"}
+            />
+          </View>
+        </View>
+        <View className="flex-row gap-2">
+          <View className="flex-1">
+            <InfoChip
+              icon={
+                <FileText
+                  color={colors.foreground}
+                  size={16}
+                  strokeWidth={2.5}
+                />
+              }
+              label="License"
+              value={profile.licenseNumber ?? "Not set"}
+            />
+          </View>
+          <View className="flex-1">
+            <InfoChip
+              icon={
+                <Building
+                  color={colors.foreground}
+                  size={16}
+                  strokeWidth={2.5}
+                />
+              }
+              label="Practice"
+              value={profile.placeName ?? profile.placeAddress ?? "Not set"}
+            />
+          </View>
+        </View>
+      </View>
+    </Card>
+  );
+}
+
+/* ─── Tags Overview Section ──────────────────────────────────────────────────── */
+
+function TagsOverviewSection({
+  profile,
+}: {
+  profile: {
+    specialties: string[];
+    languages: string[];
+    consultationModes: string[];
+    focusAreas: string[];
+  };
+}) {
+  const colors = useThemeColor();
+
+  return (
+    <Card className="gap-section">
+      <SectionHeader
+        icon={
+          <Sparkles color={colors.foreground} size={18} strokeWidth={2.5} />
+        }
+        title="At a Glance"
+      />
+      <View className="gap-3">
+        {profile.specialties.length > 0 && (
+          <View className="gap-2">
+            <Text className="font-bold font-sans text-[9px] text-muted-foreground uppercase tracking-widest">
+              Specialties
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {profile.specialties.map((s) => (
+                <Tag
+                  key={s}
+                  label={specialtyLabels[s] ?? capitalizeWords(s)}
+                  variant="primary"
+                />
+              ))}
+            </View>
+          </View>
+        )}
+        {profile.languages.length > 0 && (
+          <View className="gap-2">
+            <Text className="font-bold font-sans text-[9px] text-muted-foreground uppercase tracking-widest">
+              Languages
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {profile.languages.map((l) => (
+                <Tag
+                  key={l}
+                  label={languageLabels[l] ?? capitalizeWords(l)}
+                  variant="secondary"
+                />
+              ))}
+            </View>
+          </View>
+        )}
+        {profile.consultationModes.length > 0 && (
+          <View className="gap-2">
+            <Text className="font-bold font-sans text-[9px] text-muted-foreground uppercase tracking-widest">
+              Consultation
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {profile.consultationModes.map((m) => (
+                <Tag
+                  key={m}
+                  label={consultationModeLabels[m] ?? capitalizeWords(m)}
+                  variant="muted"
+                />
+              ))}
+            </View>
+          </View>
+        )}
+        {profile.focusAreas.length > 0 && (
+          <View className="gap-2">
+            <Text className="font-bold font-sans text-[9px] text-muted-foreground uppercase tracking-widest">
+              Focus Areas
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {profile.focusAreas.map((a) => (
+                <Tag
+                  key={a}
+                  label={focusAreaLabels[a] ?? capitalizeWords(a)}
+                  variant="success"
+                />
+              ))}
+            </View>
+          </View>
+        )}
+      </View>
+    </Card>
+  );
+}
+
+/* ─── Approach Steps Section ─────────────────────────────────────────────────── */
+
+function ApproachStepsSection({
+  steps,
+}: {
+  steps: { id: string; text: string }[];
+}) {
+  const colors = useThemeColor();
+
+  if (steps.length === 0) {
+    return null;
+  }
+
+  return (
+    <Card className="gap-section">
+      <SectionHeader
+        icon={
+          <BriefcaseMedical
+            color={colors.foreground}
+            size={18}
+            strokeWidth={2.5}
+          />
+        }
+        title="Approach"
+      />
+      <View className="relative ml-1 gap-0">
+        {steps.map((step, index) => (
+          <View className="flex-row" key={step.id}>
+            <View className="items-center pt-3" style={{ width: 28 }}>
+              <View className="h-6 w-6 items-center justify-center rounded-full border-2 border-border bg-primary">
+                <Text className="font-black font-sans text-[10px] text-primary-foreground">
+                  {index + 1}
+                </Text>
+              </View>
+              {index < steps.length - 1 && (
+                <View className="mt-0.5 h-full w-0.5 flex-1 rounded-full bg-border" />
+              )}
+            </View>
+            <View className="flex-1 pb-4 pl-3">
+              <View className="rounded-card border-2 border-border bg-card p-3">
+                <Text className="font-medium font-sans text-foreground text-sm leading-relaxed">
+                  {step.text}
+                </Text>
+              </View>
+            </View>
+          </View>
+        ))}
+      </View>
+    </Card>
+  );
+}
+
+/* ─── Education Section ──────────────────────────────────────────────────────── */
+
+function EducationSection({
+  education,
+}: {
+  education: {
+    id: string;
+    degree: string;
+    institution: string;
+    year?: number | null;
+  }[];
+}) {
+  const colors = useThemeColor();
+
+  if (education.length === 0) {
+    return null;
+  }
+
+  return (
+    <Card className="gap-section">
+      <SectionHeader
+        icon={<School2 color={colors.foreground} size={18} strokeWidth={2.5} />}
+        title="Education"
+      />
+      <View className="gap-2">
+        {education.map((entry) => (
+          <View
+            className="flex-row items-center gap-3 rounded-card border-2 border-border bg-card p-3"
+            key={entry.id}
+          >
+            <View className="rounded-card bg-secondary p-2.5">
+              <School2 color={colors.foreground} size={20} strokeWidth={2} />
+            </View>
+            <View className="flex-1 gap-0.5">
+              <Text className="font-black font-sans text-foreground text-sm uppercase tracking-tight">
+                {entry.degree}
+              </Text>
+              <Text className="font-bold font-sans text-muted-foreground text-xs uppercase">
+                {entry.institution}
+              </Text>
+            </View>
+            {entry.year && (
+              <View className="rounded-chip border-2 border-border bg-secondary px-3 py-1">
+                <Text className="font-black font-sans text-foreground text-xs">
+                  {entry.year}
+                </Text>
+              </View>
+            )}
+          </View>
+        ))}
+      </View>
+    </Card>
+  );
+}
+
+/* ─── Plans Section ──────────────────────────────────────────────────────────── */
+
+function PlansSection({ doctorId }: { doctorId: string }) {
+  const colors = useThemeColor();
+
+  const plansQuery = useQuery({
+    queryKey: ["doctor-plans", doctorId],
+    queryFn: () => orpc.getDoctorPlans.call({ doctorId }),
+  });
+
+  const plans = plansQuery.data?.plans ?? [];
+
+  if (plans.length === 0) {
+    return null;
+  }
+
+  return (
+    <Card className="gap-section">
+      <SectionHeader
+        icon={
+          <FileText color={colors.foreground} size={18} strokeWidth={2.5} />
+        }
+        title="Session Plans"
+      />
+      <View className="gap-3">
+        {plans.map((plan) => (
+          <PlanCard key={plan.id} plan={plan} />
+        ))}
+      </View>
+    </Card>
+  );
+}
+
+/* ─── Resources Section ──────────────────────────────────────────────────────── */
+
+const RESOURCE_KINDS = ["portrait", "qualification", "intro_video"];
+
+function ResourcesSection({
+  files,
+}: {
+  files: {
+    id: string;
+    fileKind: string;
+    caption?: string | null;
+    fileName: string;
+  }[];
+}) {
+  const colors = useThemeColor();
+  const filtered = files.filter((f) => RESOURCE_KINDS.includes(f.fileKind));
+
+  return (
+    <Card className="gap-section">
+      <SectionHeader
+        icon={<Camera color={colors.foreground} size={18} strokeWidth={2.5} />}
+        title="Resources"
+      />
+      {filtered.length === 0 ? (
+        <Text className="font-medium font-sans text-muted-foreground text-sm italic">
+          No resources uploaded.
+        </Text>
+      ) : (
+        <View className="gap-2">
+          {filtered.map((file) => (
+            <View
+              className="flex-row items-center gap-3 rounded-card border-2 border-border bg-card p-3"
+              key={file.id}
+            >
+              <FileText
+                color={colors.mutedForeground}
+                size={20}
+                strokeWidth={2}
+              />
+              <View className="flex-1 gap-0.5">
+                <Text className="font-black font-sans text-foreground text-xs uppercase tracking-wider">
+                  {capitalizeWords(file.fileKind)}
+                </Text>
+                <Text className="font-bold font-sans text-[10px] text-muted-foreground uppercase">
+                  {file.caption ?? file.fileName}
+                </Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+    </Card>
+  );
+}
+
+/* ─── Main Screen ────────────────────────────────────────────────────────────── */
+
+export default function DoctorProfileScreen() {
   const { doctorId } = useLocalSearchParams<{ doctorId?: string }>();
   const id = Array.isArray(doctorId) ? doctorId[0] : doctorId;
 
@@ -165,461 +752,55 @@ export default function DoctorProfileScreen() {
 
   const profile = doctorQuery.data?.profile;
   const files = doctorQuery.data?.files ?? [];
-  const education = doctorQuery.data?.education ?? [];
   const portraitId = doctorQuery.data?.portrait?.id ?? null;
   const portraitPreviewUrl = useDoctorMaterialPreviewUrl(portraitId);
 
-  const plansQuery = useQuery({
-    queryKey: ["doctor-plans", id],
-    queryFn: () => orpc.getDoctorPlans.call({ doctorId: id ?? "" }),
-    enabled: !!id && !!profile,
-  });
   const yearsOfExperience = useMemo(
     () => getYearsOfExperience(profile?.experienceStartYear ?? null),
     [profile?.experienceStartYear]
   );
 
   const displayName =
-    profile?.displayName ?? profile?.licenseNumber ?? "Doctor";
+    profile?.displayName ?? profile?.licenseNumber ?? "DOCTOR";
   const initials = displayName.slice(0, 2).toUpperCase();
 
-  const tagColors = useMemo(
-    () => ({
-      primary: {
-        bg: "bg-primary/10",
-        text: "text-primary",
-        border: "border-primary/20",
-      },
-      secondary: {
-        bg: "bg-secondary/20",
-        text: "text-secondary-foreground",
-        border: "border-border",
-      },
-      muted: {
-        bg: "bg-muted/20",
-        text: "text-muted-foreground",
-        border: "border-border",
-      },
-      accent: {
-        bg: "bg-accent/10",
-        text: "text-accent-foreground",
-        border: "border-border",
-      },
-    }),
-    []
-  );
-
   if (doctorQuery.isLoading) {
-    return (
-      <>
-        <Stack.Screen options={{ headerShown: false }} />
-        <Screen contentClassName="items-center justify-center px-page py-page">
-          <ActivityIndicator size="large" />
-        </Screen>
-      </>
-    );
+    return <LoadingState />;
+  }
+
+  if (!profile) {
+    return <NotFoundState />;
   }
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <Screen contentClassName="gap-6 px-page py-page">
-        <View className="flex-row items-center justify-between">
-          <Button
-            onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-              } else {
-                router.replace("/");
-              }
-            }}
-            size="sm"
-            variant="secondary"
-          >
-            <View className="flex-row items-center gap-2">
-              <ArrowLeft color={colors.foreground} size={16} />
-              <Text className="font-bold font-sans text-foreground text-sm">
-                Back
-              </Text>
-            </View>
-          </Button>
-        </View>
+      <Screen contentClassName="gap-section px-page py-page">
+        <BackButton />
 
-        {profile ? (
-          <>
-            {/* Profile Header Card */}
-            <Card className="gap-4">
-              <View className="flex-row items-center gap-4">
-                {portraitPreviewUrl ? (
-                  <Image
-                    className="h-16 w-16 rounded-2xl border-2 border-primary/20"
-                    source={{ uri: portraitPreviewUrl }}
-                  />
-                ) : (
-                  <View className="h-16 w-16 items-center justify-center rounded-2xl border-2 border-primary/20 bg-primary/10">
-                    <Text className="font-bold text-lg text-primary">
-                      {initials}
-                    </Text>
-                  </View>
-                )}
+        <ProfileHeader
+          initials={initials}
+          portraitPreviewUrl={portraitPreviewUrl}
+          profile={profile}
+          yearsOfExperience={yearsOfExperience}
+        />
 
-                <View className="flex-1 gap-1">
-                  <View className="flex-row flex-wrap items-center gap-2">
-                    <Text className="font-bold text-foreground text-xl">
-                      {displayName}
-                    </Text>
-                    <View
-                      className={`flex-row items-center gap-1.5 rounded-full px-2.5 py-0.5 ${
-                        profile.permanent
-                          ? "border border-success/20 bg-success/10"
-                          : "border border-warning/20 bg-warning/10"
-                      }`}
-                    >
-                      <View
-                        className={`h-1.5 w-1.5 rounded-full ${
-                          profile.permanent ? "bg-success" : "bg-warning"
-                        }`}
-                      />
-                      <Text
-                        className={`font-semibold text-xs ${
-                          profile.permanent
-                            ? "text-success-foreground"
-                            : "text-warning-foreground"
-                        }`}
-                      >
-                        {profile.permanent ? "Approved" : "Pending"}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text className="text-muted-foreground text-sm">
-                    {profile.headline ?? "No professional headline set yet"}
-                  </Text>
-                </View>
-              </View>
+        <ActionButtons doctorId={id ?? ""} />
 
-              <View className="flex-row flex-wrap gap-2">
-                {profile.location ? (
-                  <View className="flex-row items-center gap-1 rounded-full border-2 border-border bg-background px-2 py-1">
-                    <MapPin color={colors.foreground} size={12} />
-                    <Text className="font-bold text-[10px] text-foreground uppercase tracking-wide">
-                      {profile.location}
-                    </Text>
-                  </View>
-                ) : null}
-                {yearsOfExperience ? (
-                  <View className="flex-row items-center gap-1 rounded-full border-2 border-border bg-background px-2 py-1">
-                    <Stethoscope
-                      color={colors.foreground}
-                      fill={colors.foreground}
-                      size={12}
-                    />
-                    <Text className="font-bold text-[10px] text-foreground uppercase tracking-wide">
-                      {yearsOfExperience}+ years
-                    </Text>
-                  </View>
-                ) : null}
-                {profile.stripeAccountEnabled ? (
-                  <View className="flex-row items-center gap-1 rounded-full border-2 border-border bg-background px-2 py-1">
-                    <ShieldCheck color={colors.foreground} size={12} />
-                    <Text className="font-bold text-[10px] text-foreground uppercase tracking-wide">
-                      Verified
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
+        <BioSection bio={profile.bio} />
 
-              <View className="flex-row gap-3">
-                <Pressable
-                  accessibilityRole="button"
-                  className="flex-1"
-                  onPress={() => setIsFavorite((current) => !current)}
-                >
-                  {({ pressed }) => (
-                    <View
-                      className="rounded-2xl border-2 border-border bg-background px-4 py-3"
-                      style={{
-                        opacity: pressed ? 0.84 : 1,
-                        transform: [{ translateY: pressed ? 2 : 0 }],
-                      }}
-                    >
-                      <Text className="text-center font-bold text-foreground text-sm uppercase tracking-wide">
-                        {isFavorite ? "Saved" : "Save doctor"}
-                      </Text>
-                    </View>
-                  )}
-                </Pressable>
-                <Button
-                  className="flex-1"
-                  href={`/doctors/${id}/booking`}
-                  variant="primary"
-                >
-                  Book consult
-                </Button>
-              </View>
+        <DetailsSection profile={profile} />
 
-              {profile.bio ? (
-                <View className="rounded-xl border border-border/30 bg-muted/5 p-4">
-                  <Text className="font-medium text-foreground/90 text-sm italic leading-relaxed">
-                    "{profile.bio}"
-                  </Text>
-                </View>
-              ) : null}
-            </Card>
+        <TagsOverviewSection profile={profile} />
 
-            {/* Practice Details */}
-            <Card className="gap-4">
-              <SectionHeader
-                icon={<Building color={colors.foreground} size={18} />}
-                title="Practice Details"
-              />
-              <View className="gap-4 rounded-xl border border-border/50 bg-muted/5 p-4">
-                <InfoRow
-                  icon={<Clock color={colors.foreground} size={14} />}
-                  label="Experience"
-                  value={
-                    profile.experienceStartYear
-                      ? `${profile.experienceStartYear} onward`
-                      : "Not set"
-                  }
-                />
-                <InfoRow
-                  icon={<MapPin color={colors.foreground} size={14} />}
-                  label="Location"
-                  value={profile.location ?? "Not set"}
-                />
-                <InfoRow
-                  icon={<Building color={colors.foreground} size={14} />}
-                  label="Practice Address"
-                  value={profile.placeAddress ?? "Not set"}
-                />
-              </View>
-            </Card>
+        <ApproachStepsSection steps={profile.approachSteps} />
 
-            {/* Professional Info */}
-            <Card className="gap-4">
-              <SectionHeader
-                icon={<Award color={colors.foreground} size={18} />}
-                title="Professional Info"
-              />
-              <View className="gap-4 rounded-xl border border-border/50 bg-muted/5 p-4">
-                <InfoRow
-                  icon={<FileText color={colors.foreground} size={14} />}
-                  label="License Number"
-                  value={profile.licenseNumber ?? "Not set"}
-                />
-                <InfoRow
-                  icon={<Building color={colors.foreground} size={14} />}
-                  label="Practice Name"
-                  value={profile.placeName ?? "Not set"}
-                />
-                <InfoRow
-                  icon={<FileText color={colors.foreground} size={14} />}
-                  label="Place Description"
-                  value={profile.placeDescription ?? "No description added"}
-                />
-              </View>
-            </Card>
+        <EducationSection education={doctorQuery.data?.education ?? []} />
 
-            {/* At a Glance - Tags */}
-            <Card className="gap-4">
-              <SectionHeader
-                icon={<Sparkles color={colors.foreground} size={18} />}
-                title="At a glance"
-              />
-              <View className="gap-4">
-                <TagSection
-                  color={tagColors.primary}
-                  icon={<BookOpen color={colors.foreground} size={14} />}
-                  label="Specialties"
-                  labels={specialtyLabels}
-                  values={profile.specialties}
-                />
-                <TagSection
-                  color={tagColors.secondary}
-                  icon={<Languages color={colors.foreground} size={14} />}
-                  label="Languages"
-                  labels={languageLabels}
-                  values={profile.languages}
-                />
-                <TagSection
-                  color={tagColors.muted}
-                  icon={<Video color={colors.foreground} size={14} />}
-                  label="Consultation Modes"
-                  labels={consultationModeLabels}
-                  values={profile.consultationModes}
-                />
-                <TagSection
-                  color={tagColors.accent}
-                  icon={<FileText color={colors.foreground} size={14} />}
-                  label="Focus Areas"
-                  labels={focusAreaLabels}
-                  values={profile.focusAreas}
-                />
-              </View>
-            </Card>
+        <PlansSection doctorId={id ?? ""} />
 
-            {/* Approach Steps */}
-            {profile.approachSteps?.length > 0 && (
-              <Card className="gap-4">
-                <SectionHeader
-                  icon={<Sparkles color={colors.foreground} size={18} />}
-                  title="Therapeutic Approach"
-                />
-                <View className="gap-3">
-                  {profile.approachSteps.map((step, index) => (
-                    <View
-                      className="relative rounded-xl border border-border/50 bg-muted/5 p-3.5"
-                      key={step.id}
-                    >
-                      <Text className="absolute top-2.5 right-3 rounded-full bg-muted/60 px-2 py-0.5 font-bold font-mono text-[10px] text-muted-foreground/40 uppercase tracking-wider">
-                        Step {index + 1}
-                      </Text>
-                      <Text className="pr-10 font-medium text-foreground/80 text-sm leading-relaxed">
-                        {step.text}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              </Card>
-            )}
-
-            {/* Education */}
-            {education.length > 0 && (
-              <Card className="gap-4">
-                <SectionHeader
-                  icon={<School2 color={colors.foreground} size={18} />}
-                  title="Education & Credentials"
-                />
-                <View className="gap-3 overflow-hidden rounded-xl border border-border/40 bg-muted/5">
-                  {education.map((entry, index) => (
-                    <View
-                      className={`flex-row items-center justify-between p-3.5 ${
-                        index < education.length - 1
-                          ? "border-border/30 border-b"
-                          : ""
-                      }`}
-                      key={entry.id}
-                    >
-                      <View className="flex-1 gap-0.5">
-                        <Text className="font-semibold text-foreground/80 text-sm">
-                          {entry.degree}
-                        </Text>
-                        <Text className="text-muted-foreground text-xs">
-                          {entry.institution}
-                        </Text>
-                      </View>
-                      {entry.year ? (
-                        <View className="rounded-full border bg-muted px-2.5 py-1">
-                          <Text className="font-mono font-semibold text-muted-foreground text-xs">
-                            {entry.year}
-                          </Text>
-                        </View>
-                      ) : null}
-                    </View>
-                  ))}
-                </View>
-              </Card>
-            )}
-
-            {/* Session Plans */}
-            {plansQuery.data?.plans && plansQuery.data.plans.length > 0 ? (
-              <Card className="gap-4">
-                <SectionHeader
-                  icon={<FileText color={colors.foreground} size={18} />}
-                  title="Session Plans"
-                />
-                <View className="gap-3">
-                  {plansQuery.data.plans.map((plan) => {
-                    const features: string[] = plan.features
-                      ? (JSON.parse(plan.features) as string[])
-                      : [];
-
-                    return (
-                      <View
-                        className="rounded-xl border border-border/50 bg-muted/5 p-3.5"
-                        key={plan.id}
-                      >
-                        <View className="mb-2 flex-row items-center justify-between">
-                          <Text className="font-bold text-base text-foreground">
-                            {plan.name}
-                          </Text>
-                          <View className="rounded-full bg-primary/10 px-2.5 py-0.5">
-                            <Text className="font-bold text-primary text-xs">
-                              {plan.credits} credit{plan.credits > 1 ? "s" : ""}
-                            </Text>
-                          </View>
-                        </View>
-                        {plan.description ? (
-                          <Text className="mb-2 text-muted-foreground text-sm">
-                            {plan.description}
-                          </Text>
-                        ) : null}
-                        <View className="flex-row items-center gap-2">
-                          <View className="rounded-full bg-muted/60 px-2 py-0.5">
-                            <Text className="font-medium text-muted-foreground text-xs">
-                              {plan.durationMinutes} min
-                            </Text>
-                          </View>
-                          {features.map((feature: string) => (
-                            <View
-                              className="rounded-full bg-primary/5 px-2 py-0.5"
-                              key={feature}
-                            >
-                              <Text className="text-muted-foreground text-xs">
-                                {feature}
-                              </Text>
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-                    );
-                  })}
-                </View>
-              </Card>
-            ) : null}
-
-            {/* Profile Resources */}
-            <Card className="gap-4">
-              <SectionHeader
-                icon={<Camera color={colors.foreground} size={18} />}
-                title="Profile Resources"
-              />
-              {files.length === 0 ? (
-                <Text className="text-center text-muted-foreground text-sm italic">
-                  No resources uploaded yet.
-                </Text>
-              ) : (
-                <View className="gap-3">
-                  {files.map((file) => (
-                    <View
-                      className="flex-row items-center justify-between rounded-xl border border-border/50 bg-muted/5 p-3"
-                      key={file.id}
-                    >
-                      <View className="flex-1 gap-0.5">
-                        <Text className="font-semibold text-foreground/80 text-sm">
-                          {capitalizeWords(file.fileKind)}
-                        </Text>
-                        <Text className="text-muted-foreground text-xs">
-                          {file.caption ?? file.fileName}
-                        </Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              )}
-            </Card>
-          </>
-        ) : (
-          <Card className="gap-3">
-            <Text className="font-black text-2xl text-foreground">
-              Doctor not found
-            </Text>
-            <Text className="font-medium text-muted-foreground text-sm">
-              That public profile does not exist yet.
-            </Text>
-          </Card>
-        )}
+        <ResourcesSection files={files} />
       </Screen>
     </>
   );

@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -29,21 +29,19 @@ function SelectableCard({
   onPress,
 }: SelectableCardProps) {
   return (
-    <Pressable className="active:opacity-90" onPress={onPress}>
-      <Card className="flex-row items-center gap-card p-card">
-        <View className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-border bg-card">
-          {icon}
-        </View>
-        <View className="flex-1">
-          <Text className="font-extrabold font-sans text-foreground text-lg tracking-tight">
-            {title}
-          </Text>
-          <Text className="mt-1 font-normal font-sans text-muted-foreground text-sm leading-5">
-            {description}
-          </Text>
-        </View>
-      </Card>
-    </Pressable>
+    <Card className="flex-row items-center gap-card p-card" onPress={onPress}>
+      <View className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-border bg-card">
+        {icon}
+      </View>
+      <View className="flex-1">
+        <Text className="font-extrabold font-sans text-foreground text-lg tracking-tight">
+          {title}
+        </Text>
+        <Text className="mt-1 font-normal font-sans text-muted-foreground text-sm leading-5">
+          {description}
+        </Text>
+      </View>
+    </Card>
   );
 }
 

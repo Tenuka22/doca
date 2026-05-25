@@ -1,6 +1,7 @@
 import type { DoctorProfile } from "@zen-doc/db";
 import {
   doctorEducationEntries,
+  doctorPlans,
   doctorProfiles,
   parseJsonApproachSteps,
   parseJsonStringArray,
@@ -8,7 +9,13 @@ import {
   stringifyJsonStringArray,
 } from "@zen-doc/db";
 import { doctorProfileInputSchema } from "@zen-doc/db/schemas-types";
-import { eq } from "drizzle-orm";
+import {
+  BASIC_PLAN_DURATION_MINUTES,
+  BASIC_PLAN_FEATURES,
+  BASIC_PLAN_NAME,
+  BASIC_PLAN_PRICE_CENTS,
+} from "@zen-doc/pricing";
+import { and, eq } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
 
@@ -97,6 +104,36 @@ export const saveDoctorProfileRoute = protectedProcedure
     await context.clerk.users.updateUserMetadata(userId, {
       publicMetadata: { role: nextRole },
     });
+
+    const [existingPlan] = await context.db
+      .select()
+      .from(doctorPlans)
+      .where(
+        and(
+          eq(doctorPlans.doctorId, userId),
+          eq(doctorPlans.isDefault, true),
+          eq(doctorPlans.isActive, true)
+        )
+      )
+      .limit(1);
+
+    if (!existingPlan) {
+      const now = new Date().toISOString();
+      await context.db.insert(doctorPlans).values({
+        id: crypto.randomUUID(),
+        doctorId: userId,
+        name: BASIC_PLAN_NAME,
+        description: "Standard consultation session",
+        price: BASIC_PLAN_PRICE_CENTS,
+        durationMinutes: BASIC_PLAN_DURATION_MINUTES,
+        features: JSON.stringify(BASIC_PLAN_FEATURES),
+        isActive: true,
+        isDefault: true,
+        sortOrder: 1,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
 
     return { ok: true, role: nextRole, profile };
   });

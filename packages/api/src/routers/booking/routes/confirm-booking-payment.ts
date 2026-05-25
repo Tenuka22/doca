@@ -29,10 +29,16 @@ export const confirmBookingPaymentRoute = protectedProcedure
       throw new Error("Only the patient can confirm payment");
     }
 
+    // Webhook may have already processed it
+    if (session.payoutStatus === "paid") {
+      return { ok: true, payoutStatus: "paid" };
+    }
+
     if (session.payoutStatus !== "pending_payment") {
       throw new Error("Session is not awaiting payment");
     }
 
+    // Fallback: verify with Stripe directly if webhook hasn't arrived yet
     const stripe = getStripe();
     const paymentIntent = await stripe.paymentIntents.retrieve(
       input.paymentIntentId

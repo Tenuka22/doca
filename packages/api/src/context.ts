@@ -9,6 +9,7 @@ export interface ClerkRequestContext {
   auth: ClerkContextAuth | null;
   clerk: typeof clerkClient;
   db: ReturnType<typeof createDb>;
+  modelFeaturesKv: KVNamespace;
   session: null;
 }
 
@@ -56,6 +57,7 @@ export async function createContext({
     session: null,
     db: createDb(),
     clerk: clerkClient,
+    modelFeaturesKv: env.MODEL_FEATURES_KV,
   };
 }
 

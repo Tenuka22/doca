@@ -6,10 +6,11 @@ type ButtonVariant = "primary" | "secondary";
 type ButtonSize = "sm" | "default";
 
 interface ButtonProps {
-  children: ReactNode;
+  children?: ReactNode;
   className?: string;
   disabled?: boolean;
   href?: string;
+  icon?: ReactNode;
   onPress?: () => unknown;
   size?: ButtonSize;
   variant?: ButtonVariant;
@@ -20,12 +21,36 @@ export const Button = ({
   className,
   disabled,
   href,
+  icon,
   onPress,
   variant = "primary",
   size = "default",
 }: ButtonProps) => {
   const isString = typeof children === "string";
   const paddingClass = size === "sm" ? "px-4 py-1.5" : "px-card py-control";
+  const textColor =
+    variant === "primary" ? "text-primary-foreground" : "text-foreground";
+
+  const content = (
+    <View className="flex-row items-center justify-center gap-2">
+      {icon && <View className={isString ? "" : ""}>{icon}</View>}
+      {isString ? (
+        <Text
+          className={`text-center font-bold font-sans ${
+            size === "sm" ? "text-sm" : "text-base"
+          } ${textColor}`}
+        >
+          {children}
+        </Text>
+      ) : (
+        <Text
+          className={`font-bold font-sans ${size === "sm" ? "text-sm" : "text-base"} ${textColor}`}
+        >
+          {children}
+        </Text>
+      )}
+    </View>
+  );
 
   const button = (
     <Pressable
@@ -37,7 +62,6 @@ export const Button = ({
     >
       {({ pressed }) => (
         <>
-          {/* Neo-brutalist Solid Shadow Layer (does not move) */}
           <View
             className="absolute inset-0 rounded-control bg-border"
             style={{
@@ -45,7 +69,6 @@ export const Button = ({
             }}
           />
 
-          {/* Main Interactive Button Front (translates on click to align with shadow) */}
           <View
             className={`w-full flex-row items-center justify-center rounded-control border-2 border-border ${paddingClass} ${
               variant === "primary" ? "bg-primary" : "bg-card"
@@ -57,17 +80,7 @@ export const Button = ({
                   : [{ translateX: 0 }, { translateY: 0 }],
             }}
           >
-            {isString ? (
-              <Text
-                className={`text-center font-bold font-sans ${
-                  size === "sm" ? "text-sm" : "text-base"
-                } ${variant === "primary" ? "text-primary-foreground" : "text-foreground"}`}
-              >
-                {children}
-              </Text>
-            ) : (
-              children
-            )}
+            {content}
           </View>
         </>
       )}

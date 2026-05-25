@@ -229,8 +229,8 @@ function DoctorSessionsRoute() {
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel this session?</AlertDialogTitle>
             <AlertDialogDescription>
-              The patient will receive a full refund and a credit. This action
-              cannot be undone.
+              The patient will receive a full refund. This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -5,7 +5,8 @@
   "scripts": {
     "build": "tsdown",
     "check-types": "tsc -b",
-    "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server"
+    "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
+    "stripe:listen": "stripe listen --forward-to localhost:3000/stripe/webhook"
   },
   "dependencies": {
     "@orpc/openapi": "catalog:",
@@ -15,7 +16,10 @@
     "@zen-doc/db": "workspace:*",
     "@zen-doc/env": "workspace:*",
     "dotenv": "catalog:",
+    "drizzle-orm": "^0.45.2",
     "hono": "catalog:",
+    "stripe": "^22.1.1",
+    "svix": "^1.94.0",
     "zod": "catalog:"
   },
   "devDependencies": {

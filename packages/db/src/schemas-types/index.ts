@@ -103,7 +103,7 @@ export const cancelSessionSchema = z.object({
 export const createDoctorPlanSchema = z.object({
   name: z.string().trim().min(1).max(100),
   description: z.string().trim().max(500).optional(),
-  credits: z.coerce.number().int().min(1).max(100).default(1),
+  price: z.coerce.number().int().min(100).max(100_000).default(5000),
   durationMinutes: z.coerce.number().int().min(15).max(240),
   features: z.array(z.string().trim().min(1).max(200)).max(20).optional(),
 });
@@ -112,7 +112,7 @@ export const updateDoctorPlanSchema = z.object({
   id: z.string().min(1),
   name: z.string().trim().min(1).max(100).optional(),
   description: z.string().trim().max(500).nullable().optional(),
-  credits: z.coerce.number().int().min(1).max(100).optional(),
+  price: z.coerce.number().int().min(100).max(100_000).optional(),
   durationMinutes: z.coerce.number().int().min(15).max(240).optional(),
   isActive: z.coerce.boolean().optional(),
   features: z
