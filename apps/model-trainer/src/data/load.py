@@ -1,7 +1,5 @@
 import os
-import tempfile
 from collections.abc import Generator
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -9,10 +7,6 @@ import pandas as pd
 from src.config import DATA
 from src.data.download import dataset_fetching
 from src.data.features import extract_features
-
-_CACHE_VERSION = "v1"
-_CACHE_DIR = Path(tempfile.gettempdir()) / "zen_doc_model_trainer_cache" / "subjects"
-_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _parse_quest(filepath: str):
@@ -52,24 +46,6 @@ def load_subject(subj_id: int, ds_path: str):
         ds_path, "0. interim", "wesad", "Labels", f"S{subj_id}_quest.csv"
     )
 
-    cache_key = (
-        f"{_CACHE_VERSION}_S{subj_id}_"
-        f"{int(os.path.getmtime(rri_path))}_{int(os.path.getmtime(quest_path))}"
-    )
-    cache_path = _CACHE_DIR / f"{cache_key}.npz"
-    if cache_path.exists():
-        try:
-            with np.load(cache_path, allow_pickle=False) as cached:
-                feature_names = cached["feature_names"].tolist()
-                features = cached["features"]
-                labels = cached["labels"]
-            return features, labels, feature_names
-        except ValueError:
-            try:
-                cache_path.unlink(missing_ok=True)
-            except PermissionError:
-                pass
-
     rri = np.loadtxt(rri_path)
     schedule = _parse_quest(quest_path)
     times_s = rri[:, 0]
@@ -87,13 +63,6 @@ def load_subject(subj_id: int, ds_path: str):
         features = (features - np.mean(features, axis=0)) / (
             np.std(features, axis=0) + 1e-8
         )
-
-    np.savez_compressed(
-        cache_path,
-        features=features,
-        labels=l,
-        feature_names=np.asarray(feature_names, dtype=np.str_),
-    )
 
     return features, l, feature_names
 

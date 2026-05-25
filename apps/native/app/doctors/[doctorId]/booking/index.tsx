@@ -136,7 +136,7 @@ function PlanCard({
 
   return (
     <Card
-      className={`rounded-xl border-2 p-3 ${isSelected ? "border-primary bg-primary/10" : "border-border bg-background"}`}
+      className={isSelected ? "border-primary bg-primary/10" : "bg-background"}
       onPress={onSelect}
     >
       <View className="mb-1 flex-row items-center justify-between">
@@ -172,6 +172,53 @@ function PlanCard({
               {feature}
             </Text>
           </View>
+        ))}
+      </View>
+    </Card>
+  );
+}
+
+/* ─── Plan Selection Section ───────────────────────────────────────────────── */
+
+function PlanSelection({
+  plans,
+  selectedPlanId,
+  onSelectPlan,
+  colors,
+}: {
+  colors: { foreground: string; mutedForeground: string };
+  onSelectPlan: (planId: string) => void;
+  plans: {
+    description: string | null;
+    durationMinutes: number;
+    features: string | null;
+    id: string;
+    name: string;
+    price: number;
+  }[];
+  selectedPlanId: string | null;
+}) {
+  if (plans.length === 0) {
+    return null;
+  }
+
+  return (
+    <Card className="gap-4">
+      <View className="flex-row items-center gap-2">
+        <DollarSign color={colors.foreground} size={16} strokeWidth={2.5} />
+        <Text className="font-bold font-sans text-foreground text-xs uppercase tracking-wider">
+          Select Plan
+        </Text>
+      </View>
+      <View className="gap-2">
+        {plans.map((plan) => (
+          <PlanCard
+            colors={colors}
+            isSelected={plan.id === selectedPlanId}
+            key={plan.id}
+            onSelect={() => onSelectPlan(plan.id)}
+            plan={plan}
+          />
         ))}
       </View>
     </Card>
@@ -479,7 +526,6 @@ export default function BookingScreen() {
           </View>
         ) : (
           <>
-            {/* Doctor Info — always visible */}
             {doctor && (
               <Card className="gap-4">
                 <View className="flex-row items-center gap-4">
@@ -544,7 +590,6 @@ export default function BookingScreen() {
               </Card>
             )}
 
-            {/* Date Selection */}
             <Card className="gap-4">
               <View className="flex-row items-center gap-2">
                 <Calendar
@@ -582,7 +627,6 @@ export default function BookingScreen() {
               ) : null}
             </Card>
 
-            {/* Time Slots */}
             <Card className="gap-4">
               <View className="flex-row items-center gap-2">
                 <Clock color={colors.foreground} size={16} strokeWidth={2.5} />
@@ -598,43 +642,13 @@ export default function BookingScreen() {
               />
             </Card>
 
-            {/* Plan Selection */}
-            {plans.length > 0 && (
-              <Card className="gap-4">
-                <View className="flex-row items-center gap-2">
-                  <DollarSign
-                    color={colors.foreground}
-                    size={16}
-                    strokeWidth={2.5}
-                  />
-                  <Text className="font-bold font-sans text-foreground text-xs uppercase tracking-wider">
-                    Select Plan
-                  </Text>
-                </View>
-                <View className="gap-2">
-                  {plans.map(
-                    (plan: {
-                      description: string | null;
-                      durationMinutes: number;
-                      features: string | null;
-                      id: string;
-                      name: string;
-                      price: number;
-                    }) => (
-                      <PlanCard
-                        colors={colors}
-                        isSelected={plan.id === selectedPlanId}
-                        key={plan.id}
-                        onSelect={() => setSelectedPlanId(plan.id)}
-                        plan={plan}
-                      />
-                    )
-                  )}
-                </View>
-              </Card>
-            )}
+            <PlanSelection
+              colors={colors}
+              onSelectPlan={setSelectedPlanId}
+              plans={plans}
+              selectedPlanId={selectedPlanId}
+            />
 
-            {/* Summary & Confirm */}
             <Card className="gap-4">
               <View className="flex-row items-center gap-2">
                 <CreditCard

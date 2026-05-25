@@ -43,6 +43,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "28fa14e6-e9a9-4944-ba95-f3026f103d0c"
+      }
+    },
+    "owner": "tenu22"
   }
 }

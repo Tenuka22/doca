@@ -25,8 +25,8 @@ class ModelConfig:
 
 @dataclass(frozen=True)
 class TrainingConfig:
-    sequence_lengths: tuple[int, ...] = (30, 60, 90)
-    epochs: int = 30
+    sequence_lengths: tuple[int, ...] = (30,)
+    epochs: int = 5
     batch_size: int = 128
     export_onnx: bool = True
 

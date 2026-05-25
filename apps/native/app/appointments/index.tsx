@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 import { Calendar, Check, Clock, User, X } from "lucide-react-native";
 import { useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
@@ -40,9 +40,17 @@ function getStatusColor(status: string) {
   return statusColorMap[status] ?? defaultStatusColor;
 }
 
+function StatusBadge({ status }: { status: string }) {
+  const sc = getStatusColor(status);
+  return (
+    <View className={`rounded-full border px-3 py-1 ${sc.bg} ${sc.border}`}>
+      <Text className={`font-bold text-xs ${sc.text}`}>{status}</Text>
+    </View>
+  );
+}
+
 export default function AppointmentsScreen() {
   const colors = useThemeColor();
-  const router = useRouter();
   const { bookingSuccess } = useLocalSearchParams<{
     bookingSuccess?: string;
   }>();
@@ -127,7 +135,6 @@ export default function AppointmentsScreen() {
             </View>
             <View className="flex-row items-center justify-center self-center">
               <Button
-                className="h-8 w-8 rounded-full p-0"
                 icon={<X color={colors.foreground} size={16} />}
                 onPress={() => setShowSuccessBanner(false)}
                 size="sm"
@@ -160,7 +167,6 @@ export default function AppointmentsScreen() {
                   day: "numeric",
                 });
                 const timeLabel = `${startAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })} - ${endAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`;
-                const statusColors = getStatusColor(session.status);
 
                 return (
                   <Card className="gap-3" key={session.id}>
@@ -168,19 +174,10 @@ export default function AppointmentsScreen() {
                       <View className="flex-row items-center gap-2">
                         <User color={colors.foreground} size={16} />
                         <Text className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">
-                          Session
+                          {session.doctor?.displayName ?? "Session"}
                         </Text>
                       </View>
-
-                      <View
-                        className={`rounded-full border px-3 py-1 ${statusColors.bg} ${statusColors.border}`}
-                      >
-                        <Text
-                          className={`font-bold text-xs ${statusColors.text}`}
-                        >
-                          {session.status}
-                        </Text>
-                      </View>
+                      <StatusBadge status={session.status} />
                     </View>
 
                     <View className="gap-2 rounded-xl border border-border/50 bg-muted/5 p-3">
@@ -190,7 +187,6 @@ export default function AppointmentsScreen() {
                           {dateLabel}
                         </Text>
                       </View>
-
                       <View className="flex-row items-center gap-2">
                         <Clock color={colors.foreground} size={14} />
                         <Text className="font-medium font-sans text-foreground text-sm">
@@ -199,9 +195,16 @@ export default function AppointmentsScreen() {
                       </View>
                     </View>
 
-                    <Text className="font-medium font-sans text-muted-foreground text-xs">
-                      Doctor ID: {session.doctorId}
-                    </Text>
+                    {session.plan ? (
+                      <View className="flex-row items-center justify-between rounded-xl border border-border/50 bg-card px-3 py-2">
+                        <Text className="font-bold font-sans text-foreground text-xs uppercase">
+                          {session.plan.name}
+                        </Text>
+                        <Text className="font-black font-sans text-primary text-xs">
+                          ${(session.plan.price / 100).toFixed(2)}
+                        </Text>
+                      </View>
+                    ) : null}
                   </Card>
                 );
               })}

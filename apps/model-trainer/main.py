@@ -1,8 +1,7 @@
 import os
 import sys
-import tempfile
 from collections.abc import Iterable
-from pathlib import Path
+
 
 import numpy as np
 
@@ -11,9 +10,6 @@ from src.data.features import create_sequences
 from src.data.load import load_all_subjects
 from src.evaluate.metrics import plot_correlations
 
-_CACHE_VERSION = "v1"
-_SEQUENCE_CACHE_DIR = Path(tempfile.gettempdir()) / "zen_doc_model_trainer_cache" / "sequences"
-_SEQUENCE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 if hasattr(sys.stdout, "reconfigure"):
@@ -58,12 +54,6 @@ def _prepare_data(
     seq_len: int,
 ) -> tuple[np.ndarray, np.ndarray]:
     subj_items = list(subj_list)
-    subj_ids = "-".join(str(subj_id) for subj_id, _, _, _ in subj_items)
-    cache_path = _SEQUENCE_CACHE_DIR / f"{_CACHE_VERSION}_seq{seq_len}_{subj_ids}.npz"
-    if cache_path.exists():
-        cached = np.load(cache_path, allow_pickle=False)
-        return cached["X"], cached["y"]
-
     all_X, all_y = [], []
     for _, v, l, _ in subj_items:
         X_sub, y_sub = create_sequences(v, l, seq_len)
@@ -76,7 +66,6 @@ def _prepare_data(
 
     X = np.concatenate(all_X).astype(np.float32, copy=False)
     y = np.concatenate(all_y).astype(np.uint8, copy=False)
-    np.savez_compressed(cache_path, X=X, y=y)
     return X, y
 
 

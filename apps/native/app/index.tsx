@@ -1,13 +1,15 @@
 import { useAuth, useClerk } from "@clerk/expo";
 import { Stack } from "expo-router";
-import { ArrowRight, Calendar, Stethoscope } from "lucide-react-native";
+import { Calendar, Stethoscope } from "lucide-react-native";
 import { Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { Screen } from "@/components/ui/screen";
 import { TextLink } from "@/components/ui/text-link";
+import { useThemeColor } from "@/utils/theme";
 
 export default function HomeScreen() {
+  const colors = useThemeColor();
   const { isSignedIn } = useAuth();
   const { signOut } = useClerk();
 
@@ -26,22 +28,20 @@ export default function HomeScreen() {
         </Text>
         {isSignedIn ? (
           <View className="flex-row items-center gap-2">
-            <Button href="/appointments" size="sm" variant="secondary">
-              <View className="flex-row items-center gap-2">
-                <Calendar color="#09090b" size={16} />
-                <Text className="font-bold font-sans text-foreground text-sm">
-                  Appointments
-                </Text>
-              </View>
+            <Button
+              href="/appointments"
+              icon={<Calendar color={colors.foreground} size={16} />}
+              size="sm"
+              variant="secondary"
+            >
+              Appointments
             </Button>
-            <Button href="/doctors" size="sm">
-              <View className="flex-row items-center gap-2">
-                <Stethoscope color="#fafafa" fill="#fafafa" size={16} />
-                <Text className="font-bold font-sans text-primary-foreground text-sm">
-                  Doctors
-                </Text>
-                <ArrowRight color="#fafafa" fill="#fafafa" size={14} />
-              </View>
+            <Button
+              href="/doctors"
+              icon={<Stethoscope color={colors.primaryForeground} size={16} />}
+              size="sm"
+            >
+              Doctors
             </Button>
           </View>
         ) : (
@@ -94,19 +94,10 @@ export default function HomeScreen() {
             </Button>
           ) : (
             <>
-              {/* Primary "Get Started" brick red button with white chevron */}
               <Button className="w-full" href="/sign-up" variant="primary">
-                <View className="flex-row items-center justify-center gap-2 py-0.5">
-                  <Text className="font-bold font-sans text-base text-primary-foreground">
-                    Get Started
-                  </Text>
-                  <Text className="font-bold font-sans text-lg text-primary-foreground leading-none">
-                    {"\u203A"}
-                  </Text>
-                </View>
+                Get Started
               </Button>
 
-              {/* Secondary "Sign In" zinc button */}
               <Button className="w-full" href="/sign-in" variant="secondary">
                 Sign In
               </Button>

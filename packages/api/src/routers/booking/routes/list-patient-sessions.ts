@@ -1,4 +1,4 @@
-import { doctorSessions } from "@zen-doc/db";
+import { doctorPlans, doctorProfiles, doctorSessions } from "@zen-doc/db";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -13,6 +13,43 @@ export const listPatientSessionsRoute = protectedProcedure.handler(
       .where(eq(doctorSessions.patientId, patientId))
       .orderBy(doctorSessions.startAt);
 
-    return { sessions };
+    // Fetch doctor and plan details for each session
+    const enhancedSessions = await Promise.all(
+      sessions.map(async (session) => {
+        const [doctor] = await context.db
+          .select()
+          .from(doctorProfiles)
+          .where(eq(doctorProfiles.userId, session.doctorId))
+          .limit(1);
+
+        const [plan] = session.planId
+          ? await context.db
+              .select()
+              .from(doctorPlans)
+              .where(eq(doctorPlans.id, session.planId))
+              .limit(1)
+          : [null];
+
+        return {
+          ...session,
+          doctor: doctor
+            ? {
+                displayName: doctor.displayName,
+                headline: doctor.headline,
+                location: doctor.location,
+              }
+            : null,
+          plan: plan
+            ? {
+                name: plan.name,
+                price: plan.price,
+                durationMinutes: plan.durationMinutes,
+              }
+            : null,
+        };
+      })
+    );
+
+    return { sessions: enhancedSessions };
   }
 );
