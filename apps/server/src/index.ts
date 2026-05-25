@@ -9,10 +9,9 @@ import {
   createDb,
   doctorScheduleEntries,
   doctorSessions,
-  paymentIntents,
 } from "@zen-doc/db";
 import { env } from "@zen-doc/env/server";
-import { and, eq, inArray, lt, ne } from "drizzle-orm";
+import { and, eq, inArray, lt } from "drizzle-orm";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -83,18 +82,14 @@ async function runCleanup() {
   const db = createDb();
   const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
-  // Find sessions that:
-  // 1. Are older than 10 minutes
-  // 2. Haven't been paid (payoutStatus is 'none', 'pending_payment', or 'failed')
-  // 3. Haven't been confirmed/scheduled (status is 'pending')
+  // Find requested sessions older than 10 mins without being scheduled
   const abandonedSessions = await db
     .select({ id: doctorSessions.id })
     .from(doctorSessions)
     .where(
       and(
         lt(doctorSessions.createdAt, tenMinutesAgo),
-        ne(doctorSessions.payoutStatus, "paid"),
-        eq(doctorSessions.status, "pending")
+        eq(doctorSessions.status, "requested")
       )
     );
 
@@ -102,7 +97,7 @@ async function runCleanup() {
     const sessionIds = abandonedSessions.map((s) => s.id);
     const now = new Date().toISOString();
 
-    // Mark sessions as cancelled instead of deleting
+    // Mark sessions as cancelled
     await db
       .update(doctorSessions)
       .set({
@@ -111,7 +106,7 @@ async function runCleanup() {
       })
       .where(inArray(doctorSessions.id, sessionIds));
 
-    // Free up the schedule slots so others can book them
+    // Free up schedule slots
     await db
       .update(doctorScheduleEntries)
       .set({
@@ -121,16 +116,7 @@ async function runCleanup() {
       })
       .where(inArray(doctorScheduleEntries.sessionId, sessionIds));
 
-    // Cancel the pending payment intents
-    await db
-      .update(paymentIntents)
-      .set({
-        status: "cancelled",
-        updatedAt: now,
-      })
-      .where(inArray(paymentIntents.sessionId, sessionIds));
-
-    console.log(`Cancelled ${abandonedSessions.length} abandoned sessions`);
+    console.log(`Cancelled ${abandonedSessions.length} abandoned requests`);
   }
 
   return abandonedSessions.length;

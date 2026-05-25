@@ -10,6 +10,7 @@ import { hideAsync, preventAutoHideAsync } from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { CreditHeaderButton } from "@/components/ui/credit-header-button";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
 import { orpc, queryClient } from "@/utils/orpc";
 import { StripePaymentProvider } from "@/utils/stripe";
@@ -102,6 +103,7 @@ export default function RootLayout() {
                 },
                 headerTintColor: foreground,
                 headerShadowVisible: false,
+                headerRight: () => <CreditHeaderButton />,
               }}
             >
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />

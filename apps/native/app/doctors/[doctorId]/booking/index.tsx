@@ -3,10 +3,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ArrowLeft,
   Calendar,
-  Check,
   Clock,
-  CreditCard,
-  DollarSign,
   Languages,
   MapPin,
   Sparkles,
@@ -21,6 +18,7 @@ import { Screen } from "@/components/ui/screen";
 import { orpc } from "@/utils/orpc";
 import { usePaymentSheet } from "@/utils/stripe";
 import { useThemeColor } from "@/utils/theme";
+
 
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-US", {
@@ -184,17 +182,12 @@ function PlanSelection({
   plans,
   selectedPlanId,
   onSelectPlan,
-  colors,
 }: {
-  colors: { foreground: string; mutedForeground: string };
   onSelectPlan: (planId: string) => void;
   plans: {
-    description: string | null;
     durationMinutes: number;
-    features: string | null;
     id: string;
     name: string;
-    price: number;
   }[];
   selectedPlanId: string | null;
 }) {
@@ -205,20 +198,30 @@ function PlanSelection({
   return (
     <Card className="gap-4">
       <View className="flex-row items-center gap-2">
-        <DollarSign color={colors.foreground} size={16} strokeWidth={2.5} />
+        <Sparkles color="#000" size={16} strokeWidth={2.5} />
         <Text className="font-bold font-sans text-foreground text-xs uppercase tracking-wider">
           Select Plan
         </Text>
       </View>
       <View className="gap-2">
         {plans.map((plan) => (
-          <PlanCard
-            colors={colors}
-            isSelected={plan.id === selectedPlanId}
+          <Card
+            className={plan.id === selectedPlanId ? "border-primary bg-primary/10" : "bg-background"}
             key={plan.id}
-            onSelect={() => onSelectPlan(plan.id)}
-            plan={plan}
-          />
+            onPress={() => onSelectPlan(plan.id)}
+          >
+            <View className="flex-row items-center justify-between">
+              <Text className="font-black font-sans text-sm text-foreground">
+                {plan.name}
+              </Text>
+              <View className="flex-row items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5">
+                <Clock color="#a22a2a" size={10} strokeWidth={2.5} />
+                <Text className="font-bold font-sans text-primary text-xs">
+                  {plan.durationMinutes} min
+                </Text>
+              </View>
+            </View>
+          </Card>
         ))}
       </View>
     </Card>
@@ -231,7 +234,6 @@ function SummaryContent({
   bookingStep,
   handleBook,
   selectedPlan,
-  selectedPlanId,
   selectedSlotId,
 }: {
   bookingStep: string;
@@ -239,7 +241,6 @@ function SummaryContent({
   selectedPlan:
     | { durationMinutes: number; name: string; price: number }
     | undefined;
-  selectedPlanId: string | null;
   selectedSlotId: string | null;
 }) {
   const colors = useThemeColor();
@@ -259,11 +260,6 @@ function SummaryContent({
             <Text className="font-bold font-sans text-foreground text-xs uppercase tracking-wider">
               {selectedPlan.name}
             </Text>
-            <View className="rounded-full bg-primary/10 px-3 py-0.5">
-              <Text className="font-black font-sans text-primary text-xs">
-                ${(selectedPlan.price / 100).toFixed(2)}
-              </Text>
-            </View>
           </View>
           <View className="flex-row items-center gap-2">
             <Clock color={colors.foreground} size={12} strokeWidth={2.5} />
@@ -274,9 +270,7 @@ function SummaryContent({
         </View>
       ) : null}
       <Button
-        disabled={
-          !(selectedSlotId && selectedPlanId) || bookingStep !== "select"
-        }
+        disabled={!(selectedSlotId) || bookingStep !== "select"}
         onPress={handleBook}
         variant="primary"
       >
@@ -284,11 +278,8 @@ function SummaryContent({
           <ActivityIndicator color="#ffffff" size="small" />
         ) : (
           <View className="flex-row items-center gap-2">
-            <CreditCard color="#ffffff" size={16} />
             <Text className="font-bold font-sans text-primary-foreground text-sm uppercase tracking-wider">
-              {selectedPlan
-                ? `Pay $${(selectedPlan.price / 100).toFixed(2)}`
-                : "Book Appointment"}
+              Book Appointment
             </Text>
           </View>
         )}
@@ -300,14 +291,13 @@ function SummaryContent({
 export default function BookingScreen() {
   const colors = useThemeColor();
   const router = useRouter();
-  const { initPaymentSheet, presentPaymentSheet } = usePaymentSheet();
   const { doctorId } = useLocalSearchParams<{ doctorId?: string }>();
   const id = Array.isArray(doctorId) ? doctorId[0] : doctorId;
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [bookingStep, setBookingStep] = useState<
-    "select" | "processing" | "paying" | "confirming" | "error" | "done"
+    "select" | "processing" | "confirming" | "error" | "done"
   >("select");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -374,57 +364,11 @@ export default function BookingScreen() {
 
       return result;
     },
-    onSuccess: async (result) => {
-      if (result.isFree) {
-        setBookingStep("done");
-        setTimeout(() => {
-          router.replace("/appointments?bookingSuccess=true");
-        }, 1500);
-        return;
-      }
-
-      if (result.clientSecret) {
-        setBookingStep("paying");
-
-        const { error: initError } = await initPaymentSheet({
-          paymentIntentClientSecret: result.clientSecret,
-          merchantDisplayName: "Zen Doc",
-        });
-
-        if (initError) {
-          setErrorMessage(initError.message);
-          setBookingStep("error");
-          return;
-        }
-
-        const { error: presentError } = await presentPaymentSheet();
-
-        if (presentError) {
-          if (presentError.code === "Canceled") {
-            setBookingStep("select");
-          } else {
-            setErrorMessage(presentError.message);
-            setBookingStep("error");
-          }
-          return;
-        }
-
-        setBookingStep("confirming");
-        try {
-          const piId = result.clientSecret.split("_secret_")[0] ?? "";
-          await orpc.confirmBookingPayment.call({
-            sessionId: result.sessionId,
-            paymentIntentId: piId,
-          });
-        } catch {
-          // Webhook will handle it server-side if client call fails
-        }
-
-        setBookingStep("done");
-        setTimeout(() => {
-          router.replace("/appointments?bookingSuccess=true");
-        }, 1500);
-      }
+    onSuccess: async () => {
+      setBookingStep("done");
+      setTimeout(() => {
+        router.replace("/appointments?bookingSuccess=true");
+      }, 1500);
     },
     onError: (err: Error) => {
       setErrorMessage(err.message);
@@ -643,15 +587,18 @@ export default function BookingScreen() {
             </Card>
 
             <PlanSelection
-              colors={colors}
               onSelectPlan={setSelectedPlanId}
-              plans={plans}
+              plans={plans.map((p) => ({
+                durationMinutes: p.durationMinutes,
+                id: p.id,
+                name: p.name,
+              }))}
               selectedPlanId={selectedPlanId}
             />
 
             <Card className="gap-4">
               <View className="flex-row items-center gap-2">
-                <CreditCard
+                <Sparkles
                   color={colors.foreground}
                   size={16}
                   strokeWidth={2.5}
@@ -664,7 +611,6 @@ export default function BookingScreen() {
                 bookingStep={bookingStep}
                 handleBook={handleBook}
                 selectedPlan={selectedPlan}
-                selectedPlanId={selectedPlanId}
                 selectedSlotId={selectedSlotId}
               />
             </Card>

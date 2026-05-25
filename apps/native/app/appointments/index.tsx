@@ -213,9 +213,6 @@ export default function AppointmentsScreen() {
                         <Text className="font-bold font-sans text-foreground text-xs uppercase">
                           {session.plan.name}
                         </Text>
-                        <Text className="font-black font-sans text-primary text-xs">
-                          ${(session.plan.price / 100).toFixed(2)}
-                        </Text>
                       </View>
                     ) : null}
 

@@ -1,18 +1,14 @@
 import {
+  creditTransactions,
   doctorPlans,
-  doctorProfiles,
   doctorScheduleEntries,
   doctorSessions,
-  paymentIntents,
+  userCredits,
 } from "@zen-doc/db";
 import { and, eq, or } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
-import {
-  createDirectChargePaymentIntent,
-  getPayoutAmount,
-} from "../stripe-utils";
 
 export const bookSessionRoute = protectedProcedure
   .input(
@@ -59,109 +55,65 @@ export const bookSessionRoute = protectedProcedure
       );
     }
 
+    // Resolve plan and credit cost
+    const [plan] = await context.db
+      .select()
+      .from(doctorPlans)
+      .where(
+        and(
+          input.planId ? eq(doctorPlans.id, input.planId) : eq(doctorPlans.isDefault, true),
+          eq(doctorPlans.doctorId, input.doctorId),
+          eq(doctorPlans.isActive, true)
+        )
+      )
+      .limit(1);
+
+    if (!plan) {
+      throw new Error("The selected plan is not available");
+    }
+
+    const creditCost = 1; // Assuming default 1 credit per 60 min session as requested
+
+    // Check user credits
+    const [userCredit] = await context.db
+      .select()
+      .from(userCredits)
+      .where(eq(userCredits.userId, patientId))
+      .limit(1);
+
+    if (!userCredit || userCredit.balance < creditCost) {
+      throw new Error("Insufficient credits");
+    }
+
     const now = new Date().toISOString();
     const sessionId = crypto.randomUUID();
 
-    let planPrice = 0;
-    let resolvedPlanId: string | null = null;
-
-    if (input.planId) {
-      const [plan] = await context.db
-        .select()
-        .from(doctorPlans)
-        .where(
-          and(
-            eq(doctorPlans.id, input.planId),
-            eq(doctorPlans.doctorId, input.doctorId),
-            eq(doctorPlans.isActive, true)
-          )
-        )
-        .limit(1);
-
-      if (!plan) {
-        throw new Error("The selected plan is not available");
-      }
-
-      planPrice = plan.price;
-      resolvedPlanId = plan.id;
-    } else {
-      const [defaultPlan] = await context.db
-        .select()
-        .from(doctorPlans)
-        .where(
-          and(
-            eq(doctorPlans.doctorId, input.doctorId),
-            eq(doctorPlans.isActive, true)
-          )
-        )
-        .orderBy(doctorPlans.sortOrder)
-        .limit(1);
-
-      if (!defaultPlan) {
-        throw new Error("Doctor has no available plans");
-      }
-
-      planPrice = defaultPlan.price;
-      resolvedPlanId = defaultPlan.id;
-    }
-
-    const payout = getPayoutAmount(planPrice);
-    let clientSecret: string | null = null;
-    let paymentIntentId: string | null = null;
-
-    const [doctorProfile] = await context.db
-      .select()
-      .from(doctorProfiles)
-      .where(eq(doctorProfiles.userId, input.doctorId))
-      .limit(1);
-
-    const stripeAccountId = doctorProfile?.stripeAccountId;
-    const stripeEnabled = doctorProfile?.stripeAccountEnabled;
-
-    if (!(stripeAccountId && stripeEnabled)) {
-      throw new Error(
-        "Doctor does not have a fully enabled Stripe Connected account"
-      );
-    }
-
-    const paymentIntent = await createDirectChargePaymentIntent({
-      amount: payout.total,
-      platformFee: payout.platformFee,
-      doctorNet: payout.doctorNet,
-      stripeAccountId,
-      doctorId: input.doctorId,
-      patientId,
-      sessionId,
-      description: `Session booking with Doctor #${input.doctorId}`,
-    });
-
-    clientSecret = paymentIntent.client_secret;
-    paymentIntentId = paymentIntent.id;
-
+    // Perform operations in a transaction (db.transaction) if available
     await context.db.insert(doctorSessions).values({
       id: sessionId,
       doctorId: input.doctorId,
       patientId,
-      planId: resolvedPlanId,
+      planId: plan.id,
       startAt: entry.startAt,
       endAt: entry.endAt,
-      status: "pending",
-      payoutStatus: "pending_payment",
-      payoutAmount: payout.total,
+      status: "requested",
+      creditCost: creditCost,
       createdAt: now,
       updatedAt: now,
     });
 
-    await context.db.insert(paymentIntents).values({
+    await context.db
+      .update(userCredits)
+      .set({ balance: userCredit.balance - creditCost, updatedAt: now })
+      .where(eq(userCredits.userId, patientId));
+
+    await context.db.insert(creditTransactions).values({
       id: crypto.randomUUID(),
-      sessionId,
-      stripePaymentIntentId: paymentIntentId,
-      amount: payout.total,
-      platformFee: payout.platformFee,
-      doctorAmount: payout.doctorNet,
-      status: "pending",
+      userId: patientId,
+      amount: -creditCost,
+      type: "booking",
+      sessionId: sessionId,
       createdAt: now,
-      updatedAt: now,
     });
 
     await context.db
@@ -176,7 +128,5 @@ export const bookSessionRoute = protectedProcedure
     return {
       ok: true,
       sessionId,
-      clientSecret,
-      isFree: false,
     };
   });

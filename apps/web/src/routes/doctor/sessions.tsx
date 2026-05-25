@@ -43,14 +43,26 @@ export const Route = createFileRoute("/doctor/sessions")({
 });
 
 function SessionStatusBadge({ status }: { status: string }) {
-  if (status === "scheduled") {
+  if (status === "requested") {
     return (
       <Badge
         className="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 dark:text-amber-400"
         variant="outline"
       >
         <ClockIcon className="mr-1 h-3 w-3" />
-        Pending
+        Requested
+      </Badge>
+    );
+  }
+
+  if (status === "scheduled") {
+    return (
+      <Badge
+        className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"
+        variant="outline"
+      >
+        <CheckCircleIcon className="mr-1 h-3 w-3" />
+        Scheduled
       </Badge>
     );
   }
@@ -62,7 +74,7 @@ function SessionStatusBadge({ status }: { status: string }) {
         variant="outline"
       >
         <CheckCircleIcon className="mr-1 h-3 w-3" />
-        Confirmed
+        Attended
       </Badge>
     );
   }
@@ -73,7 +85,7 @@ function SessionStatusBadge({ status }: { status: string }) {
       variant="outline"
     >
       <XCircleIcon className="mr-1 h-3 w-3" />
-      Cancelled
+      {status === "declined" ? "Declined" : "Cancelled"}
     </Badge>
   );
 }
@@ -112,7 +124,7 @@ function DoctorSessionsRoute() {
     orpc.cancelSession.mutationOptions({
       onSuccess: async () => {
         await sessionsQuery.refetch();
-        toast.success("Session cancelled, patient refunded");
+        toast.success("Session cancelled, credits refunded");
         setCancelTarget(null);
       },
       onError: (error) => {
@@ -152,8 +164,7 @@ function DoctorSessionsRoute() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <p className="text-muted-foreground text-sm">
-                  No sessions yet. Patients will appear here when they book your
-                  available slots.
+                  No sessions yet.
                 </p>
               </CardContent>
             </Card>
@@ -190,26 +201,16 @@ function DoctorSessionsRoute() {
                       <div className="space-y-1 text-sm">
                         <p>
                           <span className="text-muted-foreground">
-                            Patient:{" "}
+                            Patient ID:{" "}
                           </span>
                           <span className="font-medium">
                             {session.patientId.slice(0, 12)}...
                           </span>
                         </p>
-                        {session.payoutAmount ? (
-                          <p>
-                            <span className="text-muted-foreground">
-                              Amount:{" "}
-                            </span>
-                            <span className="font-medium">
-                              ${(session.payoutAmount / 100).toFixed(2)}
-                            </span>
-                          </p>
-                        ) : null}
                       </div>
 
                       <div className="flex gap-2">
-                        {session.status === "scheduled" ? (
+                        {session.status === "scheduled" && (
                           <>
                           <SessionJoinButton
                             endAt={session.endAt}
@@ -240,6 +241,9 @@ function DoctorSessionsRoute() {
                               )}
                               Confirm Attendance
                             </Button>
+                          </>
+                        )}
+                        {session.status === "requested" || session.status === "scheduled" ? (
                             <Button
                               disabled={cancelSession.isPending}
                               onClick={() => setCancelTarget(session.id)}
@@ -247,9 +251,8 @@ function DoctorSessionsRoute() {
                               variant="outline"
                             >
                               <BanIcon className="mr-1 h-3 w-3" />
-                              Cancel
+                              {session.status === "requested" ? "Decline" : "Cancel"}
                             </Button>
-                          </>
                         ) : null}
                       </div>
                     </div>
@@ -267,15 +270,14 @@ function DoctorSessionsRoute() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel this session?</AlertDialogTitle>
+            <AlertDialogTitle>Action required</AlertDialogTitle>
             <AlertDialogDescription>
-              The patient will receive a full refund. This action cannot be
-              undone.
+              This will cancel the session and refund the patient's credits.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setCancelTarget(null)}>
-              Keep Session
+              Back
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
@@ -284,7 +286,7 @@ function DoctorSessionsRoute() {
                 }
               }}
             >
-              Cancel Session
+              Confirm
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

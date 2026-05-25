@@ -1,76 +1,71 @@
-import { env } from "@zen-doc/env/server";
-import type { Context } from "hono";
 import { Hono } from "hono";
+import { env } from "@zen-doc/env/server";
 import Stripe from "stripe";
-import { handleChargeRefunded } from "./charge-refunded";
-import { handleDisputeClosed } from "./dispute-closed";
-import { handleDisputeCreated } from "./dispute-created";
-import { handlePaymentIntentFailed } from "./payment-intent-failed";
-import { handlePaymentIntentSucceeded } from "./payment-intent-succeeded";
-
-let stripeInstance: Stripe | null = null;
-
-function getStripe(): Stripe {
-  if (!stripeInstance) {
-    stripeInstance = new Stripe(env.STRIPE_SECRET_KEY);
-  }
-  return stripeInstance;
-}
+import { createDb, userCredits, creditTransactions } from "@zen-doc/db";
+import { eq } from "drizzle-orm";
 
 export const stripeApp = new Hono();
+const stripe = new Stripe(env.STRIPE_SECRET_KEY);
+const db = createDb();
 
-stripeApp.post("/", async (c: Context) => {
-  const sig = c.req.header("stripe-signature");
-  const rawBody = await c.req.text();
-
-  if (!sig) {
-    return c.json({ error: "Missing signature" }, 401);
+stripeApp.post("/", async (c) => {
+  const signature = c.req.header("stripe-signature");
+  if (!signature) {
+    return c.text("Missing signature", 400);
   }
 
-  const stripe = getStripe();
-
+  const body = await c.req.text();
   let event: Stripe.Event;
 
   try {
-    event = await stripe.webhooks.constructEventAsync(
-      rawBody,
-      sig,
+    event = stripe.webhooks.constructEvent(
+      body,
+      signature,
       env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    console.error("Signature verification failed:", err);
-    return c.json({ error: "Invalid signature" }, 401);
+    console.error(`Webhook signature verification failed.`, err);
+    return c.text("Webhook Error", 400);
   }
 
-  switch (event.type) {
-    case "payment_intent.succeeded": {
-      await handlePaymentIntentSucceeded(c, event);
-      break;
-    }
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const userId = session.metadata?.userId;
+    const creditsToAdd = parseInt(session.metadata?.credits ?? "0", 10);
 
-    case "payment_intent.payment_failed": {
-      await handlePaymentIntentFailed(c, event);
-      break;
-    }
+    if (userId && creditsToAdd > 0) {
+      await db.transaction(async (tx) => {
+        const [userCredit] = await tx
+          .select()
+          .from(userCredits)
+          .where(eq(userCredits.userId, userId))
+          .limit(1);
 
-    case "charge.refunded": {
-      await handleChargeRefunded(c, event);
-      break;
-    }
+        if (userCredit) {
+          await tx
+            .update(userCredits)
+            .set({
+              balance: userCredit.balance + creditsToAdd,
+              updatedAt: new Date().toISOString(),
+            })
+            .where(eq(userCredits.userId, userId));
+        } else {
+          await tx.insert(userCredits).values({
+            userId,
+            balance: creditsToAdd,
+          });
+        }
 
-    case "charge.dispute.created": {
-      await handleDisputeCreated(c, event);
-      break;
+        await tx.insert(creditTransactions).values({
+          id: crypto.randomUUID(),
+          userId,
+          amount: creditsToAdd,
+          type: "purchase",
+          createdAt: new Date().toISOString(),
+        });
+      });
     }
-
-    case "charge.dispute.closed": {
-      await handleDisputeClosed(c, event);
-      break;
-    }
-
-    default:
-      break;
   }
 
-  return c.json({ received: true });
+  return c.text("OK");
 });

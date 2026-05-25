@@ -1,6 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { TAX_RATE } from "@zen-doc/pricing";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,11 +58,11 @@ const defaultFeatures = [
   "Session notes included",
 ];
 
-function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
+function formatCreditCost(credits: number): string {
+  return `${credits} ${credits === 1 ? "credit" : "credits"}`;
 }
 
-function DollarInput({
+function CreditInput({
   value,
   onChange,
   id,
@@ -72,45 +71,23 @@ function DollarInput({
   onChange: (value: string) => void;
   id: string;
 }) {
-  const dollars = Number(value) || 0;
-  const cents = Math.round(dollars * 100);
-  const tax = Math.round(cents * TAX_RATE);
-  const total = cents + tax;
-
   return (
     <div className="grid gap-2">
-      <Label htmlFor={id}>Session Price ($)</Label>
-      <div className="relative">
-        <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground">
-          $
-        </span>
-        <Input
-          className="pl-7"
-          id={id}
-          min={1}
-          onChange={(e) => {
-            const raw = e.target.value.replace(/[^0-9]/g, "");
-            onChange(raw);
-          }}
-          placeholder="0"
-          type="text"
-          value={value}
-        />
-      </div>
-      {dollars > 0 ? (
-        <div className="space-y-0.5 text-muted-foreground text-xs">
-          <p>
-            + {formatPrice(tax)} fee ({TAX_RATE * 100}%)
-          </p>
-          <p className="font-medium text-foreground">
-            Patient total: {formatPrice(total)}
-          </p>
-        </div>
-      ) : (
-        <p className="text-muted-foreground text-xs">
-          Enter a price to see the {TAX_RATE * 100}% fee breakdown
-        </p>
-      )}
+      <Label htmlFor={id}>Credit Cost</Label>
+      <Input
+        id={id}
+        min={1}
+        onChange={(e) => {
+          const raw = e.target.value.replace(/[^0-9]/g, "");
+          onChange(raw);
+        }}
+        placeholder="1"
+        type="number"
+        value={value}
+      />
+      <p className="text-muted-foreground text-xs">
+        Set the number of credits required for this session plan.
+      </p>
     </div>
   );
 }
@@ -285,9 +262,9 @@ function DoctorPlansRoute() {
 
   function isValid(): boolean {
     const dur = Number(durationMinutes);
-    const priceCents = Math.round(Number(price) * 100);
+    const credits = Number(price);
     return (
-      name.trim().length > 0 && priceCents >= 100 && dur >= 60 && dur <= 360
+      name.trim().length > 0 && credits >= 1 && dur >= 60 && dur <= 360
     );
   }
 
@@ -299,7 +276,7 @@ function DoctorPlansRoute() {
     createPlan.mutate({
       name,
       description: description || undefined,
-      price: Math.round(Number(price) * 100),
+      price: Number(price), // Treating price as credits
       durationMinutes: Number(durationMinutes),
       features: features.filter(Boolean),
     });
@@ -308,7 +285,7 @@ function DoctorPlansRoute() {
   function handleEdit(plan: DoctorPlan) {
     setName(plan.name);
     setDescription(plan.description ?? "");
-    setPrice(String(plan.price / 100));
+    setPrice(String(plan.price));
     setDurationMinutes(String(plan.durationMinutes));
     setFeatures(plan.features ? (JSON.parse(plan.features) as string[]) : []);
     setEditTarget(plan);
@@ -323,7 +300,7 @@ function DoctorPlansRoute() {
       id: editTarget.id,
       name,
       description: description || null,
-      price: Math.round(Number(price) * 100),
+      price: Number(price),
       durationMinutes: Number(durationMinutes),
       features: features.filter(Boolean),
     });
@@ -337,8 +314,7 @@ function DoctorPlansRoute() {
             Session Plans
           </h1>
           <p className="text-muted-foreground text-sm">
-            Define your session offerings and pricing. The default plan is
-            required; you can create as many custom plans as you like.
+            Define your session offerings and credit costs.
           </p>
         </div>
 
@@ -352,10 +328,6 @@ function DoctorPlansRoute() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Session Plan</DialogTitle>
-              <DialogDescription>
-                Set your session price. A {TAX_RATE * 100}% service fee is added
-                at checkout.
-              </DialogDescription>
             </DialogHeader>
 
             <div className="grid gap-4 py-4">
@@ -364,7 +336,7 @@ function DoctorPlansRoute() {
                 <Input
                   id="plan-name"
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Deep Session"
+                  placeholder="e.g. Standard Session"
                   value={name}
                 />
               </div>
@@ -379,7 +351,7 @@ function DoctorPlansRoute() {
                 />
               </div>
 
-              <DollarInput id="plan-price" onChange={setPrice} value={price} />
+              <CreditInput id="plan-price" onChange={setPrice} value={price} />
 
               <DurationInput
                 id="plan-duration"
@@ -408,7 +380,6 @@ function DoctorPlansRoute() {
         </Dialog>
       </div>
 
-      {/* Edit Dialog */}
       <Dialog
         onOpenChange={(open) => {
           if (!open) {
@@ -420,9 +391,6 @@ function DoctorPlansRoute() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Plan</DialogTitle>
-            <DialogDescription>
-              Update your session plan details.
-            </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
@@ -446,7 +414,7 @@ function DoctorPlansRoute() {
               />
             </div>
 
-            <DollarInput id="edit-price" onChange={setPrice} value={price} />
+            <CreditInput id="edit-price" onChange={setPrice} value={price} />
 
             <DurationInput
               id="edit-duration"
@@ -481,10 +449,7 @@ function DoctorPlansRoute() {
       ) : plans.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center gap-2 py-12">
-            <p className="text-muted-foreground text-sm">
-              No plans yet. Create your first session plan to start offering
-              bookings.
-            </p>
+            <p className="text-muted-foreground text-sm">No plans yet.</p>
           </CardContent>
         </Card>
       ) : (
@@ -493,8 +458,6 @@ function DoctorPlansRoute() {
             const parsedFeatures: string[] = plan.features
               ? (JSON.parse(plan.features) as string[])
               : [];
-            const taxAmount = Math.round(plan.price * TAX_RATE);
-            const totalPrice = plan.price + taxAmount;
 
             return (
               <Card
@@ -508,31 +471,20 @@ function DoctorPlansRoute() {
                 {plan.isDefault ? (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <Badge className="bg-primary px-4 text-primary-foreground text-xs">
-                      Required
+                      Default
                     </Badge>
                   </div>
                 ) : null}
 
                 <CardHeader className="pb-4 text-center">
                   <CardTitle className="text-xl">{plan.name}</CardTitle>
-                  {plan.description ? (
-                    <CardDescription>{plan.description}</CardDescription>
-                  ) : null}
                 </CardHeader>
 
                 <CardContent className="flex flex-1 flex-col gap-6">
                   <div className="text-center">
                     <span className="font-bold text-4xl text-foreground">
-                      {formatPrice(plan.price)}
+                      {formatCreditCost(plan.price)}
                     </span>
-                    <div className="mt-1 space-y-0.5">
-                      <div className="text-muted-foreground text-xs">
-                        + {formatPrice(taxAmount)} fee ({TAX_RATE * 100}%)
-                      </div>
-                      <div className="font-medium text-muted-foreground text-sm">
-                        Total: {formatPrice(totalPrice)}
-                      </div>
-                    </div>
                     <div className="mt-2">
                       <Badge className="bg-muted" variant="outline">
                         {plan.durationMinutes} min
@@ -543,7 +495,7 @@ function DoctorPlansRoute() {
                   {parsedFeatures.length > 0 ? (
                     <div className="flex-1 space-y-2">
                       <p className="font-semibold text-foreground text-xs uppercase tracking-wide">
-                        What's included
+                        Included
                       </p>
                       {parsedFeatures.map((feature) => (
                         <div className="flex items-start gap-2" key={feature}>
@@ -573,7 +525,7 @@ function DoctorPlansRoute() {
                         size="sm"
                         variant="ghost"
                       >
-                        <X className="h-4 w-4 text-muted-foreground hover:text-rose-500" />
+                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-rose-500" />
                       </Button>
                     )}
                   </div>
@@ -581,49 +533,8 @@ function DoctorPlansRoute() {
               </Card>
             );
           })}
-
-          <Card
-            className="flex min-h-[320px] cursor-pointer items-center justify-center border-2 border-dashed transition-colors hover:border-primary/50 hover:bg-muted/20"
-            onClick={() => setShowCreate(true)}
-            onKeyDown={(e) => e.key === "Enter" && setShowCreate(true)}
-            role="button"
-            tabIndex={0}
-          >
-            <div className="flex flex-col items-center gap-2 text-muted-foreground">
-              <PlusIcon className="h-8 w-8" />
-              <span className="font-medium text-sm">Add another plan</span>
-            </div>
-          </Card>
         </div>
       )}
-
-      <AlertDialog
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
-        open={!!deleteTarget}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this plan?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This plan will be deactivated. Existing bookings are not affected.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteTarget(null)}>
-              Keep Plan
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (deleteTarget) {
-                  deletePlan.mutate({ id: deleteTarget });
-                }
-              }}
-            >
-              Delete Plan
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

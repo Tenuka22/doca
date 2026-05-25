@@ -1,13 +1,13 @@
 import {
+  creditTransactions,
   doctorScheduleEntries,
   doctorSessions,
-  paymentIntents,
+  userCredits,
 } from "@zen-doc/db";
-import { cancelSessionSchema } from "@zen-doc/db/schemas-types";
 import { eq } from "drizzle-orm";
+import { cancelSessionSchema } from "@zen-doc/db/schemas-types";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
-import { refundPaymentIntent } from "../stripe-utils";
 
 export const cancelSessionRoute = protectedProcedure
   .input(cancelSessionSchema)
@@ -31,7 +31,7 @@ export const cancelSessionRoute = protectedProcedure
       throw new Error("Only the doctor can cancel this session");
     }
 
-    if (session.status !== "pending" && session.status !== "scheduled") {
+    if (session.status !== "requested" && session.status !== "scheduled") {
       throw new Error(
         "Cannot cancel a session that has already been attended or cancelled"
       );
@@ -39,6 +39,7 @@ export const cancelSessionRoute = protectedProcedure
 
     const now = new Date().toISOString();
 
+    // 1. Mark session as cancelled
     await context.db
       .update(doctorSessions)
       .set({
@@ -47,6 +48,33 @@ export const cancelSessionRoute = protectedProcedure
       })
       .where(eq(doctorSessions.id, input.sessionId));
 
+    // 2. Return reserved credits to the patient
+    const [userCredit] = await context.db
+      .select()
+      .from(userCredits)
+      .where(eq(userCredits.userId, session.patientId))
+      .limit(1);
+
+    if (userCredit) {
+      await context.db
+        .update(userCredits)
+        .set({
+          balance: userCredit.balance + session.creditCost,
+          updatedAt: now,
+        })
+        .where(eq(userCredits.userId, session.patientId));
+
+      await context.db.insert(creditTransactions).values({
+        id: crypto.randomUUID(),
+        userId: session.patientId,
+        amount: session.creditCost,
+        type: "refund",
+        sessionId: session.id,
+        createdAt: now,
+      });
+    }
+
+    // 3. Open up the schedule slot again
     const [scheduleEntry] = await context.db
       .select()
       .from(doctorScheduleEntries)
@@ -62,50 +90,6 @@ export const cancelSessionRoute = protectedProcedure
           updatedAt: now,
         })
         .where(eq(doctorScheduleEntries.id, scheduleEntry.id));
-    }
-
-    const [paymentRecord] = await context.db
-      .select()
-      .from(paymentIntents)
-      .where(eq(paymentIntents.sessionId, input.sessionId))
-      .limit(1);
-
-    if (
-      paymentRecord?.stripePaymentIntentId &&
-      paymentRecord.status === "succeeded"
-    ) {
-      try {
-        await refundPaymentIntent(paymentRecord.stripePaymentIntentId);
-
-        await context.db
-          .update(paymentIntents)
-          .set({
-            status: "refunded",
-            updatedAt: now,
-          })
-          .where(eq(paymentIntents.id, paymentRecord.id));
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        throw new Error(`Failed to refund payment: ${msg}`);
-      }
-    } else if (
-      paymentRecord?.status === "pending" &&
-      paymentRecord.stripePaymentIntentId
-    ) {
-      try {
-        const stripe = (await import("../stripe-utils")).getStripe();
-        await stripe.paymentIntents.cancel(paymentRecord.stripePaymentIntentId);
-
-        await context.db
-          .update(paymentIntents)
-          .set({
-            status: "cancelled",
-            updatedAt: now,
-          })
-          .where(eq(paymentIntents.id, paymentRecord.id));
-      } catch {
-        // Payment intent may already have been canceled
-      }
     }
 
     return { ok: true };

@@ -218,6 +218,7 @@ function BackButton() {
         }
         variant="secondary"
       >
+
         BACK
       </Button>
     </View>
@@ -233,12 +234,12 @@ function ProfileHeader({
   yearsOfExperience,
 }: {
   profile: {
-    displayName?: string;
-    headline?: string;
-    permanent?: boolean;
-    location?: string;
-    stripeAccountEnabled?: boolean;
-    experienceStartYear?: number;
+    displayName?: string | null;
+    headline?: string | null;
+    permanent?: boolean | null;
+    location?: string | null;
+    stripeAccountEnabled?: boolean | null;
+    experienceStartYear?: number | null;
   };
   portraitPreviewUrl: string | null;
   initials: string;

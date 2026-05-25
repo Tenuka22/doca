@@ -2,6 +2,8 @@ import { env } from "@zen-doc/env/server";
 import { drizzle } from "drizzle-orm/d1";
 
 import {
+  type CreditTransaction as CreditTransactionSchema,
+  creditTransactions as creditTransactionsTable,
   type DoctorEducationEntry as DoctorEducationEntrySchema,
   type DoctorFile as DoctorFileSchema,
   type DoctorPlan as DoctorPlanSchema,
@@ -17,9 +19,9 @@ import {
   type GuardianProfile as GuardianProfileSchema,
   guardianProfiles as guardianProfilesTable,
   type PatientProfile as PatientProfileSchema,
-  type PaymentIntent as PaymentIntentSchema,
   patientProfiles as patientProfilesTable,
-  paymentIntents as paymentIntentsTable,
+  type UserCredit as UserCreditSchema,
+  userCredits as userCreditsTable,
 } from "./schema";
 
 export {
@@ -40,8 +42,10 @@ export const doctorSessions = doctorSessionsTable;
 export const doctorScheduleEntries = doctorScheduleEntriesTable;
 export const patientProfiles = patientProfilesTable;
 export const guardianProfiles = guardianProfilesTable;
-export const paymentIntents = paymentIntentsTable;
 export const doctorPlans = doctorPlansTable;
+export const userCredits = userCreditsTable;
+export const creditTransactions = creditTransactionsTable;
+
 export type DoctorProfile = DoctorProfileSchema;
 export type DoctorFile = DoctorFileSchema;
 export type DoctorSession = DoctorSessionSchema;
@@ -49,8 +53,9 @@ export type DoctorScheduleEntry = DoctorScheduleEntrySchema;
 export type DoctorEducationEntry = DoctorEducationEntrySchema;
 export type PatientProfile = PatientProfileSchema;
 export type GuardianProfile = GuardianProfileSchema;
-export type PaymentIntent = PaymentIntentSchema;
 export type DoctorPlan = DoctorPlanSchema;
+export type UserCredit = UserCreditSchema;
+export type CreditTransaction = CreditTransactionSchema;
 
 export function createDb() {
   return drizzle(env.DB, {
@@ -61,8 +66,9 @@ export function createDb() {
       doctorScheduleEntries,
       patientProfiles,
       guardianProfiles,
-      paymentIntents,
       doctorPlans,
+      userCredits,
+      creditTransactions,
     },
   });
 }

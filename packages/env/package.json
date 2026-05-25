@@ -16,7 +16,6 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@zen-doc/config": "workspace:*",
-    "@zen-doc/infra": "workspace:*",
     "typescript": "^6"
   }
 }
