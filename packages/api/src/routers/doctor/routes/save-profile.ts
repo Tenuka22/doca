@@ -12,8 +12,8 @@ import { doctorProfileInputSchema } from "@zen-doc/db/schemas-types";
 import {
   BASIC_PLAN_DURATION_MINUTES,
   BASIC_PLAN_FEATURES,
+  BASIC_PLAN_CREDITS,
   BASIC_PLAN_NAME,
-  BASIC_PLAN_PRICE_CENTS,
 } from "@zen-doc/pricing";
 import { and, eq } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
@@ -124,7 +124,7 @@ export const saveDoctorProfileRoute = protectedProcedure
         doctorId: userId,
         name: BASIC_PLAN_NAME,
         description: "Standard consultation session",
-        price: BASIC_PLAN_PRICE_CENTS,
+        price: BASIC_PLAN_CREDITS,
         durationMinutes: BASIC_PLAN_DURATION_MINUTES,
         features: JSON.stringify(BASIC_PLAN_FEATURES),
         isActive: true,

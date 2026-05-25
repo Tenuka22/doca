@@ -2,8 +2,8 @@ import { doctorPlans, doctorProfiles } from "@zen-doc/db";
 import {
   BASIC_PLAN_DURATION_MINUTES,
   BASIC_PLAN_FEATURES,
+  BASIC_PLAN_CREDITS,
   BASIC_PLAN_NAME,
-  BASIC_PLAN_PRICE_CENTS,
 } from "@zen-doc/pricing";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
@@ -54,7 +54,7 @@ export const adminApproveDoctorRoute = protectedProcedure
         doctorId: input.userId,
         name: BASIC_PLAN_NAME,
         description: "Standard consultation session",
-        price: BASIC_PLAN_PRICE_CENTS,
+        price: BASIC_PLAN_CREDITS,
         durationMinutes: BASIC_PLAN_DURATION_MINUTES,
         features: JSON.stringify(BASIC_PLAN_FEATURES),
         isActive: true,
