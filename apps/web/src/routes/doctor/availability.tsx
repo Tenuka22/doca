@@ -10,11 +10,6 @@ import {
 } from "@zen-doc/ui/components/card";
 import { Label } from "@zen-doc/ui/components/label";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@zen-doc/ui/components/popover";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -22,12 +17,7 @@ import {
   SelectValue,
 } from "@zen-doc/ui/components/select";
 import { Switch } from "@zen-doc/ui/components/switch";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@zen-doc/ui/components/tooltip";
-import { Clock, Loader2, PlusIcon, Trash2 } from "lucide-react";
+import { Clock, Loader2, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { orpc } from "@/utils/orpc";
@@ -45,7 +35,6 @@ const DAYS = [
   "Friday",
   "Saturday",
 ];
-const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
   const h = Math.floor(i / 2);
@@ -61,193 +50,14 @@ interface AvailabilitySlot {
   startTime: string;
 }
 
-function DayCard({
-  dayOfWeek,
-  dayName,
-  slots,
-  onAddSlot,
-  onRemoveSlot,
-  onUpdateSlot,
-  onToggleDay,
-}: {
-  dayOfWeek: number;
-  dayName: string;
-  slots: AvailabilitySlot[];
-  onAddSlot: (dayOfWeek: number) => void;
-  onRemoveSlot: (index: number) => void;
-  onUpdateSlot: (
-    index: number,
-    field: keyof AvailabilitySlot,
-    value: unknown
-  ) => void;
-  onToggleDay: (dayOfWeek: number, isAvailable: boolean) => void;
-}) {
-  const daySlots = slots.filter((s) => s.dayOfWeek === dayOfWeek);
-  const isAvailable =
-    daySlots.length > 0 && daySlots.some((s) => s.isAvailable);
-  const totalHours = daySlots.reduce((acc, slot) => {
-    const start = Number.parseInt(slot.startTime.split(":")[0]);
-    const end = Number.parseInt(slot.endTime.split(":")[0]);
-    const startMin = Number.parseInt(slot.startTime.split(":")[1]);
-    const endMin = Number.parseInt(slot.endTime.split(":")[1]);
-    return acc + (end - start) + (endMin - startMin) / 60;
-  }, 0);
+const timeToMinutes = (time: string) => {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+};
 
-  return (
-    <Card className="flex flex-col border-border/80 bg-gradient-to-br from-card to-card/50 shadow-sm backdrop-blur-md transition-all hover:shadow-md">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div>
-              <CardTitle className="text-base">{dayName}</CardTitle>
-              <p className="text-muted-foreground text-xs">
-                {daySlots.length === 0 ? "Off" : `${totalHours.toFixed(1)}h`}
-              </p>
-            </div>
-          </div>
-          <Badge
-            className={
-              isAvailable
-                ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"
-                : "bg-muted text-muted-foreground"
-            }
-            variant="outline"
-          >
-            {isAvailable ? "Available" : "Off"}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-3">
-        {daySlots.length === 0 ? (
-          <p className="text-muted-foreground text-xs">No hours set</p>
-        ) : (
-          <div className="space-y-2">
-            {daySlots.map((slot, idx) => {
-              const slotIndex = slots.indexOf(slot);
-              return (
-                <div
-                  className="flex items-center justify-between rounded-md border border-border/50 bg-muted/30 px-2.5 py-1.5 text-xs"
-                  key={`${slot.startTime}-${slot.endTime}-${idx}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="h-3 w-3 text-muted-foreground" />
-                    <span className="font-medium">
-                      {slot.startTime} – {slot.endTime}
-                    </span>
-                  </div>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        className="h-5 w-5"
-                        onClick={() => onRemoveSlot(slotIndex)}
-                        size="icon"
-                        variant="ghost"
-                      >
-                        <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="text-xs" side="left">
-                      Remove slot
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="mt-auto flex flex-col gap-2 pt-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button className="w-full text-xs" size="sm" variant="outline">
-                <PlusIcon className="mr-1 h-3 w-3" />
-                Add Time
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-64">
-              <AddSlotForm
-                dayOfWeek={dayOfWeek}
-                 onAdd={(start, end) => {
-                   onAddSlot(dayOfWeek);
-                   const newSlot = slots.at(-1);
-                   if (newSlot && newSlot.dayOfWeek === dayOfWeek) {
-                     const newIdx = slots.length - 1;
-                     onUpdateSlot(newIdx, "startTime", start);
-                     onUpdateSlot(newIdx, "endTime", end);
-                   }
-                 }}
-              />
-            </PopoverContent>
-          </Popover>
-
-          <div className="flex items-center gap-2 rounded-md border border-border/50 bg-muted/30 px-2.5 py-1.5">
-            <Switch
-              checked={isAvailable}
-              className="h-4 w-7"
-              onCheckedChange={(checked) => onToggleDay(dayOfWeek, checked)}
-            />
-            <Label className="flex-1 cursor-pointer text-muted-foreground text-xs">
-              {isAvailable ? "Working" : "Day off"}
-            </Label>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function AddSlotForm({
-  dayOfWeek,
-  onAdd,
-}: {
-  dayOfWeek: number;
-  onAdd: (start: string, end: string) => void;
-}) {
-  const [start, setStart] = useState("09:00");
-  const [end, setEnd] = useState("17:00");
-
-  return (
-    <div className="space-y-3">
-      <div className="space-y-1.5">
-        <Label className="text-xs">Start Time</Label>
-        <Select onValueChange={setStart} value={start}>
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {TIME_OPTIONS.map((t) => (
-              <SelectItem key={t} value={t}>
-                {t}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-1.5">
-        <Label className="text-xs">End Time</Label>
-        <Select onValueChange={setEnd} value={end}>
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {TIME_OPTIONS.map((t) => (
-              <SelectItem key={t} value={t}>
-                {t}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <Button
-        className="w-full text-xs"
-        onClick={() => onAdd(start, end)}
-        size="sm"
-      >
-        Add Slot
-      </Button>
-    </div>
-  );
-}
+const getHoursForSlot = (slot: AvailabilitySlot) => {
+  return (timeToMinutes(slot.endTime) - timeToMinutes(slot.startTime)) / 60;
+};
 
 function DoctorAvailabilityRoute() {
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
@@ -264,103 +74,155 @@ function DoctorAvailabilityRoute() {
   });
 
   useEffect(() => {
-    if (
-      availabilityQuery.data?.slots &&
-      availabilityQuery.data.slots.length > 0
-    ) {
-      setSlots(availabilityQuery.data.slots as AvailabilitySlot[]);
-      setHasChanges(false);
-    }
-  }, [availabilityQuery.data]);
+    if (availabilityQuery.data?.slots) {
+      if (availabilityQuery.data.slots.length > 0) {
+        setSlots(availabilityQuery.data.slots as AvailabilitySlot[]);
+        setHasChanges(false);
+        return;
+      }
 
-  useEffect(() => {
-    if (
-      !(availabilityQuery.isPending || availabilityQuery.data?.slots?.length) &&
-      slots.length === 0
-    ) {
       setSlots([
         {
           dayOfWeek: 1,
-          startTime: "09:00",
           endTime: "17:00",
           isAvailable: true,
+          startTime: "09:00",
         },
       ]);
     }
-  }, [availabilityQuery.isPending]);
+  }, [availabilityQuery.data]);
 
   const saveMutation = useMutation(
     orpc.saveWeeklyAvailability.mutationOptions({
+      onError: (error) => {
+        toast.error(error instanceof Error ? error.message : "Failed to save");
+      },
       onSuccess: () => {
         toast.success("Availability saved");
         setHasChanges(false);
       },
-      onError: (error) => {
-        toast.error(error instanceof Error ? error.message : "Failed to save");
-      },
     })
   );
 
-  function addSlot(dayOfWeek: number) {
-    setSlots([
-      ...slots,
+  const addSlotForDay = (dayOfWeek: number) => {
+    // Check for overlap with existing slots
+    const daySlots = slots.filter((s) => s.dayOfWeek === dayOfWeek);
+    const lastSlot = daySlots[daySlots.length - 1];
+    
+    let newStart = "09:00";
+    let newEnd = "10:00";
+
+    if (lastSlot) {
+      const lastEndMinutes = timeToMinutes(lastSlot.endTime);
+      if (lastEndMinutes >= 1410) { // 23:30
+         toast.error("No more space for slots today");
+         return;
+      }
+      // Suggest next hour
+      const nextStartMin = lastEndMinutes;
+      const nextEndMin = Math.min(nextStartMin + 60, 1440);
+      
+      const format = (m: number) => {
+        const h = Math.floor(m / 60);
+        const mm = m % 60;
+        return `${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+      };
+      
+      newStart = format(nextStartMin);
+      newEnd = format(nextEndMin);
+    }
+
+    setSlots((currentSlots) => [
+      ...currentSlots,
       {
         dayOfWeek,
-        startTime: "09:00",
-        endTime: "17:00",
+        endTime: newEnd,
+        id: crypto.randomUUID(),
         isAvailable: true,
+        startTime: newStart,
       },
     ]);
     setHasChanges(true);
-  }
+  };
 
-  function removeSlot(index: number) {
-    setSlots(slots.filter((_, i) => i !== index));
+  const removeSlot = (index: number) => {
+    setSlots((currentSlots) => currentSlots.filter((_, i) => i !== index));
     setHasChanges(true);
-  }
+  };
 
-  function updateSlot(
+  const updateSlot = (
     index: number,
     field: keyof AvailabilitySlot,
-    value: unknown
-  ) {
-    const next = slots.map((s, i) =>
-      i === index ? { ...s, [field]: value } : s
-    );
-    setSlots(next);
-    setHasChanges(true);
-  }
+    value: string | boolean
+  ) => {
+    setSlots((currentSlots) => {
+      const next = [...currentSlots];
+      const slot = { ...next[index] };
+      
+      if (field === "startTime") {
+        slot.startTime = value as string;
+        // Ensure end > start
+        if (timeToMinutes(slot.endTime) <= timeToMinutes(slot.startTime)) {
+          const startMin = timeToMinutes(slot.startTime);
+          const endMin = Math.min(startMin + 30, 1440);
+          const h = Math.floor(endMin / 60);
+          const m = endMin % 60;
+          slot.endTime = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+        }
+      } else if (field === "endTime") {
+        slot.endTime = value as string;
+      } else if (field === "isAvailable") {
+        slot.isAvailable = value as boolean;
+      }
 
-  function toggleDay(dayOfWeek: number, isAvailable: boolean) {
-    const daySlots = slots.filter((s) => s.dayOfWeek === dayOfWeek);
-    const next = slots.map((s) =>
-      s.dayOfWeek === dayOfWeek ? { ...s, isAvailable } : s
-    );
-    setSlots(next);
-    setHasChanges(true);
-  }
+      // Check overlap for all slots of this day (excluding current)
+      const otherDaySlots = next.filter((s, i) => s.dayOfWeek === slot.dayOfWeek && i !== index);
+      const s1 = timeToMinutes(slot.startTime);
+      const e1 = timeToMinutes(slot.endTime);
+      
+      const hasOverlap = otherDaySlots.some(s => {
+        const s2 = timeToMinutes(s.startTime);
+        const e2 = timeToMinutes(s.endTime);
+        return s1 < e2 && e1 > s2;
+      });
 
-  function handleSave() {
-    saveMutation.mutate({ slots: slots.filter((s) => s.isAvailable) });
-  }
+      if (hasOverlap) {
+        toast.error("Slots cannot overlap");
+        return currentSlots;
+      }
+
+      next[index] = slot;
+      return next;
+    });
+    setHasChanges(true);
+  };
+
+  const toggleDay = (dayOfWeek: number, isAvailable: boolean) => {
+    setSlots((currentSlots) => {
+      const daySlots = currentSlots.filter(s => s.dayOfWeek === dayOfWeek);
+      if (daySlots.length === 0 && isAvailable) {
+        return [...currentSlots, { dayOfWeek, startTime: "09:00", endTime: "17:00", isAvailable: true, id: crypto.randomUUID() }];
+      }
+      return currentSlots.map((slot) =>
+        slot.dayOfWeek === dayOfWeek ? { ...slot, isAvailable } : slot
+      );
+    });
+    setHasChanges(true);
+  };
+
+  const handleSave = () => {
+    saveMutation.mutate({ slots: slots.filter((slot) => slot.isAvailable) });
+  };
 
   const availableDays = new Set(
-    slots.filter((s) => s.isAvailable).map((s) => s.dayOfWeek)
+    slots.filter((slot) => slot.isAvailable).map((slot) => slot.dayOfWeek)
   );
   const totalHours = slots
-    .filter((s) => s.isAvailable)
-    .reduce((acc, slot) => {
-      const start = Number.parseInt(slot.startTime.split(":")[0]);
-      const end = Number.parseInt(slot.endTime.split(":")[0]);
-      const startMin = Number.parseInt(slot.startTime.split(":")[1]);
-      const endMin = Number.parseInt(slot.endTime.split(":")[1]);
-      return acc + (end - start) + (endMin - startMin) / 60;
-    }, 0);
-
-  const sessions = sessionsQuery.data?.sessions ?? [];
-  const pendingSessions = sessions.filter(
-    (s: { status: string }) =>
-      s.status === "requested" || s.status === "rescheduled"
+    .filter((slot) => slot.isAvailable)
+    .reduce((acc, slot) => acc + getHoursForSlot(slot), 0);
+  const pendingSessions = (sessionsQuery.data?.sessions ?? []).filter(
+    (session: { status: string }) =>
+      session.status === "requested" || session.status === "rescheduled"
   );
 
   if (availabilityQuery.isPending) {
@@ -421,36 +283,191 @@ function DoctorAvailabilityRoute() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-7">
-        {DAYS.map((day, i) => (
-          <DayCard
-            dayName={DAYS_SHORT[i]}
-            dayOfWeek={i}
-            key={i}
-            onAddSlot={addSlot}
-            onRemoveSlot={removeSlot}
-            onToggleDay={toggleDay}
-            onUpdateSlot={updateSlot}
-            slots={slots}
-          />
-        ))}
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+        {DAYS.map((dayName, dayOfWeek) => {
+          const daySlots = slots.filter((slot) => slot.dayOfWeek === dayOfWeek);
+          const isDayAvailable = daySlots.some((slot) => slot.isAvailable);
+          const dayHours = daySlots.reduce(
+            (acc, slot) => acc + getHoursForSlot(slot),
+            0
+          );
+
+          return (
+            <Card
+              key={dayName}
+              className="border-border/80 bg-gradient-to-br from-card to-card/50 shadow-sm"
+            >
+              <CardHeader className="pb-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-base">{dayName}</CardTitle>
+                      <Badge
+                        className={
+                          isDayAvailable
+                            ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"
+                            : "bg-muted text-muted-foreground"
+                        }
+                        variant="outline"
+                      >
+                        {isDayAvailable ? "Available" : "Off"}
+                      </Badge>
+                    </div>
+                    <p className="text-muted-foreground text-xs">
+                      {daySlots.length === 0
+                        ? "No hours set"
+                        : `${daySlots.length} slot${daySlots.length === 1 ? "" : "s"} · ${dayHours.toFixed(1)}h`}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 rounded-md border border-border/50 bg-muted/30 px-2.5 py-1.5">
+                      <Switch
+                        checked={isDayAvailable}
+                        className="h-4 w-7"
+                        onCheckedChange={(checked) => toggleDay(dayOfWeek, checked)}
+                      />
+                      <Label className="text-muted-foreground text-xs">
+                        {isDayAvailable ? "Working" : "Day off"}
+                      </Label>
+                    </div>
+                    <Button
+                      className="text-xs"
+                      onClick={() => addSlotForDay(dayOfWeek)}
+                      size="sm"
+                      variant="outline"
+                    >
+                      Add Slot
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-3">
+                {daySlots.length === 0 ? (
+                  <div className="rounded-lg border border-dashed border-border/70 bg-muted/20 px-4 py-6 text-center text-muted-foreground text-sm">
+                    Add a slot for {dayName}.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {daySlots.map((slot, slotOffset) => {
+                      const slotIndex = slots.indexOf(slot);
+                      const validEndOptions = TIME_OPTIONS.filter(t => timeToMinutes(t) > timeToMinutes(slot.startTime));
+
+                      return (
+                        <div
+                          key={slot.id ?? `${dayName}-${slot.startTime}-${slot.endTime}-${slotOffset}`}
+                          className="rounded-lg border border-border/50 bg-muted/30 p-3"
+                        >
+                          <div className="mb-3 flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 text-sm">
+                              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                              <span className="font-medium text-xs">
+                                {slot.startTime} - {slot.endTime}
+                              </span>
+                            </div>
+                            <Button
+                              className="h-8 w-8"
+                              onClick={() => removeSlot(slotIndex)}
+                              size="icon"
+                              variant="ghost"
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                            </Button>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                            <div className="space-y-1.5">
+                              <Label className="text-muted-foreground text-xs">
+                                Start
+                              </Label>
+                              <Select
+                                onValueChange={(value) =>
+                                  updateSlot(slotIndex, "startTime", value)
+                                }
+                                value={slot.startTime}
+                              >
+                                <SelectTrigger className="h-9 w-full">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {TIME_OPTIONS.map((time) => (
+                                    <SelectItem key={time} value={time}>
+                                      {time}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <Label className="text-muted-foreground text-xs">
+                                End
+                              </Label>
+                              <Select
+                                disabled={!slot.startTime}
+                                onValueChange={(value) =>
+                                  updateSlot(slotIndex, "endTime", value)
+                                }
+                                value={slot.endTime}
+                              >
+                                <SelectTrigger className="h-9 w-full">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {validEndOptions.map((time) => (
+                                    <SelectItem key={time} value={time}>
+                                      {time}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <Label className="text-muted-foreground text-xs">
+                                Status
+                              </Label>
+                              <div className="flex h-9 items-center rounded-md border border-border/50 bg-background px-3">
+                                <Switch
+                                  checked={slot.isAvailable}
+                                  className="h-4 w-7"
+                                  onCheckedChange={(checked) =>
+                                    updateSlot(slotIndex, "isAvailable", checked)
+                                  }
+                                />
+                                <span className="ml-2 text-sm text-muted-foreground">
+                                  {slot.isAvailable ? "On" : "Off"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <div className="sticky bottom-0 flex items-center justify-between gap-3 rounded-lg border border-border/80 bg-card/95 p-4 shadow-lg backdrop-blur-md">
         <div className="flex items-center gap-2">
-          {hasChanges && (
+          {hasChanges ? (
             <Badge
               className="bg-amber-500/10 text-amber-600 dark:text-amber-400"
               variant="outline"
             >
               Unsaved changes
             </Badge>
-          )}
+          ) : null}
         </div>
         <Button
           disabled={
             saveMutation.isPending ||
-            slots.filter((s) => s.isAvailable).length === 0 ||
+            slots.filter((slot) => slot.isAvailable).length === 0 ||
             !hasChanges
           }
           onClick={handleSave}
