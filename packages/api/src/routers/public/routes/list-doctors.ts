@@ -61,9 +61,7 @@ export const listDoctorsRoute = publicProcedure
         const [availabilityCount] = await context.db
           .select({ value: count() })
           .from(doctorWeeklyAvailability)
-          .where(
-            eq(doctorWeeklyAvailability.doctorId, profile.userId)
-          );
+          .where(eq(doctorWeeklyAvailability.doctorId, profile.userId));
 
         return {
           profile: mapDoctorProfile(profile),

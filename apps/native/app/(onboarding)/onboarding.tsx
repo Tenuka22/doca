@@ -1,6 +1,7 @@
+import { useAuth } from "@clerk/expo";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, View } from "react-native";
@@ -65,7 +66,11 @@ type HasGuardianForm = z.infer<typeof hasGuardianSchema>;
 type GuardianForm = z.infer<typeof guardianSchema>;
 
 export default function OnboardingScreen() {
-  const router = useRouter();
+  const { isLoaded, isSignedIn } = useAuth();
+  if (isLoaded && !isSignedIn) {
+    router.replace("/(auth)/sign-in");
+    return null;
+  }
   const { foreground } = useThemeColor();
 
   const [mode, setMode] = useState<OnboardingMode>(null);

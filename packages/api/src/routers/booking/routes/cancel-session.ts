@@ -1,10 +1,6 @@
-import {
-  creditTransactions,
-  doctorSessions,
-  userCredits,
-} from "@zen-doc/db";
-import { eq } from "drizzle-orm";
+import { creditTransactions, doctorSessions, userCredits } from "@zen-doc/db";
 import { cancelSessionSchema } from "@zen-doc/db/schemas-types";
+import { eq } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
 
@@ -31,8 +27,13 @@ export const cancelSessionRoute = protectedProcedure
       throw new Error("Not authorized to cancel this session");
     }
 
-    if (session.status === "attended" || session.status === "timing_balance_failure") {
-      throw new Error("Cannot cancel a session that has already ended or failed");
+    if (
+      session.status === "attended" ||
+      session.status === "timing_balance_failure"
+    ) {
+      throw new Error(
+        "Cannot cancel a session that has already ended or failed"
+      );
     }
 
     const now = new Date().toISOString();

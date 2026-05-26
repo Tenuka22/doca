@@ -1,3 +1,4 @@
+import { useUser } from "@clerk/tanstack-react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -38,14 +39,11 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-
-import { useUser } from "@clerk/tanstack-react-start";
-import { getMetadataRole } from "@/utils/clerk-auth";
-
 import {
   SessionJoinButton,
   VideoRoomWeb,
 } from "@/components/livekit/video-room";
+import { getMetadataRole } from "@/utils/clerk-auth";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/doctor/sessions")({
@@ -115,7 +113,12 @@ function SessionStatusBadge({ status }: { status: string }) {
 function DoctorSessionsRoute() {
   const { user } = useUser();
   const metadataRole = getMetadataRole(user?.publicMetadata);
-  const userRole: "patient" | "doctor" | "admin" = metadataRole === "admin" ? "admin" : metadataRole === "doctor" ? "doctor" : "patient";
+  const userRole: "patient" | "doctor" | "admin" =
+    metadataRole === "admin"
+      ? "admin"
+      : metadataRole === "doctor"
+        ? "doctor"
+        : "patient";
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [proposeTarget, setProposeTarget] = useState<string | null>(null);
   const [proposedStart, setProposedStart] = useState("");
@@ -138,7 +141,9 @@ function DoctorSessionsRoute() {
         toast.success("Response sent");
       },
       onError: (error) => {
-        toast.error(error instanceof Error ? error.message : "Failed to respond");
+        toast.error(
+          error instanceof Error ? error.message : "Failed to respond"
+        );
       },
     })
   );
@@ -150,7 +155,9 @@ function DoctorSessionsRoute() {
         toast.success("Session confirmed as attended");
       },
       onError: (error) => {
-        toast.error(error instanceof Error ? error.message : "Failed to confirm session");
+        toast.error(
+          error instanceof Error ? error.message : "Failed to confirm session"
+        );
       },
     })
   );
@@ -163,7 +170,9 @@ function DoctorSessionsRoute() {
         setCancelTarget(null);
       },
       onError: (error) => {
-        toast.error(error instanceof Error ? error.message : "Failed to cancel session");
+        toast.error(
+          error instanceof Error ? error.message : "Failed to cancel session"
+        );
         setCancelTarget(null);
       },
     })
@@ -171,7 +180,11 @@ function DoctorSessionsRoute() {
 
   const sessions = sessionsQuery.data?.sessions ?? [];
 
-  function openProposeDialog(session: { id: string; startAt: string; endAt: string }) {
+  function openProposeDialog(session: {
+    id: string;
+    startAt: string;
+    endAt: string;
+  }) {
     setProposeTarget(session.id);
     setProposedStart(session.startAt);
     setProposedEnd(session.endAt);
@@ -198,7 +211,8 @@ function DoctorSessionsRoute() {
           Sessions
         </h1>
         <p className="text-muted-foreground text-sm">
-          Review patient requests, approve or propose a different time, or mark sessions as attended.
+          Review patient requests, approve or propose a different time, or mark
+          sessions as attended.
         </p>
       </div>
 
@@ -336,7 +350,8 @@ function DoctorSessionsRoute() {
                           </>
                         )}
 
-                        {(session.status === "approved" || session.status === "requested") && (
+                        {(session.status === "approved" ||
+                          session.status === "requested") && (
                           <Button
                             disabled={cancelSession.isPending}
                             onClick={() => setCancelTarget(session.id)}
@@ -397,7 +412,8 @@ function DoctorSessionsRoute() {
           <DialogHeader>
             <DialogTitle>Propose New Time</DialogTitle>
             <DialogDescription>
-              Suggest a different time for this session. The patient can accept or counter-propose.
+              Suggest a different time for this session. The patient can accept
+              or counter-propose.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

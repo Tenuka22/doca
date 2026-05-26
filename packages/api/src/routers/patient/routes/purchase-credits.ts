@@ -1,8 +1,9 @@
-import { z } from "zod";
 import { CREDIT_PRICE_CENTS, TAX_RATE } from "@zen-doc/pricing";
+import { z } from "zod";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
 import { getStripe } from "../../booking/stripe-utils";
+
 const DEFAULT_CREDIT_QUANTITY = 1;
 
 export const purchaseCreditsRoute = protectedProcedure

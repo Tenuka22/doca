@@ -3,7 +3,10 @@ import { bookSessionRoute } from "./routes/book-session";
 import { cancelSessionRoute } from "./routes/cancel-session";
 import { counterProposeSessionRoute } from "./routes/counter-propose-session";
 import { createConnectAccountLinkRoute } from "./routes/create-connect-account-link";
-import { getDoctorCreditsRoute, requestCashoutRoute } from "./routes/doctor-credits";
+import {
+  getDoctorCreditsRoute,
+  requestCashoutRoute,
+} from "./routes/doctor-credits";
 import {
   createDoctorPlanRoute,
   deleteDoctorPlanRoute,

@@ -25,7 +25,9 @@ export function CreditHeaderButton() {
           merchantDisplayName: "Zen Doc",
         });
         if (initResult.error) {
-          throw new Error(initResult.error.message ?? "Unable to start payment");
+          throw new Error(
+            initResult.error.message ?? "Unable to start payment"
+          );
         }
 
         const presentResult = await paymentSheet.presentPaymentSheet();
@@ -73,14 +75,16 @@ export function CreditHeaderButton() {
           <Card>
             <Text className="font-bold text-xl">Buy Credits</Text>
             <Text className="my-4 text-muted-foreground text-sm">
-              Add credits to your account. Stripe will handle the payment
-              sheet securely.
+              Add credits to your account. Stripe will handle the payment sheet
+              securely.
             </Text>
             <View className="mb-4 rounded-lg border border-border bg-muted/40 p-4">
               <Text className="font-semibold text-foreground text-sm">
                 {selectedCredits} credit
               </Text>
-              <Text className="text-muted-foreground text-sm">Credit top-up</Text>
+              <Text className="text-muted-foreground text-sm">
+                Credit top-up
+              </Text>
             </View>
 
             {purchaseError ? (
@@ -97,7 +101,7 @@ export function CreditHeaderButton() {
               {purchaseMutation.isPending ? (
                 <ActivityIndicator size="small" />
               ) : (
-                <Text className="font-semibold text-xs text-foreground">
+                <Text className="font-semibold text-foreground text-xs">
                   Continue to payment
                 </Text>
               )}

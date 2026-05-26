@@ -127,6 +127,13 @@
       "when": 1779785085521,
       "tag": "0017_curved_night_thrasher",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1779800753990,
+      "tag": "0018_lucky_terror",
+      "breakpoints": true
     }
   ]
 }

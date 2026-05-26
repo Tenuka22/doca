@@ -217,7 +217,6 @@ function BackButton() {
         }
         variant="secondary"
       >
-
         BACK
       </Button>
     </View>

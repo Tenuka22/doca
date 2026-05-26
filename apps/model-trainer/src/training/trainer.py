@@ -25,33 +25,13 @@ def _validate_inputs(
             f"X_train must be 3-D (samples, timesteps, features), got {X_train.shape}"
         )
     if X_train.shape[1] != seq_len:
-        raise ValueError(f"X_train timesteps ({X_train.shape[1]}) != seq_len ({seq_len})")
+        raise ValueError(
+            f"X_train timesteps ({X_train.shape[1]}) != seq_len ({seq_len})"
+        )
     if X_train.shape[0] != y_train.shape[0]:
         raise ValueError(
             f"X_train / y_train sample count mismatch: {X_train.shape[0]} vs {y_train.shape[0]}"
         )
-    if X_val.shape[2] != X_train.shape[2]:
-        raise ValueError(
-            f"Feature count mismatch: train={X_train.shape[2]}, val={X_val.shape[2]}"
-        )
-
-
-def _compute_positive_rate(y: np.ndarray) -> float:
-    if len(y) == 0:
-        raise ValueError("Cannot compute a positive rate for an empty label vector.")
-    return float(np.mean(y))
-
-
-def _build_loss(y_train: np.ndarray) -> tf.keras.losses.Loss:
-    positive_rate = float(np.clip(_compute_positive_rate(y_train), 0.05, 0.5))
-    alpha = float(np.clip((1.0 - positive_rate) * TRAINING.positive_class_weight, 0.5, 0.9))
-    logger.info("Using focal loss with alpha=%.3f, gamma=2.0", alpha)
-    return tf.keras.losses.BinaryFocalCrossentropy(
-        gamma=2.0,
-        alpha=alpha,
-        from_logits=False,
-        apply_class_balancing=False,
-    )
 
 
 def _build_callbacks() -> list[tf.keras.callbacks.Callback]:
@@ -70,36 +50,6 @@ def _build_callbacks() -> list[tf.keras.callbacks.Callback]:
             verbose=1,
         ),
     ]
-
-
-def _find_best_threshold(
-    y_true: np.ndarray,
-    y_prob: np.ndarray,
-) -> tuple[float, dict[str, float]]:
-    from sklearn.metrics import fbeta_score, precision_score, recall_score
-
-    best_threshold = 0.5
-    best_score = -1.0
-    best_metrics: dict[str, float] = {}
-
-    for threshold in np.linspace(0.1, 0.9, 81):
-        y_pred = (y_prob >= threshold).astype(np.uint8)
-        score = fbeta_score(
-            y_true,
-            y_pred,
-            beta=TRAINING.decision_threshold_beta,
-            zero_division=0,
-        )
-        if score > best_score:
-            best_score = float(score)
-            best_threshold = float(threshold)
-            best_metrics = {
-                "precision": float(precision_score(y_true, y_pred, zero_division=0)),
-                "recall": float(recall_score(y_true, y_pred, zero_division=0)),
-                "fbeta": float(score),
-            }
-
-    return best_threshold, best_metrics
 
 
 def _save_training_curves(
@@ -124,9 +74,8 @@ def _save_training_curves(
         plt.tight_layout()
         out = model_dir / "training_curves.png"
         plt.savefig(out, dpi=150)
-        logger.info("Saved training curves -> %s", out)
     except Exception:
-        logger.exception("Failed to save training curves - continuing.")
+        logger.exception("Failed to save training curves.")
     finally:
         plt.close("all")
 
@@ -134,7 +83,6 @@ def _save_training_curves(
 def _save_model(model: Model, model_dir: Path) -> None:
     out = model_dir / "model.keras"
     model.save(str(out))
-    logger.info("Saved Keras model -> %s", out)
 
 
 def train_model(
@@ -152,34 +100,38 @@ def train_model(
     model_dir = TRAINING.model_dir(seq_len)
 
     logger.info(
-        "Training seq_len=%d | samples=%d | features=%d | dir=%s",
+        "Training seq_len=%d | samples=%d | features=%d",
         seq_len,
         len(X_train),
         n_features,
-        model_dir,
     )
 
+    # 1. Build Model
     model = build_rri_lstm(seq_len, n_features)
+    
+    # 2. Adapt Normalization Layer (Keras layer handles standardization)
+    standardization_layer = model.get_layer("standardization")
+    print("Adapting Keras Normalization layer to training data...")
+    standardization_layer.adapt(X_train)
+    
+    # 3. Compile
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=MODEL.learning_rate),
-        loss=_build_loss(y_train),
+        loss="sparse_categorical_crossentropy",
         metrics=[
             "accuracy",
-            tf.keras.metrics.AUC(name="auc"),
-            tf.keras.metrics.AUC(curve="PR", name="pr_auc"),
-            tf.keras.metrics.Recall(name="recall"),
-            tf.keras.metrics.Precision(name="precision"),
+            tf.keras.metrics.SparseCategoricalAccuracy(name="sparse_accuracy"),
         ],
     )
 
-    idx = np.random.permutation(len(X_train))
-    X_train, y_train = X_train[idx], y_train[idx]
-
+    # 4. Prepare Datasets
     train_ds = tf.data.Dataset.from_tensor_slices((X_train, y_train))
-    train_ds = train_ds.batch(TRAINING.batch_size).prefetch(tf.data.AUTOTUNE)
+    train_ds = train_ds.shuffle(len(X_train)).batch(TRAINING.batch_size).prefetch(tf.data.AUTOTUNE)
+    
     val_ds = tf.data.Dataset.from_tensor_slices((X_val, y_val))
     val_ds = val_ds.batch(TRAINING.batch_size).prefetch(tf.data.AUTOTUNE)
 
+    # 5. Fit
     history = model.fit(
         train_ds,
         validation_data=val_ds,
@@ -188,14 +140,11 @@ def train_model(
         verbose=1,
     )
 
+    # 6. Save Artifacts
     _save_training_curves(history, model_dir)
     if TRAINING.export_onnx:
         from src.training.export import export_to_onnx
-
         export_to_onnx(model, seq_len, n_features, model_dir)
     _save_model(model, model_dir)
-
-    stopped_at = len(history.history["loss"])
-    logger.info("Finished seq_len=%d after %d epochs.", seq_len, stopped_at)
 
     return model, history

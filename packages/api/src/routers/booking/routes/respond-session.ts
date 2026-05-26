@@ -4,9 +4,9 @@ import {
   doctorSessions,
   userCredits,
 } from "@zen-doc/db";
+import { CREDIT_PRICE_CENTS } from "@zen-doc/pricing";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { CREDIT_PRICE_CENTS } from "@zen-doc/pricing";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
 
@@ -40,7 +40,9 @@ export const respondSessionRoute = protectedProcedure
     }
 
     if (session.status !== "requested") {
-      throw new Error("Can only respond to sessions that are awaiting your response");
+      throw new Error(
+        "Can only respond to sessions that are awaiting your response"
+      );
     }
 
     const now = new Date().toISOString();
@@ -84,7 +86,9 @@ export const respondSessionRoute = protectedProcedure
       }
     } else if (input.action === "propose") {
       if (!(input.proposedStartAt && input.proposedEndAt)) {
-        throw new Error("Proposed start and end times are required when proposing a change");
+        throw new Error(
+          "Proposed start and end times are required when proposing a change"
+        );
       }
 
       await context.db

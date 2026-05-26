@@ -1,30 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@zen-doc/ui/components/card";
-import { format } from "date-fns";
-import {
-  CheckCircleIcon,
-  ClockIcon,
-  XCircleIcon,
-} from "lucide-react";
-import { orpc } from "@/utils/orpc";
 import { Badge } from "@zen-doc/ui/components/badge";
+import { Card, CardContent, CardHeader } from "@zen-doc/ui/components/card";
+import { format } from "date-fns";
+import { CheckCircleIcon, ClockIcon, XCircleIcon } from "lucide-react";
+import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/doctor/")({
   component: DoctorDashboardRoute,
 });
 
 interface SessionItem {
+  doctorEarnedCents?: number | null;
   endAt: string;
   id: string;
   patientId: string;
   startAt: string;
   status: string;
-  doctorEarnedCents?: number | null;
 }
 
 function SessionStatusBadge({ status }: { status: string }) {

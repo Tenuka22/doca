@@ -1,10 +1,7 @@
-import {
-  doctorCredits,
-  doctorSessions,
-} from "@zen-doc/db";
+import { doctorCredits, doctorSessions } from "@zen-doc/db";
+import { CREDIT_PRICE_CENTS } from "@zen-doc/pricing";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { CREDIT_PRICE_CENTS } from "@zen-doc/pricing";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
 

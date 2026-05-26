@@ -5,6 +5,7 @@ import {
   useStripe,
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
+import { env } from "@zen-doc/env/native";
 import {
   createContext,
   type PropsWithChildren,
@@ -15,8 +16,6 @@ import {
   useState,
 } from "react";
 import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
-
-import { env } from "@zen-doc/env/native";
 
 const stripePromise = loadStripe(env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 

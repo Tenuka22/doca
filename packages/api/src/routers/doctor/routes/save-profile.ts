@@ -10,9 +10,9 @@ import {
 } from "@zen-doc/db";
 import { doctorProfileInputSchema } from "@zen-doc/db/schemas-types";
 import {
+  BASIC_PLAN_CREDITS,
   BASIC_PLAN_DURATION_MINUTES,
   BASIC_PLAN_FEATURES,
-  BASIC_PLAN_CREDITS,
   BASIC_PLAN_NAME,
 } from "@zen-doc/pricing";
 import { and, eq } from "drizzle-orm";

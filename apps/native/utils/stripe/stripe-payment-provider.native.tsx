@@ -1,10 +1,6 @@
 import { StripeProvider, useStripe } from "@stripe/stripe-react-native";
 import { env } from "@zen-doc/env/native";
-import {
-  createContext,
-  type PropsWithChildren,
-  useContext,
-} from "react";
+import { createContext, type PropsWithChildren, useContext } from "react";
 
 interface PaymentSheetResult {
   error?: { code?: string; message?: string };

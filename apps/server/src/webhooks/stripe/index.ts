@@ -1,8 +1,8 @@
-import { Hono } from "hono";
+import { createDb, creditTransactions, userCredits } from "@zen-doc/db";
 import { env } from "@zen-doc/env/server";
-import Stripe from "stripe";
-import { createDb, userCredits, creditTransactions } from "@zen-doc/db";
 import { eq } from "drizzle-orm";
+import { Hono } from "hono";
+import Stripe from "stripe";
 
 export const stripeApp = new Hono();
 const stripe = new Stripe(env.STRIPE_SECRET_KEY);
@@ -24,14 +24,14 @@ stripeApp.post("/", async (c) => {
       env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    console.error(`Webhook signature verification failed.`, err);
+    console.error("Webhook signature verification failed.", err);
     return c.text("Webhook Error", 400);
   }
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const userId = session.metadata?.userId;
-    const creditsToAdd = parseInt(session.metadata?.credits ?? "0", 10);
+    const creditsToAdd = Number.parseInt(session.metadata?.credits ?? "0", 10);
 
     if (userId && creditsToAdd > 0) {
       await db.transaction(async (tx) => {

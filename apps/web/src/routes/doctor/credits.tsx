@@ -7,8 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@zen-doc/ui/components/card";
-import { Input } from "@zen-doc/ui/components/input";
-import { Label } from "@zen-doc/ui/components/label";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +16,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@zen-doc/ui/components/dialog";
+import { Input } from "@zen-doc/ui/components/input";
+import { Label } from "@zen-doc/ui/components/label";
 import { format } from "date-fns";
 import { BanknoteIcon, DollarSignIcon, Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -101,46 +101,50 @@ function DoctorCreditsRoute() {
           <div className="grid gap-6 md:grid-cols-3">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
                   <DollarSignIcon className="h-4 w-4" />
                   Current Balance
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="font-bold text-3xl">{formatCents(balanceCents)}</p>
+                <p className="font-bold text-3xl">
+                  {formatCents(balanceCents)}
+                </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
                   <BanknoteIcon className="h-4 w-4" />
                   Total Earned
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="font-bold text-3xl">{formatCents(totalEarnedCents)}</p>
+                <p className="font-bold text-3xl">
+                  {formatCents(totalEarnedCents)}
+                </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
                   <BanknoteIcon className="h-4 w-4" />
                   Cashed Out
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="font-bold text-3xl">{formatCents(totalCashedOutCents)}</p>
+                <p className="font-bold text-3xl">
+                  {formatCents(totalCashedOutCents)}
+                </p>
               </CardContent>
             </Card>
           </div>
 
           <Dialog onOpenChange={setShowCashout} open={showCashout}>
             <DialogTrigger>
-              <Button disabled={balanceCents <= 0}>
-                Cash Out Now
-              </Button>
+              <Button disabled={balanceCents <= 0}>Cash Out Now</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -202,7 +206,7 @@ function DoctorCreditsRoute() {
                         </p>
                       </div>
                       <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        className={`rounded-full px-2.5 py-0.5 font-medium text-xs ${
                           req.status === "completed"
                             ? "bg-emerald-500/10 text-emerald-600"
                             : req.status === "failed"

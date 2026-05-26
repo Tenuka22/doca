@@ -19,7 +19,10 @@ export const getWeeklyAvailabilityRoute = protectedProcedure.handler(
       .select()
       .from(doctorWeeklyAvailability)
       .where(eq(doctorWeeklyAvailability.doctorId, doctorId))
-      .orderBy(doctorWeeklyAvailability.dayOfWeek, doctorWeeklyAvailability.startTime);
+      .orderBy(
+        doctorWeeklyAvailability.dayOfWeek,
+        doctorWeeklyAvailability.startTime
+      );
 
     return { slots };
   }
@@ -58,7 +61,10 @@ export const saveWeeklyAvailabilityRoute = protectedProcedure
       .select()
       .from(doctorWeeklyAvailability)
       .where(eq(doctorWeeklyAvailability.doctorId, doctorId))
-      .orderBy(doctorWeeklyAvailability.dayOfWeek, doctorWeeklyAvailability.startTime);
+      .orderBy(
+        doctorWeeklyAvailability.dayOfWeek,
+        doctorWeeklyAvailability.startTime
+      );
 
     return { slots };
   });
@@ -75,7 +81,10 @@ export const getDoctorWeeklyAvailabilityRoute = protectedProcedure
           eq(doctorWeeklyAvailability.isAvailable, true)
         )
       )
-      .orderBy(doctorWeeklyAvailability.dayOfWeek, doctorWeeklyAvailability.startTime);
+      .orderBy(
+        doctorWeeklyAvailability.dayOfWeek,
+        doctorWeeklyAvailability.startTime
+      );
 
     return { slots };
   });

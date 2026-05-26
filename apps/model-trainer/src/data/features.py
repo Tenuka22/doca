@@ -2,48 +2,83 @@ import numpy as np
 import pandas as pd
 
 
-def filter_hardware_features(
-    features: np.ndarray, feature_names: list[str], target_hardware: str = "MAX30102"
-):
-    if target_hardware == "MAX30102":
-        allowed_keywords = ["RR", "RMSSD", "SDSD", "pNN", "SD1", "SD2", "HR"]
-    else:
-        allowed_keywords = ["RR", "RMSSD", "SDSD", "pNN", "SD1", "SD2", "HR"]
+def filter_hardware_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Filters the dataset to include only features that a MAX30102 sensor can reasonably extract.
+    
+    MAX30102 Characteristics:
+    - Integrated Pulse Oximetry and Heart-Rate Monitor.
+    - Extracts Red and IR (Infrared) PPG signals.
+    - Derived data: Heart Rate (HR), SpO2 (Oxygen Saturation), and RR Intervals (RRI).
+    - Features below are derived from these raw signals (HRV analysis).
+    - Sampling: User specified ~4Hz processed features.
+    """
+    
+    # We select features that can be derived from the heart-rate/RRI signals 
+    # provided by the MAX30102 PPG sensor.
+    target_features = [
+        "MEAN_RR",       # Average time between heartbeats
+        "MEDIAN_RR",     # Median time between heartbeats
+        "SDRR",          # Standard deviation of RR intervals (Overall HRV)
+        "RMSSD",         # Root mean square of successive differences (Parasympathetic activity)
+        "SDSD",          # Standard deviation of successive differences
+        "SDRR_RMSSD",    # Ratio of SDRR to RMSSD
+        "HR",            # Heart Rate (BPM)
+        "pNN25",         # Percentage of RR intervals differing by >25ms
+        "pNN50",         # Percentage of RR intervals differing by >50ms
+        "SD1",           # Poincaré plot short-term variability
+        "SD2",           # Poincaré plot long-term variability
+    ]
+    
+    # Identify which columns are present in the current dataframe
+    available_features = [col for col in target_features if col in df.columns]
+    
+    # Return the filtered dataframe with readable names (keeping original case/naming as requested)
+    return df[available_features]
 
-    indices = []
-    filtered_names = []
 
-    for i, name in enumerate(feature_names):
-        if any(key in name.upper() for key in allowed_keywords):
-            indices.append(i)
-            filtered_names.append(name)
+def create_sequences_by_subject(
+    subjects_data: list, 
+    seq_len: int
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Groups data by user and creates sequences with a 10% overlap.
+    "No striding" - means we use a fixed shift calculated from the overlap to ensure
+    no gaps in the data processing.
+    
+    Example for seq_len=120:
+    Overlap = 12 (10%)
+    Shift = 108 (120 - 12)
+    Window 1: 0-120
+    Window 2: 108-228
+    """
+    all_X = []
+    all_y = []
+    
+    # Calculate shift based on 10% overlap
+    overlap = int(seq_len * 0.1)
+    shift = seq_len - overlap
+    
+    if shift <= 0:
+        shift = 1
 
-    return features[:, indices], filtered_names
-
-
-def extract_features(values: np.ndarray):
-    v = values.flatten().astype(np.float32, copy=False)
-
-    f1 = v
-    diffs = np.diff(v, prepend=v[0])
-    f3 = np.sqrt(
-        pd.Series(diffs**2).rolling(window=10, min_periods=1).mean().values
-    )
-    f4 = pd.Series(v).rolling(window=10, min_periods=1).std().fillna(0).values
-    f5 = 1.0 / (v + 1e-8)
-
-    all_features = np.stack([f1, diffs, f3, f4, f5], axis=1).astype(np.float32, copy=False)
-    all_names = ["RRI", "RRI_Diff", "RMSSD_Local", "SDNN_Local", "HR_Proxy"]
-
-    return all_features, all_names
-
-
-def create_sequences(
-    features: np.ndarray, labels: np.ndarray, seq_len: int, stride: int = 15
-):
-    X, y = [], []
-    for i in range(0, len(features) - 2 * seq_len + 1, stride):
-        X.append(features[i : i + seq_len])
-        next_mean = float(np.mean(labels[i + seq_len : i + 2 * seq_len]))
-        y.append(1 if next_mean > 0.5 else 0)
-    return np.asarray(X, dtype=np.float32), np.asarray(y, dtype=np.uint8)
+    for subj_id, features, labels, _ in subjects_data:
+        n_samples = len(features)
+        
+        # Slide through the data using the calculated shift
+        for i in range(0, n_samples - 2 * seq_len + 1, shift):
+            # Current window (Features)
+            x_window = features[i : i + seq_len]
+            
+            # Next window (Future Target)
+            # We look at the labels in the *next* block of time to predict what happens next
+            future_labels = labels[i + seq_len : i + 2 * seq_len]
+            
+            # Majority vote for the future state
+            counts = np.bincount(future_labels.astype(np.intp), minlength=3)
+            y_label = np.argmax(counts)
+            
+            all_X.append(x_window)
+            all_y.append(y_label)
+            
+    return np.array(all_X, dtype=np.float32), np.array(all_y, dtype=np.uint8)

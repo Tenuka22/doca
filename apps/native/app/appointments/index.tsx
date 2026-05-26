@@ -65,7 +65,12 @@ function StatusBadge({ status }: { status: string }) {
 export default function AppointmentsScreen() {
   const { user } = useUser();
   const metadataRole = user?.publicMetadata?.role;
-  const userRole: "patient" | "doctor" | "admin" = metadataRole === "admin" ? "admin" : metadataRole === "doctor" ? "doctor" : "patient";
+  const userRole: "patient" | "doctor" | "admin" =
+    metadataRole === "admin"
+      ? "admin"
+      : metadataRole === "doctor"
+        ? "doctor"
+        : "patient";
   const colors = useThemeColor();
   const { bookingSuccess } = useLocalSearchParams<{
     bookingSuccess?: string;

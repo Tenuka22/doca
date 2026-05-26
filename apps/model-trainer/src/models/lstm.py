@@ -6,7 +6,9 @@ from src.config import MODEL
 
 def build_rri_lstm(seq_len: int, n_features: int) -> Model:
     inputs = layers.Input(shape=(seq_len, n_features), name="input")
+    standardizer = layers.Normalization(axis=-1, name="standardization")
 
+    x = standardizer(inputs)
     x = layers.Bidirectional(
         layers.LSTM(
             MODEL.lstm_units,
@@ -15,7 +17,7 @@ def build_rri_lstm(seq_len: int, n_features: int) -> Model:
             recurrent_dropout=MODEL.lstm_recurrent_dropout,
             kernel_regularizer=regularizers.l2(MODEL.l2_reg),
         )
-    )(inputs)
+    )(x)
 
     x = layers.GlobalAveragePooling1D()(x)
 
@@ -27,18 +29,15 @@ def build_rri_lstm(seq_len: int, n_features: int) -> Model:
     x = layers.BatchNormalization()(x)
     x = layers.Dropout(MODEL.dropout_rate)(x)
 
-    outputs = layers.Dense(1, activation="sigmoid", name="stress_prob")(x)
+    outputs = layers.Dense(3, activation="softmax", name="stress_state")(x)
 
     model = Model(inputs=inputs, outputs=outputs)
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=MODEL.learning_rate),
-        loss="binary_crossentropy",
+        loss="sparse_categorical_crossentropy",
         metrics=[
             "accuracy",
-            tf.keras.metrics.AUC(name="auc"),
-            tf.keras.metrics.AUC(curve="PR", name="pr_auc"),
-            tf.keras.metrics.Recall(name="recall"),
-            tf.keras.metrics.Precision(name="precision"),
+            tf.keras.metrics.SparseCategoricalAccuracy(name="sparse_accuracy"),
         ],
     )
     return model

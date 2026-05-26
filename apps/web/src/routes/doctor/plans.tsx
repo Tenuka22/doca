@@ -36,7 +36,7 @@ interface DoctorPlan {
   isActive: boolean;
   isDefault: boolean;
   name: string;
-  price: number;
+  creditCost: number;
   sortOrder: number;
 }
 
@@ -61,7 +61,7 @@ function CreditInput({
 }) {
   return (
     <div className="grid gap-2">
-      <Label htmlFor={id}>Credit Cost</Label>
+      <Label htmlFor={id}>Credits</Label>
       <Input
         id={id}
         min={1}
@@ -74,7 +74,7 @@ function CreditInput({
         value={value}
       />
       <p className="text-muted-foreground text-xs">
-        Set the number of credits required for this session plan.
+        Number of credits required for this session.
       </p>
     </div>
   );
@@ -181,7 +181,7 @@ function DoctorPlansRoute() {
   const [editTarget, setEditTarget] = useState<DoctorPlan | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
+  const [credits, setCredits] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("");
   const [features, setFeatures] = useState<string[]>(defaultFeatures);
 
@@ -226,16 +226,21 @@ function DoctorPlansRoute() {
   function resetForm() {
     setName("");
     setDescription("");
-    setPrice("");
-    setDurationMinutes("");
+    setCredits("1");
+    setDurationMinutes("60");
     setFeatures(defaultFeatures);
   }
 
   function isValid(): boolean {
     const dur = Number(durationMinutes);
-    const credits = Number(price);
+    const creditsNum = Number(credits);
+    const validFeatures = features.filter(Boolean).length > 0;
     return (
-      name.trim().length > 0 && credits >= 1 && dur >= 60 && dur <= 360
+      name.trim().length > 0 &&
+      creditsNum >= 1 &&
+      dur >= 15 &&
+      dur <= 240 &&
+      validFeatures
     );
   }
 
@@ -247,7 +252,7 @@ function DoctorPlansRoute() {
     createPlan.mutate({
       name,
       description: description || undefined,
-      price: Number(price), // Treating price as credits
+      creditCost: Number(credits),
       durationMinutes: Number(durationMinutes),
       features: features.filter(Boolean),
     });
@@ -256,7 +261,7 @@ function DoctorPlansRoute() {
   function handleEdit(plan: DoctorPlan) {
     setName(plan.name);
     setDescription(plan.description ?? "");
-    setPrice(String(plan.price));
+    setCredits(String(plan.creditCost));
     setDurationMinutes(String(plan.durationMinutes));
     setFeatures(plan.features ? (JSON.parse(plan.features) as string[]) : []);
     setEditTarget(plan);
@@ -271,7 +276,7 @@ function DoctorPlansRoute() {
       id: editTarget.id,
       name,
       description: description || null,
-      price: Number(price),
+      creditCost: Number(credits),
       durationMinutes: Number(durationMinutes),
       features: features.filter(Boolean),
     });
@@ -322,13 +327,13 @@ function DoctorPlansRoute() {
                 />
               </div>
 
-              <CreditInput id="plan-price" onChange={setPrice} value={price} />
+                <CreditInput id="plan-credits" onChange={setCredits} value={credits} />
 
-              <DurationInput
-                id="plan-duration"
-                onChange={setDurationMinutes}
-                value={durationMinutes}
-              />
+  <DurationInput
+    id="plan-duration"
+    onChange={setDurationMinutes}
+    value={durationMinutes}
+  />
 
               <FeatureInput features={features} onChange={setFeatures} />
             </div>
@@ -385,7 +390,7 @@ function DoctorPlansRoute() {
               />
             </div>
 
-            <CreditInput id="edit-price" onChange={setPrice} value={price} />
+              <CreditInput id="edit-credits" onChange={setCredits} value={credits} />
 
             <DurationInput
               id="edit-duration"
@@ -454,7 +459,7 @@ function DoctorPlansRoute() {
                 <CardContent className="flex flex-1 flex-col gap-6">
                   <div className="text-center">
                     <span className="font-bold text-4xl text-foreground">
-                      {formatCreditCost(plan.price)}
+                      {formatCreditCost(plan.creditCost)}
                     </span>
                     <div className="mt-2">
                       <Badge className="bg-muted" variant="outline">
@@ -489,7 +494,6 @@ function DoctorPlansRoute() {
                       <Pencil className="mr-1 h-3 w-3" />
                       Edit
                     </Button>
-
                   </div>
                 </CardContent>
               </Card>

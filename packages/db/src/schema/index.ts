@@ -62,7 +62,9 @@ export const doctorSessions = sqliteTable("doctor_sessions", {
   planId: text("plan_id"),
   startAt: text("start_at").notNull(),
   endAt: text("end_at").notNull(),
-  status: text("status", { enum: sessionStatusValues }).notNull().default("requested"),
+  status: text("status", { enum: sessionStatusValues })
+    .notNull()
+    .default("requested"),
   creditCost: integer("credit_cost").notNull(),
   doctorEarnedCents: integer("doctor_earned_cents"),
   payoutStatus: text("payout_status").notNull().default("none"),
@@ -174,7 +176,6 @@ export const creditTransactions = sqliteTable("credit_transactions", {
   createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
 });
 
-
 export const doctorWeeklyAvailability = sqliteTable(
   "doctor_weekly_availability",
   {
@@ -200,26 +201,23 @@ export const doctorCredits = sqliteTable("doctor_credits", {
   updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
 });
 
-export const doctorCashoutRequests = sqliteTable(
-  "doctor_cashout_requests",
-  {
-    id: text("id").primaryKey(),
-    doctorId: text("doctor_id").notNull(),
-    amountCents: integer("amount_cents").notNull(),
-    status: text("status").notNull().default("pending"),
-    stripeTransferId: text("stripe_transfer_id"),
-    failureReason: text("failure_reason"),
-    createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
-    updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
-  }
-);
+export const doctorCashoutRequests = sqliteTable("doctor_cashout_requests", {
+  id: text("id").primaryKey(),
+  doctorId: text("doctor_id").notNull(),
+  amountCents: integer("amount_cents").notNull(),
+  status: text("status").notNull().default("pending"),
+  stripeTransferId: text("stripe_transfer_id"),
+  failureReason: text("failure_reason"),
+  createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+  updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
+});
 
 export const doctorPlans = sqliteTable("doctor_plans", {
   id: text("id").primaryKey(),
   doctorId: text("doctor_id").notNull(),
   name: text("name").notNull(),
   description: text("description"),
-  price: integer("price").notNull().default(5000),
+  creditCost: integer("credit_cost").notNull().default(1),
   durationMinutes: integer("duration_minutes").notNull(),
   features: text("features"),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
@@ -241,6 +239,7 @@ export type GuardianProfile = typeof guardianProfiles.$inferSelect;
 export type UserCredit = typeof userCredits.$inferSelect;
 export type CreditTransaction = typeof creditTransactions.$inferSelect;
 export type DoctorPlan = typeof doctorPlans.$inferSelect;
-export type DoctorWeeklyAvailability = typeof doctorWeeklyAvailability.$inferSelect;
+export type DoctorWeeklyAvailability =
+  typeof doctorWeeklyAvailability.$inferSelect;
 export type DoctorCredit = typeof doctorCredits.$inferSelect;
 export type DoctorCashoutRequest = typeof doctorCashoutRequests.$inferSelect;

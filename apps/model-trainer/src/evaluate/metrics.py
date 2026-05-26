@@ -11,86 +11,71 @@ from sklearn.metrics import (
     accuracy_score,
     classification_report,
     confusion_matrix,
-    fbeta_score,
     f1_score,
     precision_score,
     recall_score,
-    roc_auc_score,
 )
-
 from src.config import TRAINING
 
 
-def _find_best_threshold(y_true: np.ndarray, y_prob: np.ndarray) -> tuple[float, dict[str, float]]:
-    best_threshold = 0.5
-    best_score = -1.0
-    best_metrics = {"precision": 0.0, "recall": 0.0, "fbeta": 0.0}
-
-    for threshold in np.linspace(0.1, 0.9, 81):
-        y_pred = (y_prob >= threshold).astype(int)
-        score = fbeta_score(
-            y_true,
-            y_pred,
-            beta=TRAINING.decision_threshold_beta,
-            zero_division=0,
-        )
-        if score > best_score:
-            best_score = float(score)
-            best_threshold = float(threshold)
-            best_metrics = {
-                "precision": float(precision_score(y_true, y_pred, zero_division=0)),
-                "recall": float(recall_score(y_true, y_pred, zero_division=0)),
-                "fbeta": float(score),
-            }
-
-    return best_threshold, best_metrics
+def _summarize_predictions(y_true: np.ndarray, y_prob: np.ndarray) -> dict[str, float]:
+    y_pred = np.argmax(y_prob, axis=1)
+    score = f1_score(y_true, y_pred, average="macro", zero_division=0)
+    best_metrics = {
+        "precision": float(precision_score(y_true, y_pred, average="macro", zero_division=0)),
+        "recall": float(recall_score(y_true, y_pred, average="macro", zero_division=0)),
+        "fbeta": float(score),
+    }
+    return best_metrics
 
 
 def evaluate_model(model, X_test: np.ndarray, y_test: np.ndarray, seq_len: int):
-    y_prob = model.predict(X_test, verbose=0).flatten()
-    threshold, threshold_metrics = _find_best_threshold(y_test, y_prob)
-    y_pred = (y_prob >= threshold).astype(int)
+    eval_result = model.evaluate(X_test, y_test, verbose=0, return_dict=True)
+    y_prob = model.predict(X_test, verbose=0)
+    threshold_metrics = _summarize_predictions(y_test, y_prob)
+    y_pred = np.argmax(y_prob, axis=1)
 
-    auc = roc_auc_score(y_test, y_prob)
-    acc = accuracy_score(y_test, y_pred)
-    f1 = f1_score(y_test, y_pred, zero_division=0)
-    precision = precision_score(y_test, y_pred, zero_division=0)
-    recall = recall_score(y_test, y_pred, zero_division=0)
+    acc = float(eval_result.get("accuracy", accuracy_score(y_test, y_pred)))
+    test_loss = float(eval_result.get("loss", 0.0))
+    f1 = f1_score(y_test, y_pred, average="macro", zero_division=0)
+    precision = precision_score(y_test, y_pred, average="macro", zero_division=0)
+    recall = recall_score(y_test, y_pred, average="macro", zero_division=0)
 
-    cm = confusion_matrix(y_test, y_pred)
-    tn, fp, fn, tp = cm.ravel()
+    cm = confusion_matrix(y_test, y_pred, labels=[0, 1, 2])
+    class_names = ["baseline", "amusement", "stress"]
+    actual_counts = np.bincount(y_test.astype(np.intp), minlength=3)
+    predicted_counts = np.bincount(y_pred.astype(np.intp), minlength=3)
 
     metrics = {
         "seq_len": seq_len,
-        "threshold": float(threshold),
         "threshold_precision": float(threshold_metrics["precision"]),
         "threshold_recall": float(threshold_metrics["recall"]),
         "threshold_fbeta": float(threshold_metrics["fbeta"]),
-        "mean_stress_probability": float(np.mean(y_prob)),
-        "max_stress_probability": float(np.max(y_prob)),
-        "min_stress_probability": float(np.min(y_prob)),
-        "auc": float(auc),
         "accuracy": float(acc),
+        "test_loss": float(test_loss),
         "f1": float(f1),
         "precision": float(precision),
         "recall": float(recall),
-        "tp": int(tp),
-        "fp": int(fp),
-        "tn": int(tn),
-        "fn": int(fn),
+        "mean_baseline_probability": float(np.mean(y_prob[:, 0])),
+        "mean_amusement_probability": float(np.mean(y_prob[:, 1])),
+        "mean_stress_probability": float(np.mean(y_prob[:, 2])),
     }
 
-    print(f"\nROC-AUC Score: {auc:.4f}")
-    print(f"Decision Threshold: {threshold:.2f}")
-    print(f"Threshold F{TRAINING.decision_threshold_beta:.1f}: {threshold_metrics['fbeta']:.4f}")
-    print(f"Accuracy: {acc:.4f}, F1: {f1:.4f}")
+    print(f"\nTest loss: {test_loss:.4f}")
+    print(f"Test accuracy: {acc:.4f}")
+    print(f"Macro F1: {f1:.4f}")
     print(
-        "Stress probability summary - "
-        f"mean: {metrics['mean_stress_probability']:.4f}, "
-        f"min: {metrics['min_stress_probability']:.4f}, "
-        f"max: {metrics['max_stress_probability']:.4f}"
+        "Mean class probabilities - "
+        f"baseline: {metrics['mean_baseline_probability']:.4f}, "
+        f"amusement: {metrics['mean_amusement_probability']:.4f}, "
+        f"stress: {metrics['mean_stress_probability']:.4f}"
     )
-    print(f"Sample stress probabilities: {np.array2string(y_prob[:10], precision=4)}")
+    print(
+        "Class counts - "
+        f"actual baseline={actual_counts[0]}, amusement={actual_counts[1]}, stress={actual_counts[2]} | "
+        f"pred baseline={predicted_counts[0]}, amusement={predicted_counts[1]}, stress={predicted_counts[2]}"
+    )
+    print(f"Sample probabilities: {np.array2string(y_prob[:10], precision=4)}")
 
     model_dir = TRAINING.models_dir / f"seq_{seq_len}"
     with open(model_dir / "results.json", "w") as f:
@@ -99,7 +84,8 @@ def evaluate_model(model, X_test: np.ndarray, y_test: np.ndarray, seq_len: int):
     report = classification_report(
         y_test,
         y_pred,
-        target_names=["not-stress", "stress"],
+        labels=[0, 1, 2],
+        target_names=class_names,
         zero_division=0,
     )
 
@@ -109,8 +95,8 @@ def evaluate_model(model, X_test: np.ndarray, y_test: np.ndarray, seq_len: int):
         annot=True,
         fmt="d",
         cmap="Blues",
-        xticklabels=["not-stress", "stress"],
-        yticklabels=["not-stress", "stress"],
+        xticklabels=class_names,
+        yticklabels=class_names,
     )
     plt.title(f"Confusion Matrix (seq_len={seq_len})")
     plt.ylabel("Actual")
@@ -118,6 +104,15 @@ def evaluate_model(model, X_test: np.ndarray, y_test: np.ndarray, seq_len: int):
 
     plot_path = model_dir / "confusion_matrix.png"
     plt.savefig(plot_path)
+    plt.close()
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.bar(["test_accuracy", "test_loss"], [acc, test_loss], color=["#2b8a3e", "#c92a2a"])
+    ax.set_ylim(0.0, max(1.0, test_loss * 1.15, acc * 1.15))
+    ax.set_title(f"Test Metrics (seq_len={seq_len})")
+    ax.grid(axis="y", alpha=0.2)
+    plt.tight_layout()
+    plt.savefig(model_dir / "test_metrics_summary.png")
     plt.close()
 
     return report
@@ -162,19 +157,33 @@ def plot_performance_summary(results: list[dict[str, float | int]]) -> None:
     plt.close()
 
     fig, ax = plt.subplots(figsize=(12, 6))
-    ax.bar(x - 1.5 * width, [int(item["tn"]) for item in results], width, label="TN")
-    ax.bar(x - 0.5 * width, [int(item["fp"]) for item in results], width, label="FP")
-    ax.bar(x + 0.5 * width, [int(item["fn"]) for item in results], width, label="FN")
-    ax.bar(x + 1.5 * width, [int(item["tp"]) for item in results], width, label="TP")
+    ax.bar(
+        x - 1.0 * width,
+        [float(item["mean_baseline_probability"]) for item in results],
+        width,
+        label="Baseline",
+    )
+    ax.bar(
+        x,
+        [float(item["mean_amusement_probability"]) for item in results],
+        width,
+        label="Amusement",
+    )
+    ax.bar(
+        x + 1.0 * width,
+        [float(item["mean_stress_probability"]) for item in results],
+        width,
+        label="Stress",
+    )
 
     ax.set_xticks(x)
     ax.set_xticklabels([f"seq_{seq}" for seq in seq_lens])
-    ax.set_ylabel("Window Count")
-    ax.set_title("Confusion Matrix Counts by Sequence Length")
+    ax.set_ylabel("Mean Probability")
+    ax.set_title("Mean Class Probabilities by Sequence Length")
     ax.legend()
     ax.grid(axis="y", alpha=0.2)
     plt.tight_layout()
-    plt.savefig(model_dir / "confusion_counts_summary.png")
+    plt.savefig(model_dir / "class_probability_summary.png")
     plt.close()
 
 

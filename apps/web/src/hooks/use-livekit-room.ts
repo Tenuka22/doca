@@ -25,9 +25,7 @@ export function useLiveKitRoomWeb(options: UseLiveKitRoomWebOptions = {}) {
       setError(null);
 
       try {
-        const { Room } = await import(
-          "livekit-client"
-        );
+        const { Room } = await import("livekit-client");
         const room = new Room({
           adaptiveStream: true,
           dynacast: true,

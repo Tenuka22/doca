@@ -54,7 +54,13 @@ function OnboardingCheck() {
   const hasGuardianProfile = Boolean(guardianProfileQuery.data);
 
   useEffect(() => {
-    if (isLoaded && isSignedIn && !patientProfileQuery.isLoading && !guardianProfileQuery.isLoading && !(hasPatientProfile || hasGuardianProfile)) {
+    if (
+      isLoaded &&
+      isSignedIn &&
+      !patientProfileQuery.isLoading &&
+      !guardianProfileQuery.isLoading &&
+      !(hasPatientProfile || hasGuardianProfile)
+    ) {
       router.replace("/onboarding");
     }
   }, [

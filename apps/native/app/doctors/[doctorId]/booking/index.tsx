@@ -5,7 +5,6 @@ import {
   Calendar,
   Check,
   Clock,
-  Languages,
   MapPin,
   Sparkles,
   X,
@@ -60,7 +59,11 @@ const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 function AvailabilityInfo({
   availability,
 }: {
-  availability: Array<{ dayOfWeek: number; startTime: string; endTime: string }>;
+  availability: Array<{
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+  }>;
 }) {
   const colors = useThemeColor();
   if (availability.length === 0) {
@@ -118,12 +121,16 @@ function PlanSelection({
       <View className="gap-2">
         {plans.map((plan) => (
           <Card
-            className={plan.id === selectedPlanId ? "border-primary bg-primary/10" : "bg-background"}
+            className={
+              plan.id === selectedPlanId
+                ? "border-primary bg-primary/10"
+                : "bg-background"
+            }
             key={plan.id}
             onPress={() => onSelectPlan(plan.id)}
           >
             <View className="flex-row items-center justify-between">
-              <Text className="font-black font-sans text-sm text-foreground">
+              <Text className="font-black font-sans text-foreground text-sm">
                 {plan.name}
               </Text>
               <View className="flex-row items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5">
@@ -170,14 +177,17 @@ export default function BookingScreen() {
 
   const availabilityQuery = useQuery({
     queryKey: ["doctor-availability", id],
-    queryFn: () => orpc.getDoctorWeeklyAvailability.call({ doctorId: id ?? "" }),
+    queryFn: () =>
+      orpc.getDoctorWeeklyAvailability.call({ doctorId: id ?? "" }),
     enabled: !!id,
   });
 
   const today = useMemo(() => new Date(), []);
   const fromDate = useMemo(() => selectedDate?.toISOString(), [selectedDate]);
   const toDate = useMemo(() => {
-    if (!selectedDate) return;
+    if (!selectedDate) {
+      return;
+    }
     const d = new Date(selectedDate);
     d.setDate(d.getDate() + 1);
     return d.toISOString();
@@ -186,7 +196,9 @@ export default function BookingScreen() {
   const slotsQuery = useQuery({
     queryKey: ["doctor-slots", id, fromDate],
     queryFn: () => {
-      if (!(fromDate && toDate)) throw new Error("No date selected");
+      if (!(fromDate && toDate)) {
+        throw new Error("No date selected");
+      }
       return orpc.getDoctorAvailableSlots.call({
         doctorId: id ?? "",
         from: fromDate,
@@ -222,7 +234,9 @@ export default function BookingScreen() {
         startAt: selectedSlot.startAt,
         endAt: selectedSlot.endAt,
       });
-      if (!result.ok) throw new Error("Booking failed");
+      if (!result.ok) {
+        throw new Error("Booking failed");
+      }
       return result;
     },
     onSuccess: async () => {
@@ -238,7 +252,9 @@ export default function BookingScreen() {
   });
 
   const handleBook = useCallback(() => {
-    if (!(selectedSlot && selectedPlanId)) return;
+    if (!(selectedSlot && selectedPlanId)) {
+      return;
+    }
     setBookingStep("processing");
     bookMutation.mutate();
   }, [bookMutation, selectedSlot, selectedPlanId]);
@@ -285,7 +301,8 @@ export default function BookingScreen() {
             Request Sent!
           </Text>
           <Text className="max-w-[300px] text-center text-muted-foreground text-sm">
-            Your session request has been sent. The doctor will review and respond shortly.
+            Your session request has been sent. The doctor will review and
+            respond shortly.
           </Text>
           <ActivityIndicator size="small" />
         </Screen>
@@ -294,7 +311,10 @@ export default function BookingScreen() {
   }
 
   const isLoading =
-    plansQuery.isLoading || slotsQuery.isLoading || doctorQuery.isLoading || availabilityQuery.isLoading;
+    plansQuery.isLoading ||
+    slotsQuery.isLoading ||
+    doctorQuery.isLoading ||
+    availabilityQuery.isLoading;
 
   return (
     <>
@@ -327,7 +347,7 @@ export default function BookingScreen() {
             <ActivityIndicator size="large" />
           </View>
         ) : (
-          <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
             <View className="gap-6 pb-8">
               {doctor && (
                 <Card className="gap-4">
@@ -363,7 +383,11 @@ export default function BookingScreen() {
 
               <Card className="gap-4">
                 <View className="flex-row items-center gap-2">
-                  <Clock color={colors.foreground} size={16} strokeWidth={2.5} />
+                  <Clock
+                    color={colors.foreground}
+                    size={16}
+                    strokeWidth={2.5}
+                  />
                   <Text className="font-bold font-sans text-foreground text-xs uppercase tracking-wider">
                     Weekly Availability
                   </Text>
@@ -407,15 +431,18 @@ export default function BookingScreen() {
               {selectedDate && slots.length > 0 && (
                 <Card className="gap-4">
                   <View className="flex-row items-center gap-2">
-                    <Clock color={colors.foreground} size={16} strokeWidth={2.5} />
+                    <Clock
+                      color={colors.foreground}
+                      size={16}
+                      strokeWidth={2.5}
+                    />
                     <Text className="font-bold font-sans text-foreground text-xs uppercase tracking-wider">
                       Available Times
                     </Text>
                   </View>
                   <View className="flex-row flex-wrap gap-2">
                     {slots.map((slot, i) => {
-                      const isSelected =
-                        selectedSlot?.startAt === slot.startAt;
+                      const isSelected = selectedSlot?.startAt === slot.startAt;
                       return (
                         <Button
                           key={i}
@@ -442,7 +469,10 @@ export default function BookingScreen() {
               />
 
               <Button
-                disabled={!(selectedSlot && selectedPlanId) || bookingStep === "processing"}
+                disabled={
+                  !(selectedSlot && selectedPlanId) ||
+                  bookingStep === "processing"
+                }
                 onPress={handleBook}
                 variant="primary"
               >
