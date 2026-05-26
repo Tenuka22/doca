@@ -67,9 +67,10 @@ export default function Page() {
   ) => {
     setStatusMessage(null);
 
-    const { error } = await signUp.signUpWithOAuth({
+    const { error } = await signUp.sso({
       strategy,
       redirectUrl: "/",
+      redirectCallbackUrl: "/",
     });
 
     if (error) {

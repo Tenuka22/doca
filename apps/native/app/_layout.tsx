@@ -39,28 +39,31 @@ function OnboardingCheck() {
   const router = useRouter();
   const { isLoaded, isSignedIn } = useAuth();
 
-  const profileQuery = useQuery(
+  const patientProfileQuery = useQuery(
     orpc.getPatientProfile.queryOptions({
       enabled: isLoaded && isSignedIn,
     })
   );
+  const guardianProfileQuery = useQuery(
+    orpc.getGuardianProfile.queryOptions({
+      enabled: isLoaded && isSignedIn,
+    })
+  );
 
-  const isOnboardingComplete = profileQuery.data?.isOnboardingComplete ?? false;
+  const hasPatientProfile = Boolean(patientProfileQuery.data);
+  const hasGuardianProfile = Boolean(guardianProfileQuery.data);
 
   useEffect(() => {
-    if (
-      isLoaded &&
-      isSignedIn &&
-      !profileQuery.isLoading &&
-      !isOnboardingComplete
-    ) {
+    if (isLoaded && isSignedIn && !patientProfileQuery.isLoading && !guardianProfileQuery.isLoading && !(hasPatientProfile || hasGuardianProfile)) {
       router.replace("/onboarding");
     }
   }, [
+    guardianProfileQuery.isLoading,
     isLoaded,
     isSignedIn,
-    profileQuery.isLoading,
-    isOnboardingComplete,
+    hasGuardianProfile,
+    hasPatientProfile,
+    patientProfileQuery.isLoading,
     router,
   ]);
 

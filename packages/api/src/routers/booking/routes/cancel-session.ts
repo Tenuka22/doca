@@ -1,6 +1,5 @@
 import {
   creditTransactions,
-  doctorScheduleEntries,
   doctorSessions,
   userCredits,
 } from "@zen-doc/db";
@@ -14,7 +13,6 @@ export const cancelSessionRoute = protectedProcedure
   .handler(async ({ context, input }) => {
     const { userId, auth } = requireAuth(context);
     const role = auth.sessionClaims?.metadata?.role;
-    const isAdmin = role === "admin";
 
     const [session] = await context.db
       .select()
@@ -27,28 +25,26 @@ export const cancelSessionRoute = protectedProcedure
     }
 
     const isDoctor = session.doctorId === userId;
-    if (!(isDoctor || isAdmin)) {
-      throw new Error("Only the doctor can cancel this session");
+    const isPatient = session.patientId === userId;
+    const isAdmin = role === "admin";
+    if (!(isDoctor || isPatient || isAdmin)) {
+      throw new Error("Not authorized to cancel this session");
     }
 
-    if (session.status !== "requested" && session.status !== "scheduled") {
-      throw new Error(
-        "Cannot cancel a session that has already been attended or cancelled"
-      );
+    if (session.status === "attended" || session.status === "timing_balance_failure") {
+      throw new Error("Cannot cancel a session that has already ended or failed");
     }
 
     const now = new Date().toISOString();
 
-    // 1. Mark session as cancelled
     await context.db
       .update(doctorSessions)
       .set({
-        status: "cancelled",
+        status: "timing_balance_failure",
         updatedAt: now,
       })
       .where(eq(doctorSessions.id, input.sessionId));
 
-    // 2. Return reserved credits to the patient
     const [userCredit] = await context.db
       .select()
       .from(userCredits)
@@ -72,24 +68,6 @@ export const cancelSessionRoute = protectedProcedure
         sessionId: session.id,
         createdAt: now,
       });
-    }
-
-    // 3. Open up the schedule slot again
-    const [scheduleEntry] = await context.db
-      .select()
-      .from(doctorScheduleEntries)
-      .where(eq(doctorScheduleEntries.sessionId, input.sessionId))
-      .limit(1);
-
-    if (scheduleEntry) {
-      await context.db
-        .update(doctorScheduleEntries)
-        .set({
-          kind: "open",
-          sessionId: null,
-          updatedAt: now,
-        })
-        .where(eq(doctorScheduleEntries.id, scheduleEntry.id));
     }
 
     return { ok: true };

@@ -120,6 +120,13 @@
       "when": 1779722107724,
       "tag": "0016_mean_prowler",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1779785085521,
+      "tag": "0017_curved_night_thrasher",
+      "breakpoints": true
     }
   ]
 }

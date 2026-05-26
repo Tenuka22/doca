@@ -5,13 +5,7 @@ import { RPCHandler } from "@orpc/server/fetch";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { createContext } from "@zen-doc/api/context";
 import { appRouter } from "@zen-doc/api/routers/index";
-import {
-  createDb,
-  doctorScheduleEntries,
-  doctorSessions,
-} from "@zen-doc/db";
 import { env } from "@zen-doc/env/server";
-import { and, eq, inArray, lt } from "drizzle-orm";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -78,58 +72,6 @@ app.use("/*", async (c, next) => {
 
 app.get("/", (c) => c.text("OK"));
 
-async function runCleanup() {
-  const db = createDb();
-  const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-
-  // Find requested sessions older than 10 mins without being scheduled
-  const abandonedSessions = await db
-    .select({ id: doctorSessions.id })
-    .from(doctorSessions)
-    .where(
-      and(
-        lt(doctorSessions.createdAt, tenMinutesAgo),
-        eq(doctorSessions.status, "requested")
-      )
-    );
-
-  if (abandonedSessions.length > 0) {
-    const sessionIds = abandonedSessions.map((s) => s.id);
-    const now = new Date().toISOString();
-
-    // Mark sessions as cancelled
-    await db
-      .update(doctorSessions)
-      .set({
-        status: "cancelled",
-        updatedAt: now,
-      })
-      .where(inArray(doctorSessions.id, sessionIds));
-
-    // Free up schedule slots
-    await db
-      .update(doctorScheduleEntries)
-      .set({
-        kind: "open",
-        sessionId: null,
-        updatedAt: now,
-      })
-      .where(inArray(doctorScheduleEntries.sessionId, sessionIds));
-
-    console.log(`Cancelled ${abandonedSessions.length} abandoned requests`);
-  }
-
-  return abandonedSessions.length;
-}
-
-app.get("/crons", async (c) => {
-  const count = await runCleanup();
-  return c.json({ ok: true, cleanedUp: count });
-});
-
 export default {
   fetch: app.fetch,
-  async scheduled(_event: ScheduledEvent, _env: Env, _ctx: ExecutionContext) {
-    await runCleanup();
-  },
 };

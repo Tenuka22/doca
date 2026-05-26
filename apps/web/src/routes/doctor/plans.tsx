@@ -1,28 +1,16 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@zen-doc/ui/components/alert-dialog";
 import { Badge } from "@zen-doc/ui/components/badge";
 import { Button } from "@zen-doc/ui/components/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@zen-doc/ui/components/card";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -31,7 +19,7 @@ import {
 import { Input } from "@zen-doc/ui/components/input";
 import { Label } from "@zen-doc/ui/components/label";
 import { Textarea } from "@zen-doc/ui/components/textarea";
-import { Check, Loader2, Pencil, PlusIcon, Trash2, X } from "lucide-react";
+import { Check, Loader2, Pencil, PlusIcon, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { orpc } from "@/utils/orpc";
@@ -190,7 +178,6 @@ function FeatureInput({
 
 function DoctorPlansRoute() {
   const [showCreate, setShowCreate] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [editTarget, setEditTarget] = useState<DoctorPlan | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -230,22 +217,6 @@ function DoctorPlansRoute() {
         toast.error(
           error instanceof Error ? error.message : "Failed to update plan"
         );
-      },
-    })
-  );
-
-  const deletePlan = useMutation(
-    orpc.deleteDoctorPlan.mutationOptions({
-      onSuccess: async () => {
-        await plansQuery.refetch();
-        toast.success("Plan deleted");
-        setDeleteTarget(null);
-      },
-      onError: (error) => {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to delete plan"
-        );
-        setDeleteTarget(null);
       },
     })
   );
@@ -518,16 +489,7 @@ function DoctorPlansRoute() {
                       <Pencil className="mr-1 h-3 w-3" />
                       Edit
                     </Button>
-                    {plan.isDefault ? null : (
-                      <Button
-                        className="shrink-0"
-                        onClick={() => setDeleteTarget(plan.id)}
-                        size="sm"
-                        variant="ghost"
-                      >
-                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-rose-500" />
-                      </Button>
-                    )}
+
                   </div>
                 </CardContent>
               </Card>

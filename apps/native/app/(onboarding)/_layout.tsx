@@ -7,7 +7,7 @@ import { orpc } from "@/utils/orpc";
 export default function OnboardingLayout() {
   const { isLoaded, isSignedIn } = useAuth();
 
-  const profileQuery = useQuery({
+  const patientProfileQuery = useQuery({
     queryKey: orpc.getPatientProfile.queryKey(),
     queryFn: () => orpc.getPatientProfile.call(),
     enabled: isLoaded && isSignedIn,
@@ -15,7 +15,16 @@ export default function OnboardingLayout() {
     throwOnError: false,
   });
 
-  const isOnboardingComplete = profileQuery.data?.isOnboardingComplete ?? false;
+  const guardianProfileQuery = useQuery({
+    queryKey: orpc.getGuardianProfile.queryKey(),
+    queryFn: () => orpc.getGuardianProfile.call(),
+    enabled: isLoaded && isSignedIn,
+    retry: false,
+    throwOnError: false,
+  });
+
+  const hasPatientProfile = Boolean(patientProfileQuery.data);
+  const hasGuardianProfile = Boolean(guardianProfileQuery.data);
 
   if (!isLoaded) {
     return null;
@@ -25,11 +34,11 @@ export default function OnboardingLayout() {
     return <Redirect href="/sign-in" />;
   }
 
-  if (profileQuery.isLoading) {
+  if (patientProfileQuery.isLoading || guardianProfileQuery.isLoading) {
     return null;
   }
 
-  if (isOnboardingComplete) {
+  if (hasPatientProfile || hasGuardianProfile) {
     return <Redirect href="/" />;
   }
 

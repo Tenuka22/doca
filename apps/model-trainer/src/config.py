@@ -15,11 +15,11 @@ class DataConfig:
 
 @dataclass(frozen=True)
 class ModelConfig:
-    lstm_units: int = 64
-    dropout_rate: float = 0.2
-    learning_rate: float = 5e-4
-    l2_reg: float = 1e-4
-    lstm_dropout: float = 0.2
+    lstm_units: int = 32
+    dropout_rate: float = 0.4
+    learning_rate: float = 3e-4
+    l2_reg: float = 1e-3
+    lstm_dropout: float = 0.3
     lstm_recurrent_dropout: float = 0.0
 
 

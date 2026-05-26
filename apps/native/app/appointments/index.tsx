@@ -21,15 +21,25 @@ const statusColorMap: Record<
     border: "border-success/30",
     text: "text-success",
   },
-  cancelled: {
-    bg: "bg-destructive/15",
-    border: "border-destructive/30",
-    text: "text-destructive",
+  approved: {
+    bg: "bg-success/20",
+    border: "border-success/30",
+    text: "text-success",
   },
-  scheduled: {
+  requested: {
     bg: "bg-warning/20",
     border: "border-warning/30",
     text: "text-warning",
+  },
+  rescheduled: {
+    bg: "bg-blue-500/20",
+    border: "border-blue-500/30",
+    text: "text-blue-500",
+  },
+  timing_balance_failure: {
+    bg: "bg-destructive/15",
+    border: "border-destructive/30",
+    text: "text-destructive",
   },
 };
 
@@ -216,7 +226,7 @@ export default function AppointmentsScreen() {
                       </View>
                     ) : null}
 
-                    {session.status === "scheduled" ? (
+                    {session.status === "approved" ? (
                       <>
                         <SessionJoinButton
                           endAt={session.endAt}

@@ -4,11 +4,16 @@ import { z } from "zod";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
 
-export const confirmSessionRoute = protectedProcedure
-  .input(z.object({ sessionId: z.string().min(1) }))
+export const counterProposeSessionRoute = protectedProcedure
+  .input(
+    z.object({
+      sessionId: z.string().min(1),
+      startAt: z.string().min(1),
+      endAt: z.string().min(1),
+    })
+  )
   .handler(async ({ context, input }) => {
-    const { userId, auth } = requireAuth(context);
-    const role = auth.sessionClaims?.metadata?.role;
+    const { userId } = requireAuth(context);
 
     const [session] = await context.db
       .select()
@@ -20,20 +25,12 @@ export const confirmSessionRoute = protectedProcedure
       throw new Error("Session not found");
     }
 
-    const isDoctor = session.doctorId === userId;
-    const isAdmin = role === "admin";
-    if (!(isDoctor || isAdmin)) {
-      throw new Error("Only the doctor can confirm this session");
+    if (session.patientId !== userId) {
+      throw new Error("Only the patient can counter-propose");
     }
 
-    if (session.status !== "pending") {
-      throw new Error(
-        "Can only confirm sessions that are awaiting confirmation"
-      );
-    }
-
-    if (session.payoutStatus !== "paid") {
-      throw new Error("Cannot confirm a session that has not been paid");
+    if (session.status !== "rescheduled") {
+      throw new Error("Session is not in a rescheduled state");
     }
 
     const now = new Date().toISOString();
@@ -41,7 +38,9 @@ export const confirmSessionRoute = protectedProcedure
     await context.db
       .update(doctorSessions)
       .set({
-        status: "scheduled",
+        startAt: input.startAt,
+        endAt: input.endAt,
+        status: "requested",
         updatedAt: now,
       })
       .where(eq(doctorSessions.id, input.sessionId));

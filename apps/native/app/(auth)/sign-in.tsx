@@ -108,6 +108,7 @@ export default function Page() {
     const { error } = await signIn.sso({
       strategy,
       redirectUrl: "/",
+      redirectCallbackUrl: "/",
     });
 
     if (error) {

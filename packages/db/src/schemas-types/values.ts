@@ -1,3 +1,11 @@
+export const sessionStatusValues = [
+  "requested",
+  "rescheduled",
+  "approved",
+  "attended",
+  "timing_balance_failure",
+] as const;
+
 export const scheduleKindValues = ["open", "block", "session"] as const;
 
 export const scheduleNoteValues = [

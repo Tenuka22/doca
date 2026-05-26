@@ -40,6 +40,7 @@ interface NativeSamsungSensorBridge {
   addListener: (eventName: string) => void;
   getLatestSample: () => Promise<SamsungSensorSample | null>;
   isAvailable: () => Promise<boolean>;
+  removeListeners: (eventType: number) => void;
   startStreaming: (sensorType: SamsungSensorType) => Promise<void>;
   stopStreaming: () => Promise<void>;
 }

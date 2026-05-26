@@ -199,16 +199,16 @@ interface DoctorCardProps {
   portrait: { id: string | null } | null;
   profile: {
     userId: string;
-    displayName?: string;
-    location?: string;
-    headline?: string;
-    bio?: string;
+    displayName?: string | null;
+    location?: string | null;
+    headline?: string | null;
+    bio?: string | null;
     specialties?: string[];
     consultationModes?: string[];
     languages?: string[];
     focusAreas?: string[];
-    licenseNumber?: string;
-    experienceStartYear?: number;
+    licenseNumber?: string | null;
+    experienceStartYear?: number | null;
   };
 }
 

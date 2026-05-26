@@ -1,11 +1,10 @@
 import {
   creditTransactions,
   doctorPlans,
-  doctorScheduleEntries,
   doctorSessions,
   userCredits,
 } from "@zen-doc/db";
-import { and, eq, or } from "drizzle-orm";
+import { and, eq, inArray, ne, or } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -14,54 +13,20 @@ export const bookSessionRoute = protectedProcedure
   .input(
     z.object({
       doctorId: z.string().min(1),
-      scheduleEntryId: z.string().uuid(),
-      planId: z.string().optional(),
+      planId: z.string().min(1),
+      startAt: z.string().min(1),
+      endAt: z.string().min(1),
     })
   )
   .handler(async ({ context, input }) => {
     const { userId: patientId } = requireAuth(context);
 
-    const [entry] = await context.db
-      .select({
-        id: doctorScheduleEntries.id,
-        doctorId: doctorScheduleEntries.doctorId,
-        kind: doctorScheduleEntries.kind,
-        startAt: doctorScheduleEntries.startAt,
-        endAt: doctorScheduleEntries.endAt,
-      })
-      .from(doctorScheduleEntries)
-      .leftJoin(
-        doctorSessions,
-        eq(doctorScheduleEntries.sessionId, doctorSessions.id)
-      )
-      .where(
-        and(
-          eq(doctorScheduleEntries.id, input.scheduleEntryId),
-          eq(doctorScheduleEntries.doctorId, input.doctorId),
-          or(
-            eq(doctorScheduleEntries.kind, "open"),
-            and(
-              eq(doctorScheduleEntries.kind, "session"),
-              eq(doctorSessions.status, "cancelled")
-            )
-          )
-        )
-      )
-      .limit(1);
-
-    if (!entry) {
-      throw new Error(
-        "The selected schedule slot is not available or does not exist"
-      );
-    }
-
-    // Resolve plan and credit cost
     const [plan] = await context.db
       .select()
       .from(doctorPlans)
       .where(
         and(
-          input.planId ? eq(doctorPlans.id, input.planId) : eq(doctorPlans.isDefault, true),
+          eq(doctorPlans.id, input.planId),
           eq(doctorPlans.doctorId, input.doctorId),
           eq(doctorPlans.isActive, true)
         )
@@ -72,9 +37,8 @@ export const bookSessionRoute = protectedProcedure
       throw new Error("The selected plan is not available");
     }
 
-    const creditCost = 1; // Assuming default 1 credit per 60 min session as requested
+    const creditCost = 1;
 
-    // Check user credits
     const [userCredit] = await context.db
       .select()
       .from(userCredits)
@@ -85,19 +49,41 @@ export const bookSessionRoute = protectedProcedure
       throw new Error("Insufficient credits");
     }
 
+    // Check for overlapping sessions with this doctor
+    const overlapping = await context.db
+      .select({ id: doctorSessions.id })
+      .from(doctorSessions)
+      .where(
+        and(
+          eq(doctorSessions.doctorId, input.doctorId),
+          ne(doctorSessions.status, "timing_balance_failure"),
+          ne(doctorSessions.status, "attended"),
+          or(
+            inArray(doctorSessions.status, [
+              "requested",
+              "rescheduled",
+              "approved",
+            ])
+          )
+        )
+      );
+
+    if (overlapping.length > 0) {
+      throw new Error("You already have a pending session with this doctor");
+    }
+
     const now = new Date().toISOString();
     const sessionId = crypto.randomUUID();
 
-    // Perform operations in a transaction (db.transaction) if available
     await context.db.insert(doctorSessions).values({
       id: sessionId,
       doctorId: input.doctorId,
       patientId,
       planId: plan.id,
-      startAt: entry.startAt,
-      endAt: entry.endAt,
+      startAt: input.startAt,
+      endAt: input.endAt,
       status: "requested",
-      creditCost: creditCost,
+      creditCost,
       createdAt: now,
       updatedAt: now,
     });
@@ -112,18 +98,9 @@ export const bookSessionRoute = protectedProcedure
       userId: patientId,
       amount: -creditCost,
       type: "booking",
-      sessionId: sessionId,
+      sessionId,
       createdAt: now,
     });
-
-    await context.db
-      .update(doctorScheduleEntries)
-      .set({
-        kind: "session",
-        sessionId,
-        updatedAt: now,
-      })
-      .where(eq(doctorScheduleEntries.id, input.scheduleEntryId));
 
     return {
       ok: true,

@@ -1,13 +1,12 @@
 import {
   doctorFiles,
   doctorProfiles,
-  doctorScheduleEntries,
-  doctorSessions,
+  doctorWeeklyAvailability,
   parseJsonApproachSteps,
   parseJsonStringArray,
 } from "@zen-doc/db";
 import { listDoctorsInputSchema } from "@zen-doc/db/schemas-types";
-import { and, count, desc, eq, gte, lte, or } from "drizzle-orm";
+import { count, desc, eq } from "drizzle-orm";
 import { publicProcedure } from "../../../index";
 
 function mapDoctorProfile(profile: typeof doctorProfiles.$inferSelect) {
@@ -51,10 +50,6 @@ export const listDoctorsRoute = publicProcedure
     const offset = (input.page - 1) * input.pageSize;
     const pageItems = filteredProfiles.slice(offset, offset + input.pageSize);
 
-    const now = new Date();
-    const next7Days = new Date();
-    next7Days.setDate(now.getDate() + 7);
-
     const doctors = await Promise.all(
       pageItems.map(async (profile) => {
         const [portrait] = await context.db
@@ -63,33 +58,17 @@ export const listDoctorsRoute = publicProcedure
           .where(eq(doctorFiles.doctorId, profile.userId))
           .limit(1);
 
-        // Count available slots (open or cancelled sessions)
-        const [availableSlots] = await context.db
+        const [availabilityCount] = await context.db
           .select({ value: count() })
-          .from(doctorScheduleEntries)
-          .leftJoin(
-            doctorSessions,
-            eq(doctorScheduleEntries.sessionId, doctorSessions.id)
-          )
+          .from(doctorWeeklyAvailability)
           .where(
-            and(
-              eq(doctorScheduleEntries.doctorId, profile.userId),
-              gte(doctorScheduleEntries.startAt, now.toISOString()),
-              lte(doctorScheduleEntries.endAt, next7Days.toISOString()),
-              or(
-                eq(doctorScheduleEntries.kind, "open"),
-                and(
-                  eq(doctorScheduleEntries.kind, "session"),
-                  eq(doctorSessions.status, "cancelled")
-                )
-              )
-            )
+            eq(doctorWeeklyAvailability.doctorId, profile.userId)
           );
 
         return {
           profile: mapDoctorProfile(profile),
           portrait: portrait ?? null,
-          availableSlotCount: availableSlots?.value ?? 0,
+          hasAvailability: (availabilityCount?.value ?? 0) > 0,
         };
       })
     );
@@ -98,6 +77,7 @@ export const listDoctorsRoute = publicProcedure
       doctors,
       page: input.page,
       pageSize: input.pageSize,
+      total: filteredProfiles.length,
       hasMore: offset + input.pageSize < filteredProfiles.length,
     };
   });

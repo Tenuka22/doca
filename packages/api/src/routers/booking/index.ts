@@ -1,7 +1,9 @@
+import { acceptRescheduledSessionRoute } from "./routes/accept-rescheduled-session";
 import { bookSessionRoute } from "./routes/book-session";
 import { cancelSessionRoute } from "./routes/cancel-session";
-import { confirmSessionRoute } from "./routes/confirm-session";
+import { counterProposeSessionRoute } from "./routes/counter-propose-session";
 import { createConnectAccountLinkRoute } from "./routes/create-connect-account-link";
+import { getDoctorCreditsRoute, requestCashoutRoute } from "./routes/doctor-credits";
 import {
   createDoctorPlanRoute,
   deleteDoctorPlanRoute,
@@ -13,16 +15,24 @@ import { getConnectAccountStatusRoute } from "./routes/get-connect-account-statu
 import { listDoctorSessionsRoute } from "./routes/list-doctor-sessions";
 import { listPatientSessionsRoute } from "./routes/list-patient-sessions";
 import { markSessionAttendedRoute } from "./routes/mark-session-attended";
+import { respondSessionRoute } from "./routes/respond-session";
 import { syncConnectAccountStatusRoute } from "./routes/sync-connect-account-status";
+import {
+  getDoctorWeeklyAvailabilityRoute,
+  getWeeklyAvailabilityRoute,
+  saveWeeklyAvailabilityRoute,
+} from "./routes/weekly-availability";
 
 export const bookingRouter = {
   bookSession: bookSessionRoute,
   cancelSession: cancelSessionRoute,
-  confirmSession: confirmSessionRoute,
+  respondSession: respondSessionRoute,
+  acceptRescheduledSession: acceptRescheduledSessionRoute,
+  counterProposeSession: counterProposeSessionRoute,
+  markSessionAttended: markSessionAttendedRoute,
   getConnectAccountStatus: getConnectAccountStatusRoute,
   createConnectAccountLink: createConnectAccountLinkRoute,
   syncConnectAccountStatus: syncConnectAccountStatusRoute,
-  markSessionAttended: markSessionAttendedRoute,
   listPatientSessions: listPatientSessionsRoute,
   listDoctorSessions: listDoctorSessionsRoute,
   createDoctorPlan: createDoctorPlanRoute,
@@ -30,4 +40,9 @@ export const bookingRouter = {
   deleteDoctorPlan: deleteDoctorPlanRoute,
   listDoctorPlans: listDoctorPlansRoute,
   getDoctorPlans: getDoctorPlansRoute,
+  getWeeklyAvailability: getWeeklyAvailabilityRoute,
+  saveWeeklyAvailability: saveWeeklyAvailabilityRoute,
+  getDoctorWeeklyAvailability: getDoctorWeeklyAvailabilityRoute,
+  getDoctorCredits: getDoctorCreditsRoute,
+  requestCashout: requestCashoutRoute,
 };

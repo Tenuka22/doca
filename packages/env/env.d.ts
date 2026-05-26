@@ -1,7 +1,6 @@
-import { type server } from "@zen-doc/infra/alchemy.run";
-
-// This file infers types for the cloudflare:workers environment from your Alchemy Worker.
-// @see https://alchemy.run/concepts/bindings/#type-safe-bindings
+// This file defines types for the cloudflare:workers environment.
+// When running under Alchemy (@zen-doc/infra/alchemy.run), additional bindings
+// are inferred from the alchemy.run.ts configuration.
 
 interface FallbackEnv {
   CLERK_PUBLISHABLE_KEY: string;
@@ -19,7 +18,7 @@ interface FallbackEnv {
   SVIX_APP_ID: string;
 }
 
-export type CloudflareEnv = typeof server.Env & FallbackEnv;
+type CloudflareEnv = FallbackEnv;
 
 declare global {
   type Env = CloudflareEnv;

@@ -10,6 +10,8 @@ import {
 } from "@zen-doc/ui/components/sidebar";
 import {
   CalendarCheckIcon,
+  ClockIcon,
+  DollarSignIcon,
   HouseIcon,
   LayoutDashboardIcon,
   TagsIcon,
@@ -51,6 +53,12 @@ export function DoctorSidebar() {
               label: "Sessions",
               to: "/doctor/sessions",
             },
+            {
+              icon: ClockIcon,
+              label: "Availability",
+              to: "/doctor/availability",
+            },
+            { icon: DollarSignIcon, label: "Credits", to: "/doctor/credits" },
             { icon: TagsIcon, label: "Plans", to: "/doctor/plans" },
             { icon: UserIcon, label: "Profile", to: "/doctor/profile" },
           ]}

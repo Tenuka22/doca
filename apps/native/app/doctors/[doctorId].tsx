@@ -37,7 +37,7 @@ import { useThemeColor } from "@/utils/theme";
 
 function Tag({
   label,
-  variant = "default",
+  variant = "muted",
 }: {
   label: string;
   variant?: "primary" | "secondary" | "success" | "muted";

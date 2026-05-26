@@ -16,15 +16,6 @@ def build_rri_lstm(seq_len: int, n_features: int) -> Model:
             kernel_regularizer=regularizers.l2(MODEL.l2_reg),
         )
     )(inputs)
-    x = layers.Bidirectional(
-        layers.LSTM(
-            MODEL.lstm_units // 2,
-            return_sequences=True,
-            dropout=MODEL.lstm_dropout,
-            recurrent_dropout=MODEL.lstm_recurrent_dropout,
-            kernel_regularizer=regularizers.l2(MODEL.l2_reg),
-        )
-    )(x)
 
     x = layers.GlobalAveragePooling1D()(x)
 

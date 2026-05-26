@@ -39,10 +39,10 @@ def extract_features(values: np.ndarray):
 
 
 def create_sequences(
-    features: np.ndarray, labels: np.ndarray, seq_len: int
+    features: np.ndarray, labels: np.ndarray, seq_len: int, stride: int = 15
 ):
     X, y = [], []
-    for i in range(0, len(features) - 2 * seq_len + 1):
+    for i in range(0, len(features) - 2 * seq_len + 1, stride):
         X.append(features[i : i + seq_len])
         next_mean = float(np.mean(labels[i + seq_len : i + 2 * seq_len]))
         y.append(1 if next_mean > 0.5 else 0)

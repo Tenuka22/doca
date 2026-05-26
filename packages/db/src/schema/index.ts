@@ -5,6 +5,14 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
+const sessionStatusValues = [
+  "requested",
+  "rescheduled",
+  "approved",
+  "attended",
+  "timing_balance_failure",
+] as const;
+
 const scheduleKindValues = ["open", "block", "session"] as const;
 const scheduleNoteValues = [
   "home",
@@ -54,8 +62,9 @@ export const doctorSessions = sqliteTable("doctor_sessions", {
   planId: text("plan_id"),
   startAt: text("start_at").notNull(),
   endAt: text("end_at").notNull(),
-  status: text("status").notNull().default("requested"),
+  status: text("status", { enum: sessionStatusValues }).notNull().default("requested"),
   creditCost: integer("credit_cost").notNull(),
+  doctorEarnedCents: integer("doctor_earned_cents"),
   payoutStatus: text("payout_status").notNull().default("none"),
   payoutTransferId: text("payout_transfer_id"),
   payoutAmount: integer("payout_amount"),
@@ -166,6 +175,45 @@ export const creditTransactions = sqliteTable("credit_transactions", {
 });
 
 
+export const doctorWeeklyAvailability = sqliteTable(
+  "doctor_weekly_availability",
+  {
+    id: text("id").primaryKey(),
+    doctorId: text("doctor_id").notNull(),
+    dayOfWeek: integer("day_of_week").notNull(),
+    startTime: text("start_time").notNull(),
+    endTime: text("end_time").notNull(),
+    isAvailable: integer("is_available", { mode: "boolean" })
+      .notNull()
+      .default(true),
+    createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+    updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
+  }
+);
+
+export const doctorCredits = sqliteTable("doctor_credits", {
+  doctorId: text("doctor_id").primaryKey(),
+  balanceCents: integer("balance_cents").notNull().default(0),
+  totalEarnedCents: integer("total_earned_cents").notNull().default(0),
+  totalCashedOutCents: integer("total_cashed_out_cents").notNull().default(0),
+  createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+  updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
+});
+
+export const doctorCashoutRequests = sqliteTable(
+  "doctor_cashout_requests",
+  {
+    id: text("id").primaryKey(),
+    doctorId: text("doctor_id").notNull(),
+    amountCents: integer("amount_cents").notNull(),
+    status: text("status").notNull().default("pending"),
+    stripeTransferId: text("stripe_transfer_id"),
+    failureReason: text("failure_reason"),
+    createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+    updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
+  }
+);
+
 export const doctorPlans = sqliteTable("doctor_plans", {
   id: text("id").primaryKey(),
   doctorId: text("doctor_id").notNull(),
@@ -193,3 +241,6 @@ export type GuardianProfile = typeof guardianProfiles.$inferSelect;
 export type UserCredit = typeof userCredits.$inferSelect;
 export type CreditTransaction = typeof creditTransactions.$inferSelect;
 export type DoctorPlan = typeof doctorPlans.$inferSelect;
+export type DoctorWeeklyAvailability = typeof doctorWeeklyAvailability.$inferSelect;
+export type DoctorCredit = typeof doctorCredits.$inferSelect;
+export type DoctorCashoutRequest = typeof doctorCashoutRequests.$inferSelect;
