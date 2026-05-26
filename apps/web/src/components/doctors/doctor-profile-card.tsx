@@ -427,27 +427,22 @@ export function DoctorProfileCard() {
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
-
           {/* Proof and Documents Alert Banner */}
-          <div className="flex flex-col gap-4 rounded-xl border border-dashed bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between md:col-span-2">
+          <div className="flex flex-col gap-4 rounded-xl border border-dashed border-border/60 bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between md:col-span-2">
             <div className="space-y-1">
-              <h3 className="flex items-center gap-1.5 font-semibold text-foreground text-sm">
-                <FileText className="size-4" />
-                Proof of Credentials & Marketing Materials
+              <h3 className="flex items-center gap-1.5 font-bold text-foreground text-xs uppercase tracking-tight">
+                <FileText className="size-3.5" />
+                Proof of Credentials
               </h3>
-              <p className="text-muted-foreground text-xs">
-                Make your profile stand out by uploading certificates,
-                professional portraits, and video bios in the doctor materials
-                section below.
+              <p className="text-muted-foreground text-[10px] font-medium leading-tight">
+                Upload certificates and professional media in the module below to finalize your public verification.
               </p>
             </div>
             <Badge
-              className="shrink-0 self-start sm:self-auto"
+              className="shrink-0 self-start sm:self-auto text-[9px] font-black tracking-widest"
               variant="outline"
             >
-              Managed Below
+              MODULE BELOW
             </Badge>
           </div>
         </CardContent>
