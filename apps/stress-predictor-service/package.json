@@ -1,0 +1,7 @@
+{
+  "name": "stress-predictor-service",
+  "private": true,
+  "scripts": {
+    "dev": "uv run main.py"
+  }
+}

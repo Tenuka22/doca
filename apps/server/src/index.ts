@@ -39,7 +39,10 @@ export const apiHandler = new OpenAPIHandler(appRouter, {
 export const rpcHandler = new RPCHandler(appRouter, {
   interceptors: [
     onError((error) => {
-      console.error(JSON.stringify(error,undefined,2));
+      console.error("RPC Error:", error);
+      if (error && typeof error === "object" && "cause" in error) {
+        console.error("Error Cause:", error.cause);
+      }
     }),
   ],
 });

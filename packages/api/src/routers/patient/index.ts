@@ -6,6 +6,7 @@ import { getPatientProfileRoute } from "./routes/get-patient-profile";
 import { getPendingGuardianRequestsRoute } from "./routes/get-pending-guardian-requests";
 import { getUserCreditsRoute } from "./routes/get-user-credits";
 import { ingestModelFeaturesRoute } from "./routes/ingest-model-features";
+import { predictStressRoute } from "./routes/predict-stress";
 import { purchaseCreditsRoute } from "./routes/purchase-credits";
 
 export const patientRouter = {
@@ -16,6 +17,7 @@ export const patientRouter = {
   approveGuardianRequest: approveGuardianRequestRoute,
   completeOnboarding: completeOnboardingRoute,
   ingestModelFeatures: ingestModelFeaturesRoute,
+  predictStress: predictStressRoute,
   getUserCredits: getUserCreditsRoute,
   purchaseCredits: purchaseCreditsRoute,
 };

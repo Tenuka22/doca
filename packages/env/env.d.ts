@@ -12,6 +12,7 @@ interface FallbackEnv {
   LIVEKIT_API_SECRET: string;
   LIVEKIT_HOST: string;
   MODEL_FEATURES_KV: KVNamespace;
+  STRESS_PREDICTOR_URL: string;
   STRIPE_SECRET_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
   SVIX_API_TOKEN: string;

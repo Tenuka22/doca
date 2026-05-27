@@ -42,11 +42,29 @@ function OnboardingCheck() {
   const patientProfileQuery = useQuery(
     orpc.getPatientProfile.queryOptions({
       enabled: isLoaded && isSignedIn,
+      retry: false,
+      throwOnError: false,
+      queryFn: async () => {
+        try {
+          return (await orpc.getPatientProfile.call()) ?? null;
+        } catch {
+          return null;
+        }
+      },
     })
   );
   const guardianProfileQuery = useQuery(
     orpc.getGuardianProfile.queryOptions({
       enabled: isLoaded && isSignedIn,
+      retry: false,
+      throwOnError: false,
+      queryFn: async () => {
+        try {
+          return (await orpc.getGuardianProfile.call()) ?? null;
+        } catch {
+          return null;
+        }
+      },
     })
   );
 

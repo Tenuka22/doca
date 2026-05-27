@@ -5,10 +5,10 @@ import { Hono } from "hono";
 import Stripe from "stripe";
 
 export const stripeApp = new Hono();
-const stripe = new Stripe(env.STRIPE_SECRET_KEY);
-const db = createDb();
 
 stripeApp.post("/", async (c) => {
+  const stripe = new Stripe(env.STRIPE_SECRET_KEY);
+  const db = createDb();
   const signature = c.req.header("stripe-signature");
   if (!signature) {
     return c.text("Missing signature", 400);

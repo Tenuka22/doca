@@ -2,7 +2,6 @@ import alchemy from "alchemy";
 import {
   D1Database,
   KVNamespace,
-  R2Bucket,
   TanStackStart,
   Worker,
 } from "alchemy/cloudflare";
@@ -32,6 +31,7 @@ export const server = await Worker("server", {
     CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
     CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
     CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
+    STRESS_PREDICTOR_URL: alchemy.env.STRESS_PREDICTOR_URL!,
     STRIPE_SECRET_KEY: alchemy.secret.env.STRIPE_SECRET_KEY!,
     STRIPE_WEBHOOK_SECRET: alchemy.secret.env.STRIPE_WEBHOOK_SECRET!,
   },

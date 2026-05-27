@@ -42,40 +42,58 @@ export const Route = createFileRoute("/doctor/credits")({
 });
 
 function StatusBadge({ status }: { status: string }) {
-  const styles = {
-    completed: "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10",
-    failed: "border-rose-500/20 bg-rose-500/10 text-rose-600 hover:bg-rose-500/10",
-    pending: "border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/10",
-  }[status as "completed" | "failed"] ?? "border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/10";
+  const styles =
+    {
+      completed:
+        "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10",
+      failed:
+        "border-rose-500/20 bg-rose-500/10 text-rose-600 hover:bg-rose-500/10",
+      pending:
+        "border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/10",
+    }[status as "completed" | "failed"] ??
+    "border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/10";
 
   return (
-    <Badge className={`h-5 px-1.5 font-bold text-[10px] uppercase tracking-tight ${styles}`} variant="outline">
+    <Badge
+      className={`h-5 px-1.5 font-bold text-[10px] uppercase tracking-tight ${styles}`}
+      variant="outline"
+    >
       {status}
     </Badge>
   );
 }
 
 function StatusIcon({ status }: { status: string }) {
-  const styles = {
-    completed: "bg-emerald-500/10 text-emerald-600",
-    failed: "bg-rose-500/10 text-rose-600",
-    pending: "bg-amber-500/10 text-amber-600",
-  }[status as "completed" | "failed"] ?? "bg-amber-500/10 text-amber-600";
+  const styles =
+    {
+      completed: "bg-emerald-500/10 text-emerald-600",
+      failed: "bg-rose-500/10 text-rose-600",
+      pending: "bg-amber-500/10 text-amber-600",
+    }[status as "completed" | "failed"] ?? "bg-amber-500/10 text-amber-600";
 
-  const Icon = {
-    completed: ArrowUpCircle,
-    failed: XCircle,
-    pending: Clock,
-  }[status as "completed" | "failed"] ?? Clock;
+  const Icon =
+    {
+      completed: ArrowUpCircle,
+      failed: XCircle,
+      pending: Clock,
+    }[status as "completed" | "failed"] ?? Clock;
 
   return (
-    <div className={`rounded-full p-2.5 shadow-sm transition-transform group-hover/item:scale-105 ${styles}`}>
+    <div
+      className={`rounded-full p-2.5 shadow-sm transition-transform group-hover/item:scale-105 ${styles}`}
+    >
       <Icon className="h-4 w-4" />
     </div>
   );
 }
 
-function TransactionItem({ req, formatCents }: { req: any; formatCents: (c: number) => string }) {
+function TransactionItem({
+  req,
+  formatCents,
+}: {
+  req: any;
+  formatCents: (c: number) => string;
+}) {
   return (
     <div className="group/item flex items-center justify-between px-6 py-4 transition-colors hover:bg-muted/30 sm:px-0">
       <div className="flex items-center gap-4">

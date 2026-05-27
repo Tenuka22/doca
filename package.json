@@ -31,6 +31,7 @@
     "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F server dev",
+    "dev:stress": "turbo -F stress-predictor-service dev",
     "db:push": "turbo -F @zen-doc/db db:push",
     "db:generate": "turbo -F @zen-doc/db db:generate",
     "deploy": "turbo -F @zen-doc/infra deploy",

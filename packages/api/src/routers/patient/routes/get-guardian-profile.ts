@@ -11,6 +11,6 @@ export const getGuardianProfileRoute = protectedProcedure.handler(
       where: eq(guardianProfiles.clerkUserId, userId),
     });
 
-    return guardian;
+    return guardian ?? null;
   }
 );

@@ -55,9 +55,8 @@ const timeToMinutes = (time: string) => {
   return h * 60 + m;
 };
 
-const getHoursForSlot = (slot: AvailabilitySlot) => {
-  return (timeToMinutes(slot.endTime) - timeToMinutes(slot.startTime)) / 60;
-};
+const getHoursForSlot = (slot: AvailabilitySlot) =>
+  (timeToMinutes(slot.endTime) - timeToMinutes(slot.startTime)) / 60;
 
 function DoctorAvailabilityRoute() {
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
@@ -108,26 +107,27 @@ function DoctorAvailabilityRoute() {
     // Check for overlap with existing slots
     const daySlots = slots.filter((s) => s.dayOfWeek === dayOfWeek);
     const lastSlot = daySlots[daySlots.length - 1];
-    
+
     let newStart = "09:00";
     let newEnd = "10:00";
 
     if (lastSlot) {
       const lastEndMinutes = timeToMinutes(lastSlot.endTime);
-      if (lastEndMinutes >= 1410) { // 23:30
-         toast.error("No more space for slots today");
-         return;
+      if (lastEndMinutes >= 1410) {
+        // 23:30
+        toast.error("No more space for slots today");
+        return;
       }
       // Suggest next hour
       const nextStartMin = lastEndMinutes;
       const nextEndMin = Math.min(nextStartMin + 60, 1440);
-      
+
       const format = (m: number) => {
         const h = Math.floor(m / 60);
         const mm = m % 60;
         return `${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
       };
-      
+
       newStart = format(nextStartMin);
       newEnd = format(nextEndMin);
     }
@@ -158,7 +158,7 @@ function DoctorAvailabilityRoute() {
     setSlots((currentSlots) => {
       const next = [...currentSlots];
       const slot = { ...next[index] };
-      
+
       if (field === "startTime") {
         slot.startTime = value as string;
         // Ensure end > start
@@ -176,11 +176,13 @@ function DoctorAvailabilityRoute() {
       }
 
       // Check overlap for all slots of this day (excluding current)
-      const otherDaySlots = next.filter((s, i) => s.dayOfWeek === slot.dayOfWeek && i !== index);
+      const otherDaySlots = next.filter(
+        (s, i) => s.dayOfWeek === slot.dayOfWeek && i !== index
+      );
       const s1 = timeToMinutes(slot.startTime);
       const e1 = timeToMinutes(slot.endTime);
-      
-      const hasOverlap = otherDaySlots.some(s => {
+
+      const hasOverlap = otherDaySlots.some((s) => {
         const s2 = timeToMinutes(s.startTime);
         const e2 = timeToMinutes(s.endTime);
         return s1 < e2 && e1 > s2;
@@ -199,9 +201,18 @@ function DoctorAvailabilityRoute() {
 
   const toggleDay = (dayOfWeek: number, isAvailable: boolean) => {
     setSlots((currentSlots) => {
-      const daySlots = currentSlots.filter(s => s.dayOfWeek === dayOfWeek);
+      const daySlots = currentSlots.filter((s) => s.dayOfWeek === dayOfWeek);
       if (daySlots.length === 0 && isAvailable) {
-        return [...currentSlots, { dayOfWeek, startTime: "09:00", endTime: "17:00", isAvailable: true, id: crypto.randomUUID() }];
+        return [
+          ...currentSlots,
+          {
+            dayOfWeek,
+            startTime: "09:00",
+            endTime: "17:00",
+            isAvailable: true,
+            id: crypto.randomUUID(),
+          },
+        ];
       }
       return currentSlots.map((slot) =>
         slot.dayOfWeek === dayOfWeek ? { ...slot, isAvailable } : slot
@@ -294,8 +305,8 @@ function DoctorAvailabilityRoute() {
 
           return (
             <Card
-              key={dayName}
               className="border-border/80 bg-gradient-to-br from-card to-card/50 shadow-sm"
+              key={dayName}
             >
               <CardHeader className="pb-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -325,7 +336,9 @@ function DoctorAvailabilityRoute() {
                       <Switch
                         checked={isDayAvailable}
                         className="h-4 w-7"
-                        onCheckedChange={(checked) => toggleDay(dayOfWeek, checked)}
+                        onCheckedChange={(checked) =>
+                          toggleDay(dayOfWeek, checked)
+                        }
                       />
                       <Label className="text-muted-foreground text-xs">
                         {isDayAvailable ? "Working" : "Day off"}
@@ -345,19 +358,24 @@ function DoctorAvailabilityRoute() {
 
               <CardContent className="space-y-3">
                 {daySlots.length === 0 ? (
-                  <div className="rounded-lg border border-dashed border-border/70 bg-muted/20 px-4 py-6 text-center text-muted-foreground text-sm">
+                  <div className="rounded-lg border border-border/70 border-dashed bg-muted/20 px-4 py-6 text-center text-muted-foreground text-sm">
                     Add a slot for {dayName}.
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {daySlots.map((slot, slotOffset) => {
                       const slotIndex = slots.indexOf(slot);
-                      const validEndOptions = TIME_OPTIONS.filter(t => timeToMinutes(t) > timeToMinutes(slot.startTime));
+                      const validEndOptions = TIME_OPTIONS.filter(
+                        (t) => timeToMinutes(t) > timeToMinutes(slot.startTime)
+                      );
 
                       return (
                         <div
-                          key={slot.id ?? `${dayName}-${slot.startTime}-${slot.endTime}-${slotOffset}`}
                           className="rounded-lg border border-border/50 bg-muted/30 p-3"
+                          key={
+                            slot.id ??
+                            `${dayName}-${slot.startTime}-${slot.endTime}-${slotOffset}`
+                          }
                         >
                           <div className="mb-3 flex items-center justify-between">
                             <div className="flex items-center gap-1.5 text-sm">
@@ -433,10 +451,14 @@ function DoctorAvailabilityRoute() {
                                   checked={slot.isAvailable}
                                   className="h-4 w-7"
                                   onCheckedChange={(checked) =>
-                                    updateSlot(slotIndex, "isAvailable", checked)
+                                    updateSlot(
+                                      slotIndex,
+                                      "isAvailable",
+                                      checked
+                                    )
                                   }
                                 />
-                                <span className="ml-2 text-sm text-muted-foreground">
+                                <span className="ml-2 text-muted-foreground text-sm">
                                   {slot.isAvailable ? "On" : "Off"}
                                 </span>
                               </div>
