@@ -1,9 +1,4 @@
-import {
-  creditTransactions,
-  doctorPlans,
-  doctorSessions,
-  userCredits,
-} from "@zen-doc/db";
+import { doctorPlans, doctorSessions } from "@zen-doc/db";
 import { and, eq, inArray, ne, or } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -35,18 +30,6 @@ export const bookSessionRoute = protectedProcedure
 
     if (!plan) {
       throw new Error("The selected plan is not available");
-    }
-
-    const creditCost = 1;
-
-    const [userCredit] = await context.db
-      .select()
-      .from(userCredits)
-      .where(eq(userCredits.userId, patientId))
-      .limit(1);
-
-    if (!userCredit || userCredit.balance < creditCost) {
-      throw new Error("Insufficient credits");
     }
 
     // Check for overlapping sessions with this doctor
@@ -83,23 +66,9 @@ export const bookSessionRoute = protectedProcedure
       startAt: input.startAt,
       endAt: input.endAt,
       status: "requested",
-      creditCost,
+      creditCost: 1,
       createdAt: now,
       updatedAt: now,
-    });
-
-    await context.db
-      .update(userCredits)
-      .set({ balance: userCredit.balance - creditCost, updatedAt: now })
-      .where(eq(userCredits.userId, patientId));
-
-    await context.db.insert(creditTransactions).values({
-      id: crypto.randomUUID(),
-      userId: patientId,
-      amount: -creditCost,
-      type: "booking",
-      sessionId,
-      createdAt: now,
     });
 
     return {

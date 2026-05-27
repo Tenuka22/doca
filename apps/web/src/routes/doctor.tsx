@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/tanstack-react-start";
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import {
   SidebarInset,
   SidebarProvider,
@@ -7,8 +7,23 @@ import {
 } from "@zen-doc/ui/components/sidebar";
 
 import { DoctorSidebar } from "@/components/doctor-sidebar";
+import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/doctor")({
+  beforeLoad: async ({ context, location }) => {
+    if (location.pathname === "/doctor/profile") {
+      return;
+    }
+
+    const data = await context.queryClient.fetchQuery({
+      queryKey: orpc.doctorProfile.queryKey(),
+      queryFn: () => orpc.doctorProfile.call(),
+    });
+
+    if (!data?.profile) {
+      throw redirect({ to: "/doctor/profile" });
+    }
+  },
   component: DoctorLayoutRoute,
 });
 

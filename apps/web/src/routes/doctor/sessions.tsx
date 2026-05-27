@@ -148,20 +148,6 @@ function DoctorSessionsRoute() {
     })
   );
 
-  const markAttended = useMutation(
-    orpc.markSessionAttended.mutationOptions({
-      onSuccess: async () => {
-        await sessionsQuery.refetch();
-        toast.success("Session confirmed as attended");
-      },
-      onError: (error) => {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to confirm session"
-        );
-      },
-    })
-  );
-
   const cancelSession = useMutation(
     orpc.cancelSession.mutationOptions({
       onSuccess: async () => {
@@ -211,8 +197,7 @@ function DoctorSessionsRoute() {
           Sessions
         </h1>
         <p className="text-muted-foreground text-sm">
-          Review patient requests, approve or propose a different time, or mark
-          sessions as attended.
+          Review patient requests, approve or propose a different time.
         </p>
       </div>
 
@@ -290,21 +275,6 @@ function DoctorSessionsRoute() {
                               role={userRole}
                               startAt={session.startAt}
                             />
-                            <Button
-                              disabled={markAttended.isPending}
-                              onClick={() =>
-                                markAttended.mutate({ sessionId: session.id })
-                              }
-                              size="sm"
-                              variant="default"
-                            >
-                              {markAttended.isPending ? (
-                                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                              ) : (
-                                <CheckCircleIcon className="mr-1 h-3 w-3" />
-                              )}
-                              Confirm Attendance
-                            </Button>
                           </>
                         )}
 

@@ -102,16 +102,14 @@ export default function Page() {
             ) : null}
 
             <Field
+              autoComplete="one-time-code"
               error={errors.fields.code?.message}
-              inputProps={{
-                autoComplete: "one-time-code",
-                keyboardType: "numeric",
-                onChangeText: setCode,
-                placeholder: "Enter your verification code",
-                placeholderTextColor: mutedForeground,
-                value: code,
-              }}
+              keyboardType="numeric"
               label="Verification code"
+              onChangeText={setCode}
+              placeholder="Enter your verification code"
+              placeholderTextColor={mutedForeground}
+              value={code}
             />
 
             <Button
@@ -140,29 +138,25 @@ export default function Page() {
             ) : null}
 
             <Field
+              autoCapitalize="none"
+              autoComplete="email"
               error={errors.fields.emailAddress?.message}
-              inputProps={{
-                autoCapitalize: "none",
-                autoComplete: "email",
-                keyboardType: "email-address",
-                onChangeText: setEmailAddress,
-                placeholder: "Enter email",
-                placeholderTextColor: mutedForeground,
-                value: emailAddress,
-              }}
+              keyboardType="email-address"
               label="Email address"
+              onChangeText={setEmailAddress}
+              placeholder="Enter email"
+              placeholderTextColor={mutedForeground}
+              value={emailAddress}
             />
 
             <Field
               error={errors.fields.password?.message}
-              inputProps={{
-                onChangeText: setPassword,
-                placeholder: "Enter password",
-                placeholderTextColor: mutedForeground,
-                secureTextEntry: true,
-                value: password,
-              }}
               label="Password"
+              onChangeText={setPassword}
+              placeholder="Enter password"
+              placeholderTextColor={mutedForeground}
+              secureTextEntry
+              value={password}
             />
 
             <Button

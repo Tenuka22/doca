@@ -26,6 +26,7 @@
     "@tanstack/react-query": "^5.90.12",
     "@zen-doc/api": "workspace:*",
     "@zen-doc/env": "workspace:*",
+    "@zen-doc/pricing": "workspace:*",
     "babel-preset-expo": "~55.0.18",
     "dotenv": "catalog:",
     "expo": "^55.0.17",

@@ -50,6 +50,34 @@ export const respondSessionRoute = protectedProcedure
     if (input.action === "approve") {
       const earnedCents = session.creditCost * CREDIT_PRICE_CENTS;
 
+      // Deduct credits from the patient
+      const [patientCredit] = await context.db
+        .select()
+        .from(userCredits)
+        .where(eq(userCredits.userId, session.patientId))
+        .limit(1);
+
+      if (!patientCredit || patientCredit.balance < session.creditCost) {
+        throw new Error("Patient has insufficient credits");
+      }
+
+      await context.db
+        .update(userCredits)
+        .set({
+          balance: patientCredit.balance - session.creditCost,
+          updatedAt: now,
+        })
+        .where(eq(userCredits.userId, session.patientId));
+
+      await context.db.insert(creditTransactions).values({
+        id: crypto.randomUUID(),
+        userId: session.patientId,
+        amount: -session.creditCost,
+        type: "booking",
+        sessionId: session.id,
+        createdAt: now,
+      });
+
       await context.db
         .update(doctorSessions)
         .set({
@@ -109,31 +137,6 @@ export const respondSessionRoute = protectedProcedure
           updatedAt: now,
         })
         .where(eq(doctorSessions.id, input.sessionId));
-
-      const [userCredit] = await context.db
-        .select()
-        .from(userCredits)
-        .where(eq(userCredits.userId, session.patientId))
-        .limit(1);
-
-      if (userCredit) {
-        await context.db
-          .update(userCredits)
-          .set({
-            balance: userCredit.balance + session.creditCost,
-            updatedAt: now,
-          })
-          .where(eq(userCredits.userId, session.patientId));
-
-        await context.db.insert(creditTransactions).values({
-          id: crypto.randomUUID(),
-          userId: session.patientId,
-          amount: session.creditCost,
-          type: "refund",
-          sessionId: session.id,
-          createdAt: now,
-        });
-      }
     }
 
     return { ok: true };

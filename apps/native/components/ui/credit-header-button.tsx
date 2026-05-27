@@ -1,15 +1,24 @@
+import { TAX_RATE, CREDIT_PRICE_CENTS } from "@zen-doc/pricing";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ActivityIndicator, Modal, Text, View } from "react-native";
+import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { orpc } from "@/utils/orpc";
 import { usePaymentSheet } from "@/utils/stripe";
 
+const CREDIT_OPTIONS = [1, 5, 10, 20] as const;
+
+function formatPrice(cents: number) {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
 export function CreditHeaderButton() {
   const [modalVisible, setModalVisible] = useState(false);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
-  const [selectedCredits] = useState(1);
+  const [selectedCredits, setSelectedCredits] = useState<
+    (typeof CREDIT_OPTIONS)[number]
+  >(CREDIT_OPTIONS[0]);
   const creditQuery = useQuery(orpc.getUserCredits.queryOptions());
   const paymentSheet = usePaymentSheet();
 
@@ -64,33 +73,98 @@ export function CreditHeaderButton() {
         {creditQuery.isLoading ? (
           <ActivityIndicator size="small" />
         ) : (
-          <Text className="font-bold text-foreground text-xs">
-            {creditQuery.data?.balance ?? 0} Credits
-          </Text>
+          `${creditQuery.data?.balance ?? 0} Credits`
         )}
       </Button>
 
-      <Modal animationType="slide" transparent visible={modalVisible}>
+      <Modal animationType="fade" transparent visible={modalVisible}>
         <View className="flex-1 justify-center bg-black/50 p-6">
           <Card>
-            <Text className="font-bold text-xl">Buy Credits</Text>
-            <Text className="my-4 text-muted-foreground text-sm">
-              Add credits to your account. Stripe will handle the payment sheet
-              securely.
-            </Text>
-            <View className="mb-4 rounded-lg border border-border bg-muted/40 p-4">
-              <Text className="font-semibold text-foreground text-sm">
-                {selectedCredits} credit
+            <View className="flex-row items-start justify-between">
+              <Text className="font-bold font-sans text-foreground text-xl">
+                Buy Credits
               </Text>
-              <Text className="text-muted-foreground text-sm">
-                Credit top-up
-              </Text>
+              <Pressable
+                accessibilityRole="button"
+                className="rounded-control border-2 border-border bg-card px-2 py-1"
+                onPress={() => setModalVisible(false)}
+              >
+                <Text className="font-bold text-foreground text-sm">X</Text>
+              </Pressable>
             </View>
 
+            <Text className="text-muted-foreground text-sm">
+              Add credits to your account.
+            </Text>
+
+            <View className="flex-row flex-wrap gap-2">
+              {CREDIT_OPTIONS.map((amount) => {
+                const isSelected = selectedCredits === amount;
+                const subtotal = amount * CREDIT_PRICE_CENTS;
+                const total = subtotal + Math.round(subtotal * TAX_RATE);
+                return (
+                  <Pressable
+                    accessibilityRole="button"
+                    className={`flex-1 rounded-card border-2 p-card ${
+                      isSelected
+                        ? "border-primary bg-primary"
+                        : "border-border bg-card"
+                    }`}
+                    key={amount}
+                    onPress={() => setSelectedCredits(amount)}
+                  >
+                    <Text
+                      className={`text-center font-bold font-sans text-lg ${
+                        isSelected
+                          ? "text-primary-foreground"
+                          : "text-foreground"
+                      }`}
+                    >
+                      {amount}
+                    </Text>
+                    <Text
+                      className={`text-center font-sans text-sm ${
+                        isSelected
+                          ? "text-primary-foreground/80"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {formatPrice(total)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {selectedCredits ? (
+              <View className="gap-1 rounded-card border-2 border-border bg-muted/30 p-card">
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-muted-foreground text-sm">
+                    Subtotal ({selectedCredits} × {formatPrice(CREDIT_PRICE_CENTS)})
+                  </Text>
+                  <Text className="text-foreground text-sm">
+                    {formatPrice(selectedCredits * CREDIT_PRICE_CENTS)}
+                  </Text>
+                </View>
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-muted-foreground text-sm">Tax ({(TAX_RATE * 100).toFixed(0)}%)</Text>
+                  <Text className="text-foreground text-sm">
+                    {formatPrice(Math.round(selectedCredits * CREDIT_PRICE_CENTS * TAX_RATE))}
+                  </Text>
+                </View>
+                <View className="mt-1 border-t border-border pt-1">
+                  <View className="flex-row items-center justify-between">
+                    <Text className="font-bold text-foreground text-sm">Total</Text>
+                    <Text className="font-bold text-foreground text-base">
+                      {formatPrice(selectedCredits * CREDIT_PRICE_CENTS + Math.round(selectedCredits * CREDIT_PRICE_CENTS * TAX_RATE))}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            ) : null}
+
             {purchaseError ? (
-              <Text className="mb-4 text-destructive text-sm">
-                {purchaseError}
-              </Text>
+              <Text className="text-destructive text-sm">{purchaseError}</Text>
             ) : null}
 
             <Button
@@ -98,13 +172,9 @@ export function CreditHeaderButton() {
               disabled={purchaseMutation.isPending}
               onPress={handleBuyCredits}
             >
-              {purchaseMutation.isPending ? (
-                <ActivityIndicator size="small" />
-              ) : (
-                <Text className="font-semibold text-foreground text-xs">
-                  Continue to payment
-                </Text>
-              )}
+              {purchaseMutation.isPending
+                ? "Processing..."
+                : "Continue to payment"}
             </Button>
 
             <Button

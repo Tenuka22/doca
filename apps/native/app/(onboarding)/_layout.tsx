@@ -15,10 +15,10 @@ export default function OnboardingLayout() {
       queryFn: async () => {
         try {
           const data = await orpc.getPatientProfile.call();
-          return data ?? {};
+          return data ?? null;
         } catch (e) {
           console.error(e);
-          return {};
+          return null;
         }
       },
     })
@@ -32,10 +32,10 @@ export default function OnboardingLayout() {
       queryFn: async () => {
         try {
           const data = await orpc.getGuardianProfile.call();
-          return data ?? {};
+          return data ?? null;
         } catch (e) {
           console.error(e);
-          return {};
+          return null;
         }
       },
     })
@@ -52,7 +52,7 @@ export default function OnboardingLayout() {
     return <Redirect href="/(auth)/sign-in" />;
   }
 
-  if (patientProfileQuery.isLoading || guardianProfileQuery.isLoading) {
+  if (!(patientProfileQuery.isFetched && guardianProfileQuery.isFetched)) {
     return null;
   }
 

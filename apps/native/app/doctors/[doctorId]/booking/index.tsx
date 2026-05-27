@@ -28,7 +28,8 @@ function formatDate(date: Date): string {
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString("en-US", {
-    hour: "2-digit",
+    hour: "numeric",
+    hour12: true,
     minute: "2-digit",
   });
 }
@@ -194,23 +195,28 @@ export default function BookingScreen() {
   }, [selectedDate]);
 
   const slotsQuery = useQuery({
-    queryKey: ["doctor-slots", id, fromDate],
+    queryKey: ["doctor-slots", id, fromDate, selectedPlanId],
     queryFn: () => {
-      if (!(fromDate && toDate)) {
-        throw new Error("No date selected");
+      if (!(fromDate && toDate && selectedPlanId)) {
+        throw new Error("Missing required selections");
       }
+      const plan = plans.find(
+        (p: { id: string; durationMinutes: number }) => p.id === selectedPlanId
+      );
       return orpc.getDoctorAvailableSlots.call({
         doctorId: id ?? "",
         from: fromDate,
         to: toDate,
+        durationMinutes: plan?.durationMinutes ?? 30,
       });
     },
-    enabled: !!id && !!selectedDate,
+    enabled: !!id && !!selectedDate && !!selectedPlanId,
   });
 
   const slots = (slotsQuery.data?.slots ?? []) as Array<{
     startAt: string;
     endAt: string;
+    available: boolean;
   }>;
   const plans = plansQuery.data?.plans ?? [];
   const doctor = doctorQuery.data?.profile;
@@ -395,6 +401,19 @@ export default function BookingScreen() {
                 <AvailabilityInfo availability={availability} />
               </Card>
 
+              <PlanSelection
+                onSelectPlan={(planId) => {
+                  setSelectedPlanId(planId);
+                  setSelectedSlot(null);
+                }}
+                plans={plans.map((p) => ({
+                  durationMinutes: p.durationMinutes,
+                  id: p.id,
+                  name: p.name,
+                }))}
+                selectedPlanId={selectedPlanId}
+              />
+
               <Card className="gap-4">
                 <View className="flex-row items-center gap-2">
                   <Calendar
@@ -428,7 +447,7 @@ export default function BookingScreen() {
                 </View>
               </Card>
 
-              {selectedDate && slots.length > 0 && (
+              {selectedPlanId && selectedDate && slots.length > 0 && (
                 <Card className="gap-4">
                   <View className="flex-row items-center gap-2">
                     <Clock
@@ -445,6 +464,7 @@ export default function BookingScreen() {
                       const isSelected = selectedSlot?.startAt === slot.startAt;
                       return (
                         <Button
+                          disabled={!slot.available}
                           key={i}
                           onPress={() => setSelectedSlot(slot)}
                           size="sm"
@@ -457,16 +477,6 @@ export default function BookingScreen() {
                   </View>
                 </Card>
               )}
-
-              <PlanSelection
-                onSelectPlan={setSelectedPlanId}
-                plans={plans.map((p) => ({
-                  durationMinutes: p.durationMinutes,
-                  id: p.id,
-                  name: p.name,
-                }))}
-                selectedPlanId={selectedPlanId}
-              />
 
               <Button
                 disabled={

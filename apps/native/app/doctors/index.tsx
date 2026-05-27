@@ -68,15 +68,13 @@ export default function DoctorsScreen() {
         {/* --- Search & Filters -------------------------------------------------- */}
         <View className="gap-4">
           <Field
-            inputProps={{
-              placeholder: "Search name, specialty, language...",
-              value: search,
-              onChangeText: (text) => {
-                setSearch(text);
-                setPage(1);
-              },
-            }}
             label="Search Directory"
+            onChangeText={(text) => {
+              setSearch(text);
+              setPage(1);
+            }}
+            placeholder="Search name, specialty, language..."
+            value={search}
           />
 
           <View className="flex-row flex-wrap gap-2">

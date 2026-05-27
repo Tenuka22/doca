@@ -208,8 +208,9 @@ export function DoctorProfileCard() {
     }
   );
 
-  const displayName =
-    profile?.displayName ?? profile?.licenseNumber ?? "Doctor";
+  const displayName = profile
+    ? (profile.displayName ?? profile.licenseNumber ?? "Doctor")
+    : "Unknown";
   const specialties = (profile?.specialties ?? []) as DoctorSpecialty[];
   const languages = (profile?.languages ?? []) as DoctorLanguage[];
   const consultationModes = (profile?.consultationModes ??
@@ -231,6 +232,31 @@ export function DoctorProfileCard() {
     () => parseEducationRows(profile?.education ?? null),
     [profile?.education]
   );
+
+  const statusBadge = (() => {
+    if (!profile) {
+      return (
+        <>
+          <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+          Waiting for the name to be created
+        </>
+      );
+    }
+    if (profile.permanent) {
+      return (
+        <>
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+          Approved
+        </>
+      );
+    }
+    return (
+      <>
+        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+        Pending Approval
+      </>
+    );
+  })();
 
   return (
     <>
@@ -254,17 +280,7 @@ export function DoctorProfileCard() {
                   {displayName}
                 </CardTitle>
                 <div className="flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 font-semibold text-primary text-xs">
-                  {profile?.permanent ? (
-                    <>
-                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-                      Approved
-                    </>
-                  ) : (
-                    <>
-                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                      Pending Approval
-                    </>
-                  )}
+                  {statusBadge}
                 </div>
               </div>
               <p className="mt-1 text-muted-foreground text-sm">

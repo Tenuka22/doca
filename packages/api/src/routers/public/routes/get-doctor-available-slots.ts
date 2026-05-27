@@ -3,8 +3,6 @@ import { and, eq, gte, lte, ne } from "drizzle-orm";
 import { z } from "zod";
 import { publicProcedure } from "../../../index";
 
-const SLOT_DURATION_MS = 30 * 60 * 1000;
-
 function getDayOfWeek(date: Date): number {
   return date.getDay();
 }
@@ -28,11 +26,13 @@ export const getDoctorAvailableSlotsRoute = publicProcedure
       doctorId: z.string().min(1),
       from: z.string().min(1),
       to: z.string().min(1),
+      durationMinutes: z.number().int().positive().default(30),
     })
   )
   .handler(async ({ context, input }) => {
     const fromDate = new Date(input.from);
     const toDate = new Date(input.to);
+    const slotDurationMs = input.durationMinutes * 60 * 1000;
 
     const availability = await context.db
       .select()
@@ -65,11 +65,15 @@ export const getDoctorAvailableSlotsRoute = publicProcedure
       end: new Date(s.endAt).getTime(),
     }));
 
-    const slots: Array<{ startAt: string; endAt: string }> = [];
+    const slots: Array<{
+      startAt: string;
+      endAt: string;
+      available: boolean;
+    }> = [];
 
     // Iterate through each day in the range
     const currentDate = new Date(fromDate);
-    while (currentDate <= toDate) {
+    while (currentDate < toDate) {
       const dayOfWeek = getDayOfWeek(currentDate);
 
       const dayAvailability = availability.filter(
@@ -83,10 +87,10 @@ export const getDoctorAvailableSlotsRoute = publicProcedure
         const slotStart = minutesToDate(currentDate, startMinutes);
         const slotEndBase = minutesToDate(currentDate, endMinutes);
 
-        // Generate 30-min slots within this availability range
+        // Generate slots matching the requested duration within this availability range
         let cursor = new Date(slotStart);
         while (cursor < slotEndBase) {
-          const slotEnd = new Date(cursor.getTime() + SLOT_DURATION_MS);
+          const slotEnd = new Date(cursor.getTime() + slotDurationMs);
 
           if (slotEnd > slotEndBase) {
             break;
@@ -100,12 +104,11 @@ export const getDoctorAvailableSlotsRoute = publicProcedure
             (b) => cursorTime < b.end && slotEndTime > b.start
           );
 
-          if (!hasOverlap) {
-            slots.push({
-              startAt: cursor.toISOString(),
-              endAt: slotEnd.toISOString(),
-            });
-          }
+          slots.push({
+            startAt: cursor.toISOString(),
+            endAt: slotEnd.toISOString(),
+            available: !hasOverlap,
+          });
 
           cursor = slotEnd;
         }

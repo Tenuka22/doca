@@ -18,7 +18,7 @@ stripeApp.post("/", async (c) => {
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(
+    event = await stripe.webhooks.constructEventAsync(
       body,
       signature,
       env.STRIPE_WEBHOOK_SECRET
@@ -28,42 +28,57 @@ stripeApp.post("/", async (c) => {
     return c.text("Webhook Error", 400);
   }
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object as Stripe.Checkout.Session;
-    const userId = session.metadata?.userId;
-    const creditsToAdd = Number.parseInt(session.metadata?.credits ?? "0", 10);
+  if (event.type === "payment_intent.succeeded") {
+    const paymentIntent = event.data.object as Stripe.PaymentIntent;
+    const userId = paymentIntent.metadata?.userId;
+    const creditsToAdd = Number.parseInt(
+      paymentIntent.metadata?.credits ?? "0",
+      10
+    );
 
     if (userId && creditsToAdd > 0) {
-      await db.transaction(async (tx) => {
-        const [userCredit] = await tx
-          .select()
-          .from(userCredits)
-          .where(eq(userCredits.userId, userId))
-          .limit(1);
+      const [existing] = await db
+        .select()
+        .from(userCredits)
+        .where(eq(userCredits.userId, userId))
+        .limit(1);
 
-        if (userCredit) {
-          await tx
+      const newBalance = existing
+        ? existing.balance + creditsToAdd
+        : creditsToAdd;
+
+      const queries = [];
+
+      if (existing) {
+        queries.push(
+          db
             .update(userCredits)
             .set({
-              balance: userCredit.balance + creditsToAdd,
+              balance: newBalance,
               updatedAt: new Date().toISOString(),
             })
-            .where(eq(userCredits.userId, userId));
-        } else {
-          await tx.insert(userCredits).values({
+            .where(eq(userCredits.userId, userId))
+        );
+      } else {
+        queries.push(
+          db.insert(userCredits).values({
             userId,
             balance: creditsToAdd,
-          });
-        }
+          })
+        );
+      }
 
-        await tx.insert(creditTransactions).values({
+      queries.push(
+        db.insert(creditTransactions).values({
           id: crypto.randomUUID(),
           userId,
           amount: creditsToAdd,
           type: "purchase",
           createdAt: new Date().toISOString(),
-        });
-      });
+        })
+      );
+
+      await db.batch(queries);
     }
   }
 

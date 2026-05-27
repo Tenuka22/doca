@@ -88,33 +88,47 @@ export async function getDoctorWithClerkInfo(
   clerk: Context["clerk"],
   profile: DoctorProfile
 ) {
-  const clerkUser = await clerk.users.getUser(profile.userId);
-  const nameParts = [clerkUser.firstName, clerkUser.lastName].filter(Boolean);
-  let name = clerkUser.fullName ?? null;
-  if (!name && nameParts.length > 0) {
-    name = nameParts.join(" ");
-  }
-  if (!name) {
-    name =
-      clerkUser.username ??
-      clerkUser.emailAddresses[0]?.emailAddress ??
-      clerkUser.phoneNumbers[0]?.phoneNumber ??
-      "Doctor";
-  }
-  const email = clerkUser.emailAddresses[0]?.emailAddress ?? null;
-  const phone = clerkUser.phoneNumbers[0]?.phoneNumber ?? null;
+  try {
+    const clerkUser = await clerk.users.getUser(profile.userId);
+    const nameParts = [clerkUser.firstName, clerkUser.lastName].filter(Boolean);
+    let name = clerkUser.fullName ?? null;
+    if (!name && nameParts.length > 0) {
+      name = nameParts.join(" ");
+    }
+    if (!name) {
+      name =
+        clerkUser.username ??
+        clerkUser.emailAddresses[0]?.emailAddress ??
+        clerkUser.phoneNumbers[0]?.phoneNumber ??
+        "Doctor";
+    }
+    const email = clerkUser.emailAddresses[0]?.emailAddress ?? null;
+    const phone = clerkUser.phoneNumbers[0]?.phoneNumber ?? null;
 
-  return {
-    userId: profile.userId,
-    name,
-    email,
-    phone,
-    imageUrl: clerkUser.imageUrl ?? null,
-    bio: profile.bio,
-    licenseNumber: profile.licenseNumber,
-    permanent: profile.permanent,
-    role: profile.permanent ? "doctor" : "pending-doctor",
-  };
+    return {
+      userId: profile.userId,
+      name,
+      email,
+      phone,
+      imageUrl: clerkUser.imageUrl ?? null,
+      bio: profile.bio,
+      licenseNumber: profile.licenseNumber,
+      permanent: profile.permanent,
+      role: profile.permanent ? "doctor" : "pending-doctor",
+    };
+  } catch {
+    return {
+      userId: profile.userId,
+      name: "Doctor",
+      email: null,
+      phone: null,
+      imageUrl: null,
+      bio: profile.bio,
+      licenseNumber: profile.licenseNumber,
+      permanent: profile.permanent,
+      role: profile.permanent ? "doctor" : "pending-doctor",
+    };
+  }
 }
 
 export function paginateItems<T>(

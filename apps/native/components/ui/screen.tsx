@@ -16,6 +16,7 @@ export const Screen = ({
     className={scrollClassName ?? "flex-1 bg-background"}
     contentContainerStyle={{ flexGrow: 1 }}
     contentInsetAdjustmentBehavior="automatic"
+    keyboardShouldPersistTaps="handled"
     showsVerticalScrollIndicator={false}
   >
     <View className={contentClassName ?? "flex-1 px-page py-page"}>

@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/expo";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, View } from "react-native";
@@ -66,11 +66,8 @@ type HasGuardianForm = z.infer<typeof hasGuardianSchema>;
 type GuardianForm = z.infer<typeof guardianSchema>;
 
 export default function OnboardingScreen() {
+  const router = useRouter();
   const { isLoaded, isSignedIn } = useAuth();
-  if (isLoaded && !isSignedIn) {
-    router.replace("/(auth)/sign-in");
-    return null;
-  }
   const { foreground } = useThemeColor();
 
   const [mode, setMode] = useState<OnboardingMode>(null);
@@ -102,6 +99,19 @@ export default function OnboardingScreen() {
     })
   );
 
+  const handleApproveGuardian = useMutation(
+    orpc.approveGuardianRequest.mutationOptions({
+      onSuccess: () => {
+        pendingGuardiansQuery.refetch();
+      },
+    })
+  );
+
+  if (isLoaded && !isSignedIn) {
+    router.replace("/(auth)/sign-in");
+    return null;
+  }
+
   const handleModeSelect = (
     selectedMode: "self" | "has_guardian" | "guardian"
   ) => {
@@ -132,14 +142,6 @@ export default function OnboardingScreen() {
       guardianEmail: data.guardianEmail,
     });
   };
-
-  const handleApproveGuardian = useMutation(
-    orpc.approveGuardianRequest.mutationOptions({
-      onSuccess: () => {
-        pendingGuardiansQuery.refetch();
-      },
-    })
-  );
 
   if (step === "select") {
     return (
@@ -208,13 +210,10 @@ export default function OnboardingScreen() {
                 <View className="gap-2">
                   <Field
                     error={fieldState.error?.message}
-                    inputProps={{
-                      onChangeText: field.onChange,
-                      placeholder: "Enter a nickname",
-                      placeholderTextColor: "#6b7280",
-                      value: field.value,
-                    }}
                     label="Your Alias"
+                    onChangeText={field.onChange}
+                    placeholder="Enter a nickname"
+                    value={field.value}
                   />
                   <Text className="mt-1 font-normal font-sans text-muted-foreground text-xs leading-4">
                     This is how you will appear to doctors. It can be any name
@@ -273,13 +272,10 @@ export default function OnboardingScreen() {
                 render={({ field, fieldState }) => (
                   <Field
                     error={fieldState.error?.message}
-                    inputProps={{
-                      onChangeText: field.onChange,
-                      placeholder: "Enter a nickname",
-                      placeholderTextColor: "#6b7280",
-                      value: field.value,
-                    }}
                     label="Your Alias"
+                    onChangeText={field.onChange}
+                    placeholder="Enter a nickname"
+                    value={field.value}
                   />
                 )}
               />
@@ -289,16 +285,13 @@ export default function OnboardingScreen() {
                 name="guardianEmail"
                 render={({ field, fieldState }) => (
                   <Field
+                    autoCapitalize="none"
                     error={fieldState.error?.message}
-                    inputProps={{
-                      autoCapitalize: "none",
-                      keyboardType: "email-address",
-                      onChangeText: field.onChange,
-                      placeholder: "guardian@example.com",
-                      placeholderTextColor: "#6b7280",
-                      value: field.value,
-                    }}
+                    keyboardType="email-address"
                     label="Guardian Email"
+                    onChangeText={field.onChange}
+                    placeholder="guardian@example.com"
+                    value={field.value}
                   />
                 )}
               />
@@ -309,14 +302,11 @@ export default function OnboardingScreen() {
                 render={({ field, fieldState }) => (
                   <Field
                     error={fieldState.error?.message}
-                    inputProps={{
-                      keyboardType: "phone-pad",
-                      onChangeText: field.onChange,
-                      placeholder: "+1 (555) 000-0000",
-                      placeholderTextColor: "#6b7280",
-                      value: field.value,
-                    }}
+                    keyboardType="phone-pad"
                     label="Guardian Phone"
+                    onChangeText={field.onChange}
+                    placeholder="+1 (555) 000-0000"
+                    value={field.value}
                   />
                 )}
               />
@@ -372,13 +362,10 @@ export default function OnboardingScreen() {
                 <View className="gap-1">
                   <Field
                     error={fieldState.error?.message}
-                    inputProps={{
-                      onChangeText: field.onChange,
-                      placeholder: "Enter a nickname",
-                      placeholderTextColor: "#6b7280",
-                      value: field.value,
-                    }}
                     label="Your Alias"
+                    onChangeText={field.onChange}
+                    placeholder="Enter a nickname"
+                    value={field.value}
                   />
                   <Text className="mt-1 font-normal font-sans text-muted-foreground text-xs leading-4">
                     This is how patients will identify you.
@@ -392,16 +379,13 @@ export default function OnboardingScreen() {
               name="guardianEmail"
               render={({ field, fieldState }) => (
                 <Field
+                  autoCapitalize="none"
                   error={fieldState.error?.message}
-                  inputProps={{
-                    autoCapitalize: "none",
-                    keyboardType: "email-address",
-                    onChangeText: field.onChange,
-                    placeholder: "guardian@example.com",
-                    placeholderTextColor: "#6b7280",
-                    value: field.value,
-                  }}
+                  keyboardType="email-address"
                   label="Your Email"
+                  onChangeText={field.onChange}
+                  placeholder="guardian@example.com"
+                  value={field.value}
                 />
               )}
             />
