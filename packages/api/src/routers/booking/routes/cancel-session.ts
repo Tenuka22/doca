@@ -37,6 +37,17 @@ export const cancelSessionRoute = protectedProcedure
     }
 
     const now = new Date().toISOString();
+    const nowMs = Date.now();
+    const startAtMs = new Date(session.startAt).getTime();
+    const createdAtMs = new Date(session.createdAt).getTime();
+    const totalWindow = startAtMs - createdAtMs;
+    const remaining = startAtMs - nowMs;
+
+    if (remaining < totalWindow / 6) {
+      throw new Error(
+        "Cancellation period has closed. Sessions can only be cancelled within the first 5/6 of the time from booking to session start."
+      );
+    }
 
     await context.db
       .update(doctorSessions)

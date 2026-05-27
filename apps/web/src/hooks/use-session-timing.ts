@@ -39,7 +39,9 @@ function computeTiming(
   const mustLeave = !isAdmin && now > leaveDeadline;
 
   let timeStatus: SessionTiming["timeStatus"];
-  if (now < start - THIRTY_MIN_MS) {
+  if (isAdmin) {
+    timeStatus = "during";
+  } else if (now < start - THIRTY_MIN_MS) {
     timeStatus = "before";
   } else if (now <= end) {
     timeStatus = "during";

@@ -1,16 +1,23 @@
 import { useUser } from "@clerk/expo";
 import { useQuery } from "@tanstack/react-query";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Calendar, Check, Clock, User, Video, X } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Screen } from "@/components/ui/screen";
-import { VideoRoom } from "@/components/ui/video-room";
 import { useSessionTiming } from "@/hooks/use-session-timing";
 import { orpc } from "@/utils/orpc";
 import { useThemeColor } from "@/utils/theme";
+
+const statusLabelMap: Record<string, string> = {
+  attended: "Attended",
+  approved: "Approved",
+  requested: "Requested",
+  rescheduled: "Rescheduled",
+  timing_balance_failure: "Failed to Agree",
+};
 
 const statusColorMap: Record<
   string,
@@ -55,15 +62,17 @@ function getStatusColor(status: string) {
 
 function StatusBadge({ status }: { status: string }) {
   const sc = getStatusColor(status);
+  const label = statusLabelMap[status] ?? status;
   return (
     <View className={`rounded-full border px-3 py-1 ${sc.bg} ${sc.border}`}>
-      <Text className={`font-bold text-xs ${sc.text}`}>{status}</Text>
+      <Text className={`font-bold text-xs ${sc.text}`}>{label}</Text>
     </View>
   );
 }
 
 export default function AppointmentsScreen() {
   const { user } = useUser();
+  const router = useRouter();
   const metadataRole = user?.publicMetadata?.role;
   const userRole: "patient" | "doctor" | "admin" =
     metadataRole === "admin"
@@ -78,7 +87,6 @@ export default function AppointmentsScreen() {
   const [showSuccessBanner, setShowSuccessBanner] = useState(
     bookingSuccess === "true"
   );
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
 
   const profileQuery = useQuery(orpc.getPatientProfile.queryOptions());
 
@@ -87,9 +95,12 @@ export default function AppointmentsScreen() {
   const sessions = sessionsQuery.data?.sessions ?? [];
   const hasProfile = profileQuery.data?.isOnboardingComplete ?? false;
 
-  const handleCloseVideoRoom = useCallback(() => {
-    setActiveSessionId(null);
-  }, []);
+  const handleJoinSession = useCallback(
+    (id: string) => {
+      router.push(`/appointments/${id}`);
+    },
+    [router]
+  );
 
   if (profileQuery.isLoading || sessionsQuery.isLoading) {
     return (
@@ -194,8 +205,6 @@ export default function AppointmentsScreen() {
                 });
                 const timeLabel = `${startAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })} - ${endAt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}`;
 
-                const isActiveInVideo = activeSessionId === session.id;
-
                 return (
                   <Card className="gap-3" key={session.id}>
                     <View className="flex-row items-center justify-between">
@@ -232,24 +241,13 @@ export default function AppointmentsScreen() {
                     ) : null}
 
                     {session.status === "approved" ? (
-                      <>
-                        <SessionJoinButton
-                          endAt={session.endAt}
-                          onJoin={setActiveSessionId}
-                          role={userRole}
-                          sessionId={session.id}
-                          startAt={session.startAt}
-                        />
-                        {isActiveInVideo ? (
-                          <VideoRoom
-                            endAt={session.endAt}
-                            onClose={handleCloseVideoRoom}
-                            role={userRole}
-                            sessionId={session.id}
-                            startAt={session.startAt}
-                          />
-                        ) : null}
-                      </>
+                      <SessionJoinButton
+                        endAt={session.endAt}
+                        onJoin={handleJoinSession}
+                        role={userRole}
+                        sessionId={session.id}
+                        startAt={session.startAt}
+                      />
                     ) : null}
                   </Card>
                 );

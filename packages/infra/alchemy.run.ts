@@ -34,6 +34,9 @@ export const server = await Worker("server", {
     STRESS_PREDICTOR_URL: alchemy.env.STRESS_PREDICTOR_URL!,
     STRIPE_SECRET_KEY: alchemy.secret.env.STRIPE_SECRET_KEY!,
     STRIPE_WEBHOOK_SECRET: alchemy.secret.env.STRIPE_WEBHOOK_SECRET!,
+    LIVEKIT_HOST: alchemy.env.LIVEKIT_HOST!,
+    LIVEKIT_API_KEY: alchemy.secret.env.LIVEKIT_API_KEY!,
+    LIVEKIT_API_SECRET: alchemy.secret.env.LIVEKIT_API_SECRET!,
   },
   crons: ["*/10 * * * *"],
   dev: {

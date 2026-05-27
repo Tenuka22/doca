@@ -1,5 +1,5 @@
-import { TAX_RATE, CREDIT_PRICE_CENTS } from "@zen-doc/pricing";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { CREDIT_PRICE_CENTS, TAX_RATE } from "@zen-doc/pricing";
 import { useState } from "react";
 import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
 import { Button } from "@/components/ui/button";
@@ -140,23 +140,37 @@ export function CreditHeaderButton() {
               <View className="gap-1 rounded-card border-2 border-border bg-muted/30 p-card">
                 <View className="flex-row items-center justify-between">
                   <Text className="text-muted-foreground text-sm">
-                    Subtotal ({selectedCredits} × {formatPrice(CREDIT_PRICE_CENTS)})
+                    Subtotal ({selectedCredits} ×{" "}
+                    {formatPrice(CREDIT_PRICE_CENTS)})
                   </Text>
                   <Text className="text-foreground text-sm">
                     {formatPrice(selectedCredits * CREDIT_PRICE_CENTS)}
                   </Text>
                 </View>
                 <View className="flex-row items-center justify-between">
-                  <Text className="text-muted-foreground text-sm">Tax ({(TAX_RATE * 100).toFixed(0)}%)</Text>
+                  <Text className="text-muted-foreground text-sm">
+                    Tax ({(TAX_RATE * 100).toFixed(0)}%)
+                  </Text>
                   <Text className="text-foreground text-sm">
-                    {formatPrice(Math.round(selectedCredits * CREDIT_PRICE_CENTS * TAX_RATE))}
+                    {formatPrice(
+                      Math.round(
+                        selectedCredits * CREDIT_PRICE_CENTS * TAX_RATE
+                      )
+                    )}
                   </Text>
                 </View>
-                <View className="mt-1 border-t border-border pt-1">
+                <View className="mt-1 border-border border-t pt-1">
                   <View className="flex-row items-center justify-between">
-                    <Text className="font-bold text-foreground text-sm">Total</Text>
-                    <Text className="font-bold text-foreground text-base">
-                      {formatPrice(selectedCredits * CREDIT_PRICE_CENTS + Math.round(selectedCredits * CREDIT_PRICE_CENTS * TAX_RATE))}
+                    <Text className="font-bold text-foreground text-sm">
+                      Total
+                    </Text>
+                    <Text className="font-bold text-base text-foreground">
+                      {formatPrice(
+                        selectedCredits * CREDIT_PRICE_CENTS +
+                          Math.round(
+                            selectedCredits * CREDIT_PRICE_CENTS * TAX_RATE
+                          )
+                      )}
                     </Text>
                   </View>
                 </View>

@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/tanstack-react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -99,6 +99,18 @@ function SessionStatusBadge({ status }: { status: string }) {
     );
   }
 
+  if (status === "timing_balance_failure") {
+    return (
+      <Badge
+        className="bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 dark:text-rose-400"
+        variant="outline"
+      >
+        <XCircleIcon className="mr-1 h-3 w-3" />
+        Failed to Agree
+      </Badge>
+    );
+  }
+
   return (
     <Badge
       className="bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 dark:text-rose-400"
@@ -110,6 +122,18 @@ function SessionStatusBadge({ status }: { status: string }) {
   );
 }
 
+function canCancelSession(session: {
+  startAt: string;
+  createdAt: string;
+}): boolean {
+  const nowMs = Date.now();
+  const startAtMs = new Date(session.startAt).getTime();
+  const createdAtMs = new Date(session.createdAt).getTime();
+  const totalWindow = startAtMs - createdAtMs;
+  const remaining = startAtMs - nowMs;
+  return remaining >= totalWindow / 6;
+}
+
 function DoctorSessionsRoute() {
   const { user } = useUser();
   const metadataRole = getMetadataRole(user?.publicMetadata);
@@ -119,15 +143,11 @@ function DoctorSessionsRoute() {
       : metadataRole === "doctor"
         ? "doctor"
         : "patient";
+  const navigate = useNavigate();
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [proposeTarget, setProposeTarget] = useState<string | null>(null);
   const [proposedStart, setProposedStart] = useState("");
   const [proposedEnd, setProposedEnd] = useState("");
-  const [videoSession, setVideoSession] = useState<{
-    sessionId: string;
-    startAt: string;
-    endAt: string;
-  } | null>(null);
 
   const sessionsQuery = useQuery({
     queryKey: orpc.listDoctorSessions.queryKey(),
@@ -262,20 +282,18 @@ function DoctorSessionsRoute() {
 
                       <div className="flex gap-2">
                         {session.status === "approved" && (
-                          <>
-                            <SessionJoinButton
-                              endAt={session.endAt}
-                              onJoin={() =>
-                                setVideoSession({
-                                  sessionId: session.id,
-                                  startAt: session.startAt,
-                                  endAt: session.endAt,
-                                })
-                              }
-                              role={userRole}
-                              startAt={session.startAt}
-                            />
-                          </>
+                          <SessionJoinButton
+                            endAt={session.endAt}
+                            onJoin={(id) =>
+                              navigate({
+                                to: "/doctor/sessions/$sessionId",
+                                params: { sessionId: id },
+                              })
+                            }
+                            role={userRole}
+                            sessionId={session.id}
+                            startAt={session.startAt}
+                          />
                         )}
 
                         {session.status === "requested" && (
@@ -321,17 +339,18 @@ function DoctorSessionsRoute() {
                         )}
 
                         {(session.status === "approved" ||
-                          session.status === "requested") && (
-                          <Button
-                            disabled={cancelSession.isPending}
-                            onClick={() => setCancelTarget(session.id)}
-                            size="sm"
-                            variant="outline"
-                          >
-                            <BanIcon className="mr-1 h-3 w-3" />
-                            Cancel
-                          </Button>
-                        )}
+                          session.status === "requested") &&
+                          canCancelSession(session) && (
+                            <Button
+                              disabled={cancelSession.isPending}
+                              onClick={() => setCancelTarget(session.id)}
+                              size="sm"
+                              variant="outline"
+                            >
+                              <BanIcon className="mr-1 h-3 w-3" />
+                              Cancel
+                            </Button>
+                          )}
                       </div>
                     </div>
                   </CardContent>
@@ -422,17 +441,6 @@ function DoctorSessionsRoute() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {videoSession && (
-        <VideoRoomWeb
-          endAt={videoSession.endAt}
-          onClose={() => setVideoSession(null)}
-          open={!!videoSession}
-          role={userRole}
-          sessionId={videoSession.sessionId}
-          startAt={videoSession.startAt}
-        />
-      )}
     </div>
   );
 }

@@ -18,6 +18,7 @@ export function useLiveKitRoomWeb(options: UseLiveKitRoomWebOptions = {}) {
   const [error, setError] = useState<string | null>(null);
   const [participantCount, setParticipantCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const connect = useCallback(
     async (url: string, token: string) => {
@@ -41,6 +42,15 @@ export function useLiveKitRoomWeb(options: UseLiveKitRoomWebOptions = {}) {
           setIsConnected(true);
           setIsConnecting(false);
           options.onConnected?.();
+          
+          // Set up local video if available
+          const localParticipant = room.localParticipant;
+          if (localParticipant) {
+             const videoTrack = Array.from(localParticipant.videoTrackPublications.values())[0]?.videoTrack;
+             if (videoTrack && localVideoRef.current) {
+                videoTrack.attach(localVideoRef.current);
+             }
+          }
         });
 
         room.on(RoomEvent.Disconnected satisfies RoomEventType, () => {
@@ -50,13 +60,13 @@ export function useLiveKitRoomWeb(options: UseLiveKitRoomWebOptions = {}) {
         });
 
         room.on(RoomEvent.ParticipantConnected satisfies RoomEventType, () => {
-          setParticipantCount((prev) => prev + 1);
+          setParticipantCount(room.remoteParticipants.size);
         });
 
         room.on(
           RoomEvent.ParticipantDisconnected satisfies RoomEventType,
           () => {
-            setParticipantCount((prev) => Math.max(0, prev - 1));
+            setParticipantCount(room.remoteParticipants.size);
           }
         );
 
@@ -68,24 +78,30 @@ export function useLiveKitRoomWeb(options: UseLiveKitRoomWebOptions = {}) {
               videoRef.current &&
               !participant.isLocal
             ) {
-              const mediaStream = new MediaStream();
-              mediaStream.addTrack(track.mediaStreamTrack);
-              videoRef.current.srcObject = mediaStream;
-              videoRef.current.play().catch(() => undefined);
+              track.attach(videoRef.current);
             }
           }
         );
 
         room.on(
           RoomEvent.TrackUnsubscribed satisfies RoomEventType,
-          (_track, _publication) => {
-            if (videoRef.current) {
-              videoRef.current.srcObject = null;
-            }
+          (track) => {
+            track.detach();
           }
         );
 
+        room.on(RoomEvent.LocalTrackPublished satisfies RoomEventType, (publication) => {
+          if (publication.track.kind === "video" && localVideoRef.current) {
+            publication.track.attach(localVideoRef.current);
+          }
+        });
+
         await room.connect(url, token);
+        
+        // Start local tracks
+        await room.localParticipant.setCameraEnabled(true);
+        await room.localParticipant.setMicrophoneEnabled(true);
+
         roomRef.current = room;
       } catch (err) {
         const message =
@@ -128,6 +144,7 @@ export function useLiveKitRoomWeb(options: UseLiveKitRoomWebOptions = {}) {
     error,
     participantCount,
     videoRef,
+    localVideoRef,
     room: roomRef.current,
   };
 }

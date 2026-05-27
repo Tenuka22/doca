@@ -46,7 +46,9 @@ export function computeSessionTiming(
     !isAdmin && leaveDeadlineAt !== null && now > leaveDeadlineAt.getTime();
 
   let timeStatus: SessionTiming["timeStatus"];
-  if (now < startMs - THIRTY_MIN_MS) {
+  if (isAdmin) {
+    timeStatus = "during";
+  } else if (now < startMs - THIRTY_MIN_MS) {
     timeStatus = "before";
   } else if (now <= endMs) {
     timeStatus = "during";

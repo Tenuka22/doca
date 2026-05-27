@@ -56,6 +56,18 @@ function SessionStatusBadge({ status }: { status: string }) {
     );
   }
 
+  if (status === "timing_balance_failure") {
+    return (
+      <Badge
+        className="bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 dark:text-rose-400"
+        variant="outline"
+      >
+        <XCircleIcon className="mr-1 h-3 w-3" />
+        Failed to Agree
+      </Badge>
+    );
+  }
+
   return (
     <Badge
       className="bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 dark:text-rose-400"

@@ -26,6 +26,10 @@ import {
   guardianProfiles as guardianProfilesTable,
   type PatientProfile as PatientProfileSchema,
   patientProfiles as patientProfilesTable,
+  type SessionAttendanceEvent as SessionAttendanceEventSchema,
+  type SessionSnapshot as SessionSnapshotSchema,
+  sessionAttendanceEvents as sessionAttendanceEventsTable,
+  sessionSnapshots as sessionSnapshotsTable,
   type UserCredit as UserCreditSchema,
   userCredits as userCreditsTable,
 } from "./schema";
@@ -54,6 +58,8 @@ export const creditTransactions = creditTransactionsTable;
 export const doctorWeeklyAvailability = doctorWeeklyAvailabilityTable;
 export const doctorCredits = doctorCreditsTable;
 export const doctorCashoutRequests = doctorCashoutRequestsTable;
+export const sessionAttendanceEvents = sessionAttendanceEventsTable;
+export const sessionSnapshots = sessionSnapshotsTable;
 
 export type DoctorProfile = DoctorProfileSchema;
 export type DoctorFile = DoctorFileSchema;
@@ -68,6 +74,8 @@ export type CreditTransaction = CreditTransactionSchema;
 export type DoctorWeeklyAvailability = DoctorWeeklyAvailabilitySchema;
 export type DoctorCredit = DoctorCreditSchema;
 export type DoctorCashoutRequest = DoctorCashoutRequestSchema;
+export type SessionAttendanceEvent = SessionAttendanceEventSchema;
+export type SessionSnapshot = SessionSnapshotSchema;
 
 export function createDb() {
   return drizzle(env.DB, {
@@ -84,6 +92,8 @@ export function createDb() {
       doctorWeeklyAvailability,
       doctorCredits,
       doctorCashoutRequests,
+      sessionAttendanceEvents,
+      sessionSnapshots,
     },
   });
 }

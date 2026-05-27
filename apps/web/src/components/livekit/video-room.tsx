@@ -7,7 +7,8 @@ import {
   DialogTitle,
 } from "@zen-doc/ui/components/dialog";
 import { Video, VideoOff } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 import { useLiveKitRoomWeb } from "@/hooks/use-livekit-room";
 import { useSessionTiming } from "@/hooks/use-session-timing";
@@ -16,10 +17,11 @@ import { orpc } from "@/utils/orpc";
 interface VideoRoomProps {
   endAt: string;
   onClose: () => void;
-  open: boolean;
+  open?: boolean;
   role: "doctor" | "patient" | "admin";
   sessionId: string;
   startAt: string;
+  asDialog?: boolean;
 }
 
 function formatDuration(minutes: number): string {
@@ -29,6 +31,83 @@ function formatDuration(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+}
+
+function useAttendanceTracker({
+  isConnected,
+  sessionId,
+  endAt,
+  role,
+}: {
+  isConnected: boolean;
+  sessionId: string;
+  endAt: string;
+  role: string;
+}) {
+  const hasRecordedJoin = useRef(false);
+  const snapshotTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    if (isConnected && !hasRecordedJoin.current) {
+      hasRecordedJoin.current = true;
+      orpc.recordAttendanceEvent
+        .call({ sessionId, event: "join" })
+        .catch(() => undefined);
+    }
+  }, [isConnected, sessionId]);
+
+  useEffect(() => {
+    if (!isConnected && hasRecordedJoin.current) {
+      hasRecordedJoin.current = false;
+      orpc.recordAttendanceEvent
+        .call({ sessionId, event: "leave" })
+        .catch(() => undefined);
+    }
+  }, [isConnected, sessionId]);
+
+  useEffect(() => {
+    if (!isConnected || role !== "doctor") {
+      return;
+    }
+
+    const endMs = new Date(endAt).getTime();
+    const tenMinBeforeEnd = endMs - 10 * 60 * 1000 - Date.now();
+    const atEnd = endMs - Date.now();
+
+    if (tenMinBeforeEnd > 0) {
+      const timer = setTimeout(() => {
+        orpc.recordSnapshot
+          .call({
+            sessionId,
+            imageData: "snapshot_10min_before_end",
+            reason: "pre_end_check",
+          })
+          .catch(() => undefined);
+      }, tenMinBeforeEnd);
+      snapshotTimers.current.push(timer);
+    }
+
+    if (atEnd > 0) {
+      const timer = setTimeout(() => {
+        orpc.recordSnapshot
+          .call({
+            sessionId,
+            imageData: "snapshot_at_end",
+            reason: "end_check",
+          })
+          .catch(() => undefined);
+        orpc.autoMarkAttendance.call({ sessionId }).catch(() => undefined);
+      }, atEnd);
+      snapshotTimers.current.push(timer);
+    }
+
+    return () => {
+      for (const timer of snapshotTimers.current) {
+        clearTimeout(timer);
+      }
+      snapshotTimers.current = [];
+    };
+  }, [isConnected, sessionId, endAt, role]);
 }
 
 interface VideoRoomContentProps {
@@ -78,29 +157,56 @@ function VideoRoomContent({
   if (timing.canJoin) {
     return (
       <div className="space-y-4">
-        <div className="relative aspect-video overflow-hidden rounded-lg border bg-black">
-          {liveKit.isConnected ? (
-            <>
-              <video
-                autoPlay
-                className="h-full w-full object-cover"
-                muted
-                playsInline
-                ref={liveKit.videoRef}
-              />
-              <div className="absolute right-3 bottom-3 flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5">
-                <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
-                <span className="text-white text-xs">
-                  {liveKit.participantCount + 1} participant
-                  {liveKit.participantCount === 0 ? "" : "s"}
-                </span>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {/* Remote Video */}
+          <div className="relative aspect-video overflow-hidden rounded-lg border bg-black">
+            {liveKit.isConnected ? (
+              <>
+                <video
+                  autoPlay
+                  className="h-full w-full object-cover"
+                  playsInline
+                  ref={liveKit.videoRef}
+                />
+                <div className="absolute top-3 left-3 rounded-full bg-black/60 px-2 py-1 text-[10px] text-white">
+                  Remote
+                </div>
+                <div className="absolute right-3 bottom-3 flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5">
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
+                  <span className="text-white text-xs">
+                    {liveKit.participantCount} participant
+                    {liveKit.participantCount === 1 ? "" : "s"}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
               </div>
-            </>
-          ) : (
-            <div className="flex h-full items-center justify-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Local Video */}
+          <div className="relative aspect-video overflow-hidden rounded-lg border bg-black">
+            {liveKit.isConnected ? (
+              <>
+                <video
+                  autoPlay
+                  className="h-full w-full object-cover scale-x-[-1]"
+                  muted
+                  playsInline
+                  ref={liveKit.localVideoRef}
+                />
+                <div className="absolute top-3 left-3 rounded-full bg-black/60 px-2 py-1 text-[10px] text-white">
+                  You (Local)
+                </div>
+              </>
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              </div>
+            )}
+          </div>
         </div>
 
         {timing.mustLeave && (
@@ -159,11 +265,12 @@ function VideoRoomContent({
 
 export function VideoRoomWeb({
   onClose,
-  open,
+  open = true,
   sessionId,
   startAt,
   endAt,
   role,
+  asDialog = false,
 }: VideoRoomProps) {
   const liveKit = useLiveKitRoomWeb();
   const timing = useSessionTiming(startAt, endAt, role);
@@ -175,6 +282,13 @@ export function VideoRoomWeb({
   const [tokenError, setTokenError] = useState<string | null>(null);
   const [isFetchingToken, setIsFetchingToken] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
+
+  useAttendanceTracker({
+    isConnected: liveKit.isConnected,
+    sessionId,
+    endAt,
+    role,
+  });
 
   const fetchToken = useCallback(async () => {
     if (tokenData || isFetchingToken) {
@@ -209,12 +323,15 @@ export function VideoRoomWeb({
   }, [open, tokenData, liveKit]);
 
   const handleEndSession = useCallback(async () => {
+    await orpc.recordAttendanceEvent
+      .call({ sessionId, event: "leave" })
+      .catch(() => undefined);
     await liveKit.disconnect();
     setTokenData(null);
     setTokenError(null);
     setShowEndConfirm(false);
     onClose();
-  }, [liveKit, onClose]);
+  }, [liveKit, onClose, sessionId]);
 
   useEffect(() => {
     if (timing.mustLeave && liveKit.isConnected) {
@@ -255,38 +372,57 @@ export function VideoRoomWeb({
     );
   }, [timing]);
 
-  return (
-    <Dialog onOpenChange={(o) => !o && onClose()} open={open}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Video className="h-5 w-5 text-emerald-500" />
-            Video Session
-            {statusBadge}
-          </DialogTitle>
-        </DialogHeader>
+  const content = (
+    <VideoRoomContent
+      fetchToken={fetchToken}
+      handleEndSession={handleEndSession}
+      isFetchingToken={isFetchingToken}
+      liveKit={liveKit}
+      setShowEndConfirm={setShowEndConfirm}
+      showEndConfirm={showEndConfirm}
+      timing={timing}
+      tokenError={tokenError}
+    />
+  );
 
-        <VideoRoomContent
-          fetchToken={fetchToken}
-          handleEndSession={handleEndSession}
-          isFetchingToken={isFetchingToken}
-          liveKit={liveKit}
-          setShowEndConfirm={setShowEndConfirm}
-          showEndConfirm={showEndConfirm}
-          timing={timing}
-          tokenError={tokenError}
-        />
-      </DialogContent>
-    </Dialog>
+  if (asDialog) {
+    return (
+      <Dialog onOpenChange={(o) => !o && onClose()} open={open}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Video className="h-5 w-5 text-emerald-500" />
+              Video Session
+              {statusBadge}
+            </DialogTitle>
+          </DialogHeader>
+          {content}
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Video className="h-5 w-5 text-emerald-500" />
+          <span className="font-bold">Video Session</span>
+        </div>
+        {statusBadge}
+      </div>
+      {content}
+    </div>
   );
 }
 
 interface SessionJoinButtonProps {
   endAt: string;
   label?: string;
-  onJoin: () => void;
+  onJoin: (sessionId: string) => void;
   role?: "doctor" | "patient" | "admin";
   startAt: string;
+  sessionId: string;
 }
 
 export function SessionJoinButton({
@@ -295,12 +431,13 @@ export function SessionJoinButton({
   onJoin,
   startAt,
   role = "doctor",
+  sessionId,
 }: SessionJoinButtonProps) {
   const timing = useSessionTiming(startAt, endAt, role);
 
   if (timing.canJoin) {
     return (
-      <Button onClick={onJoin} size="sm" variant="default">
+      <Button onClick={() => onJoin(sessionId)} size="sm" variant="default">
         <Video className="mr-1 h-3 w-3" />
         {label}
       </Button>

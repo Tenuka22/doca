@@ -24,6 +24,24 @@ export default function TestIndexScreen() {
 
       {/* Connection Cards List */}
       <View className="gap-section">
+        <Card className="gap-4">
+          <View className="gap-1">
+            <Text className="font-bold font-sans text-primary text-xs uppercase tracking-[0.18em]">
+              Conference
+            </Text>
+            <Text className="font-extrabold font-sans text-2xl text-foreground tracking-tight">
+              Video Sessions
+            </Text>
+            <Text className="mt-1 font-normal font-sans text-muted-foreground text-sm leading-6">
+              Test video conferencing features with admin access and no time
+              restrictions.
+            </Text>
+          </View>
+          <Button className="w-full" href="/test/session" variant="secondary">
+            Open Session Lab ›
+          </Button>
+        </Card>
+
         {wearablePackages.map((item) => (
           <Card className="gap-4" key={item.route}>
             <View className="gap-1">

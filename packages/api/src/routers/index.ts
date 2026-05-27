@@ -7,6 +7,7 @@ import { doctorFilesRouter } from "./doctor-files";
 import { liveKitRouter } from "./livekit";
 import { patientRouter } from "./patient";
 import { publicRouter } from "./public";
+import { sessionAttendanceRouter } from "./session-attendance";
 
 export const appRouter = {
   ...publicRouter,
@@ -16,6 +17,7 @@ export const appRouter = {
   ...bookingRouter,
   ...liveKitRouter,
   ...patientRouter,
+  ...sessionAttendanceRouter,
 };
 
 export type AppRouter = typeof appRouter;

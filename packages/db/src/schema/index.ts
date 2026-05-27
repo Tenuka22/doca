@@ -212,6 +212,29 @@ export const doctorCashoutRequests = sqliteTable("doctor_cashout_requests", {
   updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
 });
 
+export const sessionAttendanceEvents = sqliteTable(
+  "session_attendance_events",
+  {
+    id: text("id").primaryKey(),
+    sessionId: text("session_id").notNull(),
+    participantId: text("participant_id").notNull(),
+    participantType: text("participant_type").notNull(),
+    event: text("event").notNull(),
+    timestamp: text("timestamp").notNull(),
+    metadata: text("metadata"),
+  }
+);
+
+export const sessionSnapshots = sqliteTable("session_snapshots", {
+  id: text("id").primaryKey(),
+  sessionId: text("session_id").notNull(),
+  capturedAt: text("captured_at").notNull(),
+  imageUrl: text("image_url"),
+  imageData: text("image_data"),
+  participantType: text("participant_type").notNull(),
+  reason: text("reason").notNull(),
+});
+
 export const doctorPlans = sqliteTable("doctor_plans", {
   id: text("id").primaryKey(),
   doctorId: text("doctor_id").notNull(),
@@ -243,3 +266,6 @@ export type DoctorWeeklyAvailability =
   typeof doctorWeeklyAvailability.$inferSelect;
 export type DoctorCredit = typeof doctorCredits.$inferSelect;
 export type DoctorCashoutRequest = typeof doctorCashoutRequests.$inferSelect;
+export type SessionAttendanceEvent =
+  typeof sessionAttendanceEvents.$inferSelect;
+export type SessionSnapshot = typeof sessionSnapshots.$inferSelect;

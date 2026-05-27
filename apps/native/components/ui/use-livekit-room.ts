@@ -2,6 +2,12 @@ import {
   type Room,
   type RoomEvent,
   RoomEvent as RoomEvents,
+  Track,
+  type RemoteTrack,
+  type RemoteTrackPublication,
+  type RemoteParticipant,
+  type LocalTrackPublication,
+  type LocalParticipant,
 } from "livekit-client";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -17,6 +23,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [participants, setParticipants] = useState<string[]>([]);
+  const [tracks, setTracks] = useState<RemoteTrack[]>([]);
 
   const connect = useCallback(
     async (url: string, token: string) => {
@@ -39,6 +46,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
         room.on(RoomEvents.Disconnected satisfies RoomEvent, () => {
           setIsConnected(false);
           setIsConnecting(false);
+          setTracks([]);
           options.onDisconnected?.();
         });
 
@@ -58,12 +66,24 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
           }
         );
 
-        room.on(RoomEvents.Disconnected satisfies RoomEvent, () => {
-          setIsConnected(false);
-          setParticipants([]);
+        room.on(RoomEvents.TrackSubscribed satisfies RoomEvent, (track) => {
+           if (track.kind === Track.Kind.Video) {
+              setTracks((prev) => [...prev, track as RemoteTrack]);
+           }
+        });
+
+        room.on(RoomEvents.TrackUnsubscribed satisfies RoomEvent, (track) => {
+           if (track.kind === Track.Kind.Video) {
+              setTracks((prev) => prev.filter((t) => t.sid !== track.sid));
+           }
         });
 
         await room.connect(url, token);
+        
+        // Activate local tracks
+        await room.localParticipant.setCameraEnabled(true);
+        await room.localParticipant.setMicrophoneEnabled(true);
+
         roomRef.current = room;
       } catch (err) {
         const message =
@@ -85,6 +105,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
     }
     setIsConnected(false);
     setParticipants([]);
+    setTracks([]);
   }, []);
 
   useEffect(
@@ -105,6 +126,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
     isConnecting,
     error,
     participants,
+    tracks,
     room: roomRef.current,
   };
 }
