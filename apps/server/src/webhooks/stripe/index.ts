@@ -1,4 +1,4 @@
-import { createDb, creditTransactions, userCredits } from "@zen-doc/db";
+import { createDb, creditTransactions, doctorProfiles, userCredits } from "@zen-doc/db";
 import { env } from "@zen-doc/env/server";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
@@ -72,6 +72,24 @@ stripeApp.post("/", async (c) => {
         });
       });
     }
+  }
+
+  if (
+    event.type === "account.updated" ||
+    event.type === "account.application.authorized"
+  ) {
+    const account = event.data.object as Stripe.Account;
+    const stripeAccountId = account.id;
+
+    const enabled = account.details_submitted && account.charges_enabled;
+
+    await db
+      .update(doctorProfiles)
+      .set({
+        stripeAccountEnabled: enabled,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(doctorProfiles.stripeAccountId, stripeAccountId));
   }
 
   return c.text("OK");

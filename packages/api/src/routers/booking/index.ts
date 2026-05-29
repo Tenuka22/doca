@@ -2,6 +2,10 @@ import { acceptRescheduledSessionRoute } from "./routes/accept-rescheduled-sessi
 import { bookSessionRoute } from "./routes/book-session";
 import { cancelSessionRoute } from "./routes/cancel-session";
 import { counterProposeSessionRoute } from "./routes/counter-propose-session";
+import { sessionStatsRoute } from "./routes/session-stats";
+import { planStatsRoute } from "./routes/plan-stats";
+import { creditStatsRoute } from "./routes/credit-stats";
+import { availabilityStatsRoute } from "./routes/availability-stats";
 import { createConnectAccountLinkRoute } from "./routes/create-connect-account-link";
 import {
   getDoctorCreditsRoute,
@@ -33,6 +37,10 @@ export const bookingRouter = {
   acceptRescheduledSession: acceptRescheduledSessionRoute,
   counterProposeSession: counterProposeSessionRoute,
   markSessionAttended: markSessionAttendedRoute,
+  sessionStats: sessionStatsRoute,
+  planStats: planStatsRoute,
+  creditStats: creditStatsRoute,
+  availabilityStats: availabilityStatsRoute,
   getConnectAccountStatus: getConnectAccountStatusRoute,
   createConnectAccountLink: createConnectAccountLinkRoute,
   syncConnectAccountStatus: syncConnectAccountStatusRoute,

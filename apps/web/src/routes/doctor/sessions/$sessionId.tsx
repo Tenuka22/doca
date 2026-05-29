@@ -19,7 +19,7 @@ function DoctorSessionDetailRoute() {
   const userRole = metadataRole === "admin" ? "admin" : "doctor";
 
   const sessionQuery = useQuery({
-    queryKey: orpc.getLiveKitToken.queryKey({ sessionId }),
+    queryKey: orpc.getLiveKitToken.queryKey({ input: { sessionId } }),
     queryFn: () => orpc.getLiveKitToken.call({ sessionId }),
   });
 

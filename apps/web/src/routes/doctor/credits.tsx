@@ -5,6 +5,8 @@ import { Button } from "@zen-doc/ui/components/button";
 import {
   Card,
   CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@zen-doc/ui/components/card";
@@ -17,8 +19,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@zen-doc/ui/components/dialog";
-import { Input } from "@zen-doc/ui/components/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@zen-doc/ui/components/input-group";
 import { Label } from "@zen-doc/ui/components/label";
+import { Separator } from "@zen-doc/ui/components/separator";
 import { format } from "date-fns";
 import {
   ArrowDownCircle,
@@ -41,77 +48,44 @@ export const Route = createFileRoute("/doctor/credits")({
   component: DoctorCreditsRoute,
 });
 
-function StatusBadge({ status }: { status: string }) {
-  const styles =
-    {
-      completed:
-        "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10",
-      failed:
-        "border-rose-500/20 bg-rose-500/10 text-rose-600 hover:bg-rose-500/10",
-      pending:
-        "border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/10",
-    }[status as "completed" | "failed"] ??
-    "border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/10";
-
-  return (
-    <Badge
-      className={`h-5 px-1.5 font-bold text-[10px] uppercase tracking-tight ${styles}`}
-      variant="outline"
-    >
-      {status}
-    </Badge>
-  );
-}
-
-function StatusIcon({ status }: { status: string }) {
-  const styles =
-    {
-      completed: "bg-emerald-500/10 text-emerald-600",
-      failed: "bg-rose-500/10 text-rose-600",
-      pending: "bg-amber-500/10 text-amber-600",
-    }[status as "completed" | "failed"] ?? "bg-amber-500/10 text-amber-600";
-
-  const Icon =
-    {
-      completed: ArrowUpCircle,
-      failed: XCircle,
-      pending: Clock,
-    }[status as "completed" | "failed"] ?? Clock;
-
-  return (
-    <div
-      className={`rounded-full p-2.5 shadow-sm transition-transform group-hover/item:scale-105 ${styles}`}
-    >
-      <Icon className="h-4 w-4" />
-    </div>
-  );
-}
-
-function TransactionItem({
-  req,
-  formatCents,
+function MetricCard({
+  description,
+  icon,
+  title,
+  trend,
+  value,
 }: {
-  req: any;
-  formatCents: (c: number) => string;
+  description: string;
+  icon: React.ReactNode;
+  title: string;
+  trend?: string;
+  value: string;
 }) {
   return (
-    <div className="group/item flex items-center justify-between px-6 py-4 transition-colors hover:bg-muted/30 sm:px-0">
-      <div className="flex items-center gap-4">
-        <StatusIcon status={req.status} />
-        <div className="space-y-0.5">
-          <p className="font-bold text-sm">Payout Request</p>
-          <p className="font-medium text-muted-foreground text-xs">
-            {format(new Date(req.createdAt), "MMM d, yyyy · h:mm a")}
-          </p>
+    <Card className="rounded-3xl border-border/60">
+      <CardHeader>
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <CardDescription>{title}</CardDescription>
+            <CardTitle className="text-4xl tracking-tight">{value}</CardTitle>
+          </div>
+
+          <div className="rounded-2xl border bg-muted/40 p-3 text-muted-foreground">
+            {icon}
+          </div>
         </div>
-      </div>
-      <div className="flex flex-col items-end gap-1.5">
-        <p className="font-bold text-sm tracking-tight">
-          -{formatCents(req.amountCents)}
-        </p>
-        <StatusBadge status={req.status} />
-      </div>
-    </div>
+      </CardHeader>
+
+      <CardFooter className="mt-auto flex items-center justify-between text-muted-foreground text-sm">
+        <span>{description}</span>
+        {trend ? (
+          <Badge className="gap-1" variant="secondary">
+            <ArrowDownCircle className="size-3" />
+            {trend}
+          </Badge>
+        ) : null}
+      </CardFooter>
+    </Card>
   );
 }
 
@@ -126,14 +100,36 @@ function DoctorCreditsRoute() {
 
   const cashoutMutation = useMutation(
     orpc.requestCashout.mutationOptions({
-      onSuccess: () => {
+      onSuccess: async () => {
         toast.success("Cashout initiated successfully");
         setShowCashout(false);
         setCashoutCents("");
-        creditsQuery.refetch();
+        await creditsQuery.refetch();
       },
-      onError: (error) => {
+      onError: (error: Error) => {
         toast.error(error instanceof Error ? error.message : "Cashout failed");
+      },
+    })
+  );
+
+  const connectStatusQuery = useQuery({
+    queryKey: orpc.getConnectAccountStatus.queryKey(),
+    queryFn: () => orpc.getConnectAccountStatus.call(),
+  });
+
+  const stripeConnected = connectStatusQuery.data?.stripeAccountEnabled;
+
+  const createConnectLinkMutation = useMutation(
+    orpc.createConnectAccountLink.mutationOptions({
+      onSuccess: (data) => {
+        window.open(data.url, "_blank");
+      },
+      onError: (error: Error) => {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to create Stripe link"
+        );
       },
     })
   );
@@ -172,29 +168,61 @@ function DoctorCreditsRoute() {
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
+  const statusConfig: Record<string, { bg: string; icon: React.ReactNode }> = {
+    completed: {
+      bg: "bg-emerald-500/10 text-emerald-600",
+      icon: <ArrowUpCircle className="h-4 w-4" />,
+    },
+    failed: {
+      bg: "bg-rose-500/10 text-rose-600",
+      icon: <XCircle className="h-4 w-4" />,
+    },
+    pending: {
+      bg: "bg-amber-500/10 text-amber-600",
+      icon: <Clock className="h-4 w-4" />,
+    },
+  };
+
+  function statusStyle(status: string) {
+    return statusConfig[status] ?? statusConfig.pending;
+  }
+
   return (
-    <div className="flex w-full flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6">
+      <Card className="overflow-hidden rounded-[2rem] border-border/60 bg-gradient-to-br from-background via-background to-muted/20">
+        <CardContent>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline">Credits dashboard</Badge>
+              <Badge variant="secondary">Live overview</Badge>
+            </div>
+
+            <div className="space-y-2">
+              <h1 className="font-semibold text-4xl tracking-tight">
+                Earnings & payouts
+              </h1>
+
+              <p className="max-w-2xl text-muted-foreground text-sm md:text-base">
+                Monitor balances, review payout activity, and request cashouts
+                from your Stripe connected account.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-1">
-          <h1 className="font-bold text-3xl text-foreground tracking-tight">
-            Earnings & Payouts
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Manage your revenue and withdraw funds to your account.
-          </p>
-        </div>
+        <div className="space-y-1" />
 
         <Dialog onOpenChange={setShowCashout} open={showCashout}>
-          <DialogTrigger asChild>
-            <Button
-              className="mt-2 shadow-sm md:mt-0"
-              disabled={balanceCents <= 0}
-              size="lg"
-            >
-              <ArrowUpCircle className="mr-2 h-4 w-4" />
-              Request Payout
-            </Button>
-          </DialogTrigger>
+          <DialogTrigger
+            render={
+              <Button className="mt-2 shadow-sm md:mt-0" size="lg">
+                <ArrowUpCircle className="mr-2 h-4 w-4" />
+                Request Payout
+              </Button>
+            }
+          />
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Request Payout</DialogTitle>
@@ -211,16 +239,38 @@ function DoctorCreditsRoute() {
                   {formatCents(balanceCents)}
                 </span>
               </div>
+              {balanceCents <= 0 && (
+                <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-700 text-xs dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                  Your balance is zero. Complete sessions to earn credits before
+                  requesting a payout.
+                </p>
+              )}
+              {connectStatusQuery.isFetched && stripeConnected === false && (
+                <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-700 text-xs dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                  Stripe Connect account not set up.{" "}
+                  <button
+                    className="font-medium underline"
+                    disabled={createConnectLinkMutation.isPending}
+                    onClick={() =>
+                      createConnectLinkMutation.mutate({
+                        returnUrl: window.location.href,
+                        refreshUrl: window.location.href,
+                      })
+                    }
+                    type="button"
+                  >
+                    {createConnectLinkMutation.isPending
+                      ? "Connecting..."
+                      : "Connect now"}
+                  </button>
+                </p>
+              )}
               <div className="grid gap-2">
                 <Label className="font-semibold text-sm" htmlFor="amount">
                   Amount to Withdraw (USD)
                 </Label>
-                <div className="relative">
-                  <span className="absolute top-2.5 left-3 text-muted-foreground text-sm">
-                    $
-                  </span>
-                  <Input
-                    className="pl-7"
+                <InputGroup className="h-9">
+                  <InputGroupInput
                     id="amount"
                     max={balanceCents / 100}
                     min={1}
@@ -229,7 +279,10 @@ function DoctorCreditsRoute() {
                     type="number"
                     value={cashoutCents}
                   />
-                </div>
+                  <InputGroupAddon align="inline-start">
+                    <span className="text-muted-foreground text-sm">$</span>
+                  </InputGroupAddon>
+                </InputGroup>
                 <p className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
                   <Info className="h-3 w-3" />
                   Payouts are typically processed instantly to your connected
@@ -267,143 +320,100 @@ function DoctorCreditsRoute() {
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card className="group relative overflow-hidden border-border/80 bg-gradient-to-br from-card to-card/50 shadow-sm">
-              <div className="absolute top-0 right-0 p-4 opacity-10 transition-transform group-hover:scale-110">
-                <Wallet className="h-12 w-12" />
-              </div>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
-                  Current Balance
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="font-bold text-3xl tracking-tight">
-                  {formatCents(balanceCents)}
-                </p>
-                <div className="mt-4 flex items-center gap-1.5 font-medium text-[10px] text-emerald-600 dark:text-emerald-400">
-                  <ArrowDownCircle className="h-3 w-3" />
-                  Ready for payout
-                </div>
-              </CardContent>
-            </Card>
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <MetricCard
+              description="Available for your next payout request"
+              icon={<Wallet className="size-5" />}
+              title="Current balance"
+              trend="Ready"
+              value={formatCents(balanceCents)}
+            />
 
-            <Card className="group relative overflow-hidden border-border/80 bg-gradient-to-br from-card to-card/50 shadow-sm">
-              <div className="absolute top-0 right-0 p-4 opacity-10 transition-transform group-hover:scale-110">
-                <DollarSignIcon className="h-12 w-12" />
-              </div>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
-                  Lifetime Earnings
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="font-bold text-3xl tracking-tight">
-                  {formatCents(totalEarnedCents)}
-                </p>
-                <div className="mt-4 flex items-center gap-1.5 font-medium text-[10px] text-muted-foreground">
-                  <Clock className="h-3 w-3" />
-                  Total gross revenue
-                </div>
-              </CardContent>
-            </Card>
+            <MetricCard
+              description="Total revenue generated from completed sessions"
+              icon={<DollarSignIcon className="size-5" />}
+              title="Lifetime earnings"
+              value={formatCents(totalEarnedCents)}
+            />
 
-            <Card className="group relative overflow-hidden border-border/80 bg-gradient-to-br from-card to-card/50 shadow-sm">
-              <div className="absolute top-0 right-0 p-4 opacity-10 transition-transform group-hover:scale-110">
-                <BanknoteIcon className="h-12 w-12" />
-              </div>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
-                  Total Payouts
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="font-bold text-3xl tracking-tight">
-                  {formatCents(totalCashedOutCents)}
-                </p>
-                <div className="mt-4 flex items-center gap-1.5 font-medium text-[10px] text-muted-foreground">
-                  <ArrowUpCircle className="h-3 w-3" />
-                  Withdrawn to Stripe
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+            <MetricCard
+              description="Funds already withdrawn to Stripe"
+              icon={<BanknoteIcon className="size-5" />}
+              title="Total payouts"
+              value={formatCents(totalCashedOutCents)}
+            />
+          </section>
 
-          <Card className="border-border/80 bg-gradient-to-br from-card to-card/50 shadow-sm">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-2">
-                <History className="h-4 w-4 text-muted-foreground" />
-                <CardTitle className="font-bold text-muted-foreground text-sm uppercase tracking-wider">
-                  Transaction History
-                </CardTitle>
+          <Card className="rounded-3xl border-border/60">
+            <CardHeader>
+              <div className="flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <h2 className="font-semibold text-xl tracking-tight">
+                    Transaction history
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
+                    Recent payout requests and their statuses
+                  </p>
+                </div>
+
+                <Badge className="gap-1" variant="secondary">
+                  <History className="size-3" />
+                  Payout timeline
+                </Badge>
               </div>
             </CardHeader>
-            <CardContent className="p-0 sm:p-6 sm:pt-0">
+
+            <Separator />
+
+            <CardContent>
               {sortedHistory.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="mb-3 rounded-full bg-muted p-3">
-                    <History className="h-6 w-6 text-muted-foreground/50" />
+                  <div className="mb-3 rounded-2xl border bg-muted/40 p-3 text-muted-foreground">
+                    <History className="size-5" />
                   </div>
-                  <p className="font-medium text-muted-foreground text-sm">
-                    No transactions found
-                  </p>
-                  <p className="text-muted-foreground text-xs">
+                  <p className="font-medium text-sm">No transactions found</p>
+                  <p className="text-muted-foreground text-sm">
                     Your payout requests will appear here.
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-border/40">
+                <div className="flex flex-col gap-3">
                   {sortedHistory.map((req) => (
-                    <div
-                      className="group/item flex items-center justify-between px-6 py-4 transition-colors hover:bg-muted/30 sm:px-0"
+                    <Card
+                      className="rounded-2xl border-border/60 transition-colors hover:bg-muted/30"
                       key={req.id}
                     >
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`rounded-full p-2.5 shadow-sm transition-transform group-hover/item:scale-105 ${
-                            req.status === "completed"
-                              ? "bg-emerald-500/10 text-emerald-600"
-                              : req.status === "failed"
-                                ? "bg-rose-500/10 text-rose-600"
-                                : "bg-amber-500/10 text-amber-600"
-                          }`}
-                        >
-                          {req.status === "completed" ? (
-                            <ArrowUpCircle className="h-4 w-4" />
-                          ) : req.status === "failed" ? (
-                            <XCircle className="h-4 w-4" />
-                          ) : (
-                            <Clock className="h-4 w-4" />
-                          )}
+                      <CardContent className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <div
+                            className={`rounded-2xl border bg-muted/40 p-2.5 ${statusStyle(req.status).bg}`}
+                          >
+                            {statusStyle(req.status).icon}
+                          </div>
+
+                          <div className="space-y-1">
+                            <p className="font-medium text-sm">
+                              Payout request
+                            </p>
+                            <p className="text-muted-foreground text-sm">
+                              {format(
+                                new Date(req.createdAt),
+                                "EEE, MMM d • h:mm a"
+                              )}
+                            </p>
+                          </div>
                         </div>
-                        <div className="space-y-0.5">
-                          <p className="font-bold text-sm">Payout Request</p>
-                          <p className="font-medium text-muted-foreground text-xs">
-                            {format(
-                              new Date(req.createdAt),
-                              "MMM d, yyyy · h:mm a"
-                            )}
+
+                        <div className="flex flex-col items-end gap-2">
+                          <p className="font-semibold text-sm tracking-tight">
+                            -{formatCents(req.amountCents)}
                           </p>
+                          <Badge className="h-6 px-2" variant="outline">
+                            {req.status}
+                          </Badge>
                         </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-1.5">
-                        <p className="font-bold text-sm tracking-tight">
-                          -{formatCents(req.amountCents)}
-                        </p>
-                        <Badge
-                          className={`h-5 px-1.5 font-bold text-[10px] uppercase tracking-tight ${
-                            req.status === "completed"
-                              ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10"
-                              : req.status === "failed"
-                                ? "border-rose-500/20 bg-rose-500/10 text-rose-600 hover:bg-rose-500/10"
-                                : "border-amber-500/20 bg-amber-500/10 text-amber-600 hover:bg-amber-500/10"
-                          }`}
-                          variant="outline"
-                        >
-                          {req.status}
-                        </Badge>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               )}

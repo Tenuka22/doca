@@ -9,7 +9,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@zen-doc/ui/components/card";
-import { Input } from "@zen-doc/ui/components/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@zen-doc/ui/components/input-group";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { z } from "zod";
 import { getMetadataRole } from "@/utils/clerk-auth";
@@ -148,10 +152,8 @@ function AdminDoctorsRoute() {
             </p>
           )}
           <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                className="pl-9"
+            <InputGroup className="h-9 flex-1">
+              <InputGroupInput
                 onChange={(event) => {
                   navigate({
                     search: {
@@ -161,10 +163,13 @@ function AdminDoctorsRoute() {
                     replace: true,
                   });
                 }}
-                placeholder="Search by name or email"
-                value={search.query}
+                placeholder="Search approved doctors..."
+                value={query}
               />
-            </div>
+              <InputGroupAddon align="inline-start">
+                <Search className="h-4 w-4" />
+              </InputGroupAddon>
+            </InputGroup>
             <button
               className={buttonVariants({ variant: "outline" })}
               onClick={() => {

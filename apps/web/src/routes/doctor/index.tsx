@@ -4,12 +4,14 @@ import {
 } from "@clerk/tanstack-react-start";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Avatar, AvatarFallback } from "@zen-doc/ui/components/avatar";
 import { Badge } from "@zen-doc/ui/components/badge";
-import { buttonVariants } from "@zen-doc/ui/components/button";
+import { Button } from "@zen-doc/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@zen-doc/ui/components/card";
@@ -18,28 +20,32 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@zen-doc/ui/components/chart";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@zen-doc/ui/components/empty";
+import { Separator } from "@zen-doc/ui/components/separator";
+import { Skeleton } from "@zen-doc/ui/components/skeleton";
 import { format } from "date-fns";
-import { CheckCircleIcon, ClockIcon, XCircleIcon } from "lucide-react";
+import {
+  ArrowRightIcon,
+  CalendarClockIcon,
+  CalendarDaysIcon,
+  CheckCircle2Icon,
+  Clock3Icon,
+  DollarSignIcon,
+  InboxIcon,
+  SparklesIcon,
+  StethoscopeIcon,
+  TrendingUpIcon,
+  XCircleIcon,
+} from "lucide-react";
+import type { ReactNode } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { orpc } from "@/utils/orpc";
-
-interface DoctorStats {
-  monthlyEarnings: {
-    month: string;
-    earnings: number;
-  }[];
-  recentSessions: {
-    id: string;
-    startAt: string;
-    endAt: string;
-    status: string;
-    patientId: string;
-    doctorEarnedCents: number | null;
-  }[];
-  totalEarnedCents: number;
-  totalSessions: number;
-  upcomingSessions: number;
-}
 
 interface SessionItem {
   doctorEarnedCents?: number | null;
@@ -53,131 +59,192 @@ interface SessionItem {
 function SessionStatusBadge({ status }: { status: string }) {
   if (status === "requested" || status === "rescheduled") {
     return (
-      <Badge
-        className="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 dark:text-amber-400"
-        variant="outline"
-      >
-        <ClockIcon className="mr-1 h-3 w-3" />
-        {status === "rescheduled" ? "Rescheduled" : "Requested"}
+      <Badge className="gap-1" variant="secondary">
+        <Clock3Icon className="size-3.5" />
+        {status === "requested" ? "Requested" : "Rescheduled"}
       </Badge>
     );
   }
 
-  if (status === "approved") {
+  if (status === "approved" || status === "attended") {
     return (
-      <Badge
-        className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"
-        variant="outline"
-      >
-        <CheckCircleIcon className="mr-1 h-3 w-3" />
-        Approved
-      </Badge>
-    );
-  }
-
-  if (status === "attended") {
-    return (
-      <Badge
-        className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"
-        variant="outline"
-      >
-        <CheckCircleIcon className="mr-1 h-3 w-3" />
-        Attended
-      </Badge>
-    );
-  }
-
-  if (status === "timing_balance_failure") {
-    return (
-      <Badge
-        className="bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 dark:text-rose-400"
-        variant="outline"
-      >
-        <XCircleIcon className="mr-1 h-3 w-3" />
-        Failed to Agree
+      <Badge className="gap-1" variant="default">
+        <CheckCircle2Icon className="size-3.5" />
+        {status === "approved" ? "Approved" : "Attended"}
       </Badge>
     );
   }
 
   return (
-    <Badge
-      className="bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 dark:text-rose-400"
-      variant="outline"
-    >
-      <XCircleIcon className="mr-1 h-3 w-3" />
+    <Badge className="gap-1" variant="destructive">
+      <XCircleIcon className="size-3.5" />
       Failed
     </Badge>
   );
 }
 
-function IncomingRequestsCard({
-  sessions,
+function DashboardSkeleton() {
+  return (
+    <div className="flex flex-col gap-6">
+      <Skeleton className="h-52 rounded-3xl" />
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton className="h-36 rounded-2xl" key={index.toString()} />
+        ))}
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+        <Skeleton className="h-[420px] rounded-3xl" />
+        <Skeleton className="h-[420px] rounded-3xl" />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[0.7fr_1.3fr]">
+        <Skeleton className="h-[360px] rounded-3xl" />
+        <Skeleton className="h-[360px] rounded-3xl" />
+      </div>
+    </div>
+  );
+}
+
+function MetricCard({
+  description,
+  icon,
+  title,
+  trend,
+  value,
+}: {
+  description: string;
+  icon: ReactNode;
+  title: string;
+  trend?: string;
+  value: string;
+}) {
+  return (
+    <Card className="rounded-3xl border-border/60">
+      <CardHeader>
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <CardDescription>{title}</CardDescription>
+            <CardTitle className="text-4xl tracking-tight">
+              {value}
+            </CardTitle>
+          </div>
+
+          <div className="rounded-2xl border bg-muted/40 p-3 text-muted-foreground">
+            {icon}
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardFooter className="flex items-center justify-between text-sm text-muted-foreground mt-auto">
+        <span>{description}</span>
+
+        {trend ? (
+          <Badge className="gap-1" variant="secondary">
+            <TrendingUpIcon className="size-3" />
+            {trend}
+          </Badge>
+        ) : null}
+      </CardFooter>
+    </Card>
+  );
+}
+
+function SectionHeader({
+  action,
+  description,
+  title,
+}: {
+  action?: ReactNode;
+  description: string;
+  title: string;
+}) {
+  return (
+    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="space-y-1">
+        <h2 className="font-semibold text-xl tracking-tight">{title}</h2>
+        <p className="text-muted-foreground text-sm">{description}</p>
+      </div>
+
+      {action}
+    </div>
+  );
+}
+
+function PendingRequests({
   isPending,
+  sessions,
 }: {
   isPending: boolean;
   sessions: SessionItem[];
 }) {
   const pendingSessions = sessions.filter(
-    (s) => s.status === "requested" || s.status === "rescheduled"
+    (session) =>
+      session.status === "requested" || session.status === "rescheduled"
   );
 
+  if (isPending) {
+    return (
+      <div className="flex flex-col gap-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Skeleton className="h-24 rounded-2xl" key={index.toString()} />
+        ))}
+      </div>
+    );
+  }
+
+  if (pendingSessions.length === 0) {
+    return (
+      <Empty className="size-full">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <InboxIcon />
+          </EmptyMedia>
+          <EmptyTitle>No pending requests</EmptyTitle>
+          <EmptyDescription>
+            New patient requests will appear here.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
+  }
+
   return (
-    <Card className="border border-border/80 bg-gradient-to-br from-card to-card/50 shadow-sm backdrop-blur-md">
-      <CardHeader className="pb-3">
-        <span className="font-semibold text-lg tracking-tight">
-          Pending Requests
-        </span>
-      </CardHeader>
-      <CardContent className="h-[250px] overflow-y-auto pr-1">
-        {isPending && (
-          <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
-            Loading requests...
-          </div>
-        )}
+    <div className="flex flex-col gap-3">
+      {pendingSessions.map((session) => {
+        const start = new Date(session.startAt);
+        const end = new Date(session.endAt);
 
-        {!isPending && pendingSessions.length === 0 && (
-          <div className="flex h-[200px] flex-col items-center justify-center gap-1.5 text-center">
-            <span className="text-muted-foreground text-sm">
-              No pending requests
-            </span>
-          </div>
-        )}
-
-        {!isPending && pendingSessions.length > 0 && (
-          <div className="flex flex-col gap-3">
-            {pendingSessions.map((session) => {
-              const start = new Date(session.startAt);
-              const end = new Date(session.endAt);
-              const formattedTime = `${format(
-                start,
-                "MMM d, h:mm a"
-              )} - ${format(end, "h:mm a")}`;
-
-              return (
-                <div
-                  className="flex flex-col gap-2 rounded-lg border border-border/40 bg-card/60 p-3 transition-colors hover:bg-card"
-                  key={session.id}
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-medium text-sm">
-                        Patient ID: {session.patientId.slice(0, 12)}...
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        {formattedTime}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <SessionStatusBadge status={session.status} />
-                    </div>
-                  </div>
+        return (
+          <Card className="rounded-2xl border-border/60" key={session.id}>
+            <CardContent className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl border bg-muted/40 p-2 text-muted-foreground">
+                  <CalendarClockIcon className="size-4" />
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+
+                <div className="space-y-1">
+                  <p className="font-medium text-sm">
+                    {session.patientId.slice(0, 12)}...
+                  </p>
+
+                  <p className="text-muted-foreground text-sm">
+                    {format(start, "EEE, MMM d")}
+                  </p>
+
+                  <p className="text-muted-foreground text-xs">
+                    {format(start, "h:mm a")} - {format(end, "h:mm a")}
+                  </p>
+                </div>
+              </div>
+
+              <SessionStatusBadge status={session.status} />
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
   );
 }
 
@@ -185,21 +252,17 @@ export const Route = createFileRoute("/doctor/")({
   loaderDeps: () => ({}),
   loader: async ({ context }) => {
     try {
-      const initialData = await context.queryClient.fetchQuery<DoctorStats>({
+      await context.queryClient.prefetchQuery({
         queryKey: orpc.doctorStats.queryKey(),
         queryFn: () => orpc.doctorStats.call(),
       });
-      return { initialData };
+
+      await context.queryClient.prefetchQuery({
+        queryKey: orpc.listDoctorSessions.queryKey(),
+        queryFn: () => orpc.listDoctorSessions.call(),
+      });
     } catch {
-      return {
-        initialData: {
-          totalSessions: 0,
-          totalEarnedCents: 0,
-          upcomingSessions: 0,
-          recentSessions: [],
-          monthlyEarnings: [],
-        },
-      };
+      // noop
     }
   },
   component: DoctorDashboardRoute,
@@ -207,8 +270,11 @@ export const Route = createFileRoute("/doctor/")({
 
 function DoctorDashboardRoute() {
   const user = useUser();
-  const loaderData = Route.useLoaderData();
-  const stats = loaderData.initialData;
+
+  const statsQuery = useQuery({
+    queryKey: orpc.doctorStats.queryKey(),
+    queryFn: () => orpc.doctorStats.call(),
+  });
 
   const doctorSessionsQuery = useQuery({
     queryKey: orpc.listDoctorSessions.queryKey(),
@@ -216,110 +282,166 @@ function DoctorDashboardRoute() {
   });
 
   if (!user.isLoaded) {
-    return <div className="p-6">Loading...</div>;
+    return <DashboardSkeleton />;
   }
+
   if (!user.user) {
     return (
-      <div className="p-6">
-        <SignInButton />
+      <div className="flex min-h-[70vh] items-center justify-center">
+        <Card className="w-full max-w-md rounded-3xl">
+          <CardHeader className="items-center text-center">
+            <div className="rounded-2xl border bg-muted/40 p-4">
+              <StethoscopeIcon className="size-6" />
+            </div>
+
+            <div className="space-y-2">
+              <CardTitle>Sign in required</CardTitle>
+              <CardDescription>
+                Access your doctor dashboard after signing in.
+              </CardDescription>
+            </div>
+          </CardHeader>
+
+          <CardContent className="flex justify-center">
+            <ClerkSignInButton />
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  const name = user.user?.fullName ?? user.user?.username ?? "Doctor";
+  const name = user.user.fullName ?? user.user.username ?? "Doctor";
+
+  const initials = name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+  const stats = statsQuery.data;
+
+  const sessions = (doctorSessionsQuery.data?.sessions as SessionItem[]) ?? [];
+
+  const pendingSessions = sessions.filter(
+    (session) =>
+      session.status === "requested" || session.status === "rescheduled"
+  );
+
+  const totalEarned = Number(stats?.totalEarnedCents ?? 0) / 100;
+  const totalSessions = stats?.totalSessions ?? 0;
+  const upcomingSessions = stats?.upcomingSessions ?? 0;
+  const recentSessions = (stats?.recentSessions ?? []) as SessionItem[];
+
+  const earningsTrend =
+    stats?.monthlyEarnings.map((point: { month: string; earnings: number }) => ({
+      ...point,
+      earnings: point.earnings / 100,
+    })) ?? [];
 
   return (
-    <div className="flex w-full flex-col gap-6 p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Doctor Dashboard</CardTitle>
-          <CardDescription>Signed in as {name}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-2 text-sm">
-          <p>Current role: doctor</p>
-          <div className="flex flex-wrap gap-4">
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              to="/doctor/profile"
-            >
-              Profile
-            </Link>
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              to="/doctor/availability"
-            >
-              Availability
-            </Link>
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              to="/doctor/sessions"
-            >
-              All Sessions
-            </Link>
+    <div className="flex flex-col gap-6">
+      <Card className="overflow-hidden rounded-[2rem] border-border/60 bg-gradient-to-br from-background via-background to-muted/20">
+        <CardContent>
+          <div className="flex flex-col gap-8 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex items-start gap-4">
+              <Avatar className="size-16 border shadow-sm">
+                <AvatarFallback className="text-lg font-semibold">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline">Doctor dashboard</Badge>
+                  <Badge variant="secondary">Live overview</Badge>
+                </div>
+
+                <div className="space-y-2">
+                  <h1 className="font-semibold text-4xl tracking-tight">
+                    Welcome back, {name}
+                  </h1>
+
+                  <p className="max-w-2xl text-muted-foreground text-sm md:text-base">
+                    Monitor patient requests, manage upcoming appointments,
+                    track earnings, and stay on top of your schedule from one
+                    unified dashboard.
+                  </p>
+                </div>
+              </div>
+            </div>
+
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Sessions</CardTitle>
-          </CardHeader>
-          <CardContent className="font-bold text-2xl">
-            {stats.totalSessions}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Earned</CardTitle>
-          </CardHeader>
-          <CardContent className="font-bold text-2xl">
-            ${(stats.totalEarnedCents / 100).toFixed(2)}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Upcoming Sessions</CardTitle>
-          </CardHeader>
-          <CardContent className="font-bold text-2xl">
-            {stats.upcomingSessions}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Sessions</CardTitle>
-          </CardHeader>
-          <CardContent className="font-bold text-2xl">
-            {stats.recentSessions.length}
-          </CardContent>
-        </Card>
-      </div>
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          description="Completed and scheduled consultations"
+          icon={<CalendarDaysIcon className="size-5" />}
+          title="Total sessions"
+          trend="Healthy"
+          value={totalSessions.toString()}
+        />
 
-      <div className="grid gap-4">
-        <Card className="col-span-full">
+        <MetricCard
+          description="Revenue generated from completed work"
+          icon={<DollarSignIcon className="size-5" />}
+          title="Total earned"
+          trend="Growing"
+          value={`$${totalEarned.toFixed(2)}`}
+        />
+
+        <MetricCard
+          description="Confirmed future appointments"
+          icon={<Clock3Icon className="size-5" />}
+          title="Upcoming"
+          value={upcomingSessions.toString()}
+        />
+
+        <MetricCard
+          description="Awaiting review or response"
+          icon={<InboxIcon className="size-5" />}
+          title="Pending"
+          value={pendingSessions.length.toString()}
+        />
+      </section>
+
+      <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+        <Card className="rounded-3xl border-border/60">
           <CardHeader>
-            <CardTitle>Earnings Trend (Last 6 Months)</CardTitle>
-            <CardDescription>
-              Monthly earnings over the past six months
-            </CardDescription>
+            <SectionHeader
+              action={
+                <Badge className="gap-1" variant="secondary">
+                  <TrendingUpIcon className="size-3" />
+                  Earnings overview
+                </Badge>
+              }
+              description="Monthly income over the last six months"
+              title="Earnings analytics"
+            />
           </CardHeader>
+
+          <Separator />
+
           <CardContent>
-            {stats.monthlyEarnings.length > 0 ? (
+            {earningsTrend.length > 0 ? (
               <ChartContainer
-                className="h-96 w-full"
+                className="h-[360px] w-full"
                 config={{
                   earnings: {
                     label: "Earnings",
-                    color: "var(--chart-1)",
+                    color: "var(--primary)",
                   },
                 }}
               >
                 <AreaChart
                   accessibilityLayer
-                  data={stats.monthlyEarnings}
-                  margin={{ left: 12, right: 12 }}
+                  data={earningsTrend}
+                  margin={{ left: 8, right: 8 }}
                 >
                   <CartesianGrid vertical={false} />
+
                   <XAxis
                     axisLine={false}
                     dataKey="month"
@@ -329,105 +451,170 @@ function DoctorDashboardRoute() {
                       return format(date, "MMM");
                     }}
                     tickLine={false}
-                    tickMargin={8}
+                    tickMargin={10}
                   />
+
                   <YAxis
                     axisLine={false}
-                    tickFormatter={(value: number) =>
-                      `$${(value / 100).toFixed(0)}`
-                    }
+                    tickFormatter={(value: number) => `$${value.toFixed(0)}`}
                     tickLine={false}
-                    tickMargin={8}
+                    tickMargin={10}
                   />
+
                   <ChartTooltip
                     content={
                       <ChartTooltipContent
-                        formatter={(value: number) =>
-                          `$${(value / 100).toFixed(2)}`
+                        formatter={(value: unknown) =>
+                          `$${Number(value).toFixed(2)}`
                         }
                         indicator="line"
                       />
                     }
                     cursor={false}
                   />
+
                   <Area
                     dataKey="earnings"
-                    fill="var(--color-earnings)"
-                    fillOpacity={0.4}
-                    stroke="var(--color-earnings)"
-                    type="natural"
+                    fill="var(--primary)"
+                    fillOpacity={0.15}
+                    stroke="var(--primary)"
+                    strokeWidth={2}
+                    type="monotone"
                   />
                 </AreaChart>
               </ChartContainer>
             ) : (
-              <div className="flex h-48 items-center justify-center text-muted-foreground">
-                No earnings data for the last 6 months
-              </div>
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <TrendingUpIcon />
+                  </EmptyMedia>
+                  <EmptyTitle>No earnings data yet</EmptyTitle>
+                  <EmptyDescription>
+                    Earnings analytics will appear once sessions are completed.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             )}
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-3xl border-border/60">
+          <CardHeader>
+             <SectionHeader
+               action={
+                 <Button size="sm" variant="secondary" render={(
+                   <Link to="/doctor/availability">
+                     Manage
+                     <ArrowRightIcon />
+                   </Link>
+                 )}>
+                 </Button>
+               }
+               description="Patients currently waiting for your response"
+               title="Pending requests"
+             />
+          </CardHeader>
+
+          <Separator />
+
+          <CardContent className="size-full">
+            <PendingRequests
+              isPending={doctorSessionsQuery.isPending}
+              sessions={sessions}
+            />
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <Card>
+      <div className="grid gap-6 xl:grid-cols-[0.7fr_1.3fr]">
+        <Card className="rounded-3xl border-border/60">
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {stats.recentSessions.length > 0 ? (
-              stats.recentSessions.map((session) => (
-                <div
-                  className="flex items-start justify-between gap-4 rounded-lg border border-border/40 bg-muted/50 p-4"
-                  key={session.id}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted/60">
-                      <ClockIcon className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="font-medium">
-                        {session.patientId.slice(0, 8)}...
-                      </p>
-                      <p className="text-muted-foreground text-sm">
-                        {new Date(session.startAt).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-end gap-2">
-                    <SessionStatusBadge status={session.status} />
-                    {session.doctorEarnedCents !== null && (
-                      <span className="ml-2 font-medium text-sm">
-                        ${(session.doctorEarnedCents / 100).toFixed(2)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="py-8 text-center">
-                <p className="text-muted-foreground">No recent sessions</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Incoming Requests</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <IncomingRequestsCard
-              isPending={false} // We'll load the actual data from the stats or a separate query if needed
-              sessions={
-                (doctorSessionsQuery.data?.sessions as SessionItem[]) ?? []
+            <SectionHeader
+              action={
+                 <Button size="sm" variant="secondary" render={(
+                  <Link to="/doctor/sessions">
+                    View
+                     <ArrowRightIcon />
+                   </Link>
+                 )}>
+                 </Button>
               }
+              description="Latest appointment updates and completed sessions"
+              title="Recent activity"
             />
+          </CardHeader>
+
+          <Separator />
+
+          <CardContent>
+            {recentSessions.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {recentSessions.map((session) => {
+                  const start = new Date(session.startAt);
+                  const end = new Date(session.endAt);
+
+                  const sessionValue =
+                    session.doctorEarnedCents == null
+                      ? "--"
+                      : `$${(session.doctorEarnedCents / 100).toFixed(2)}`;
+
+                  return (
+                    <Card
+                      className="rounded-2xl border-border/60 transition-colors hover:bg-muted/30"
+                      key={session.id}
+                    >
+                      <CardContent className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                        <div className="flex items-start gap-4">
+                          <div className="rounded-2xl border bg-muted/40 p-3 text-muted-foreground">
+                            <Clock3Icon className="size-4" />
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-sm">
+                                {session.patientId.slice(0, 12)}...
+                              </p>
+                            </div>
+
+                            <p className="text-muted-foreground text-sm">
+                              {format(start, "EEE, MMM d • h:mm a")}
+                            </p>
+
+                            <p className="text-muted-foreground text-xs">
+                              Ends at {format(end, "h:mm a")}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-row items-center justify-between gap-3 md:flex-col md:items-end">
+                          <SessionStatusBadge status={session.status} />
+
+                          <div className="font-semibold text-sm">
+                            {sessionValue}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <SparklesIcon />
+                  </EmptyMedia>
+                  <EmptyTitle>No recent activity</EmptyTitle>
+                  <EmptyDescription>
+                    Your recent sessions and earnings will appear here.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
           </CardContent>
         </Card>
       </div>
     </div>
   );
-}
-
-function SignInButton() {
-  return <ClerkSignInButton />;
 }

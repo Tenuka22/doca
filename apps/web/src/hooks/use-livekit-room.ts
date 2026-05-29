@@ -133,8 +133,8 @@ export function useLiveKitRoomWeb(options: UseLiveKitRoomWebOptions = {}) {
         room.on(
           RoomEvent.LocalTrackPublished satisfies RoomEventType,
           (publication) => {
-            if (publication.track.kind === "video" && localVideoRef.current) {
-              publication.track.attach(localVideoRef.current);
+            if (publication.track?.kind === "video" && localVideoRef.current) {
+              publication.track?.attach(localVideoRef.current);
             }
           }
         );

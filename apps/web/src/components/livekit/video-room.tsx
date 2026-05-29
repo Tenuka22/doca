@@ -29,15 +29,6 @@ interface VideoRoomProps {
   startAt: string;
 }
 
-function _formatDuration(minutes: number): string {
-  if (minutes < 60) {
-    return `${minutes}m`;
-  }
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-}
-
 function useAttendanceTracker({
   isConnected,
   sessionId,
@@ -588,7 +579,7 @@ export function VideoRoomWeb({
   );
 
   if (asDialog) {
-    const { Dialog, DialogContent, DialogHeader, DialogTitle } =
+    const { Dialog, DialogContent } =
       require("@zen-doc/ui/components/dialog") as typeof import("@zen-doc/ui/components/dialog");
     return (
       <Dialog onOpenChange={(o: boolean) => !o && onClose()} open={open}>
