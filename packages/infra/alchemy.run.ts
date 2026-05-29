@@ -8,8 +8,14 @@ import {
 import { config } from "dotenv";
 
 config({ path: "./.env" });
-config({ path: "../../apps/server/.env.production" });
-config({ path: "../../apps/web/.env.production" });
+
+if (process.env.NODE_ENV === "production") {
+  config({ path: "../../apps/server/.env.production" });
+  config({ path: "../../apps/web/.env.production" });
+} else {
+  config({ path: "../../apps/server/.env" });
+  config({ path: "../../apps/web/.env" });
+}
 
 const app = await alchemy("zen-doc");
 
