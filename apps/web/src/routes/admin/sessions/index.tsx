@@ -3,7 +3,7 @@ import {
   useUser,
 } from "@clerk/tanstack-react-start";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Badge } from "@zen-doc/ui/components/badge";
 import { Button } from "@zen-doc/ui/components/button";
 import { Card, CardContent, CardHeader } from "@zen-doc/ui/components/card";
@@ -16,96 +16,103 @@ import {
 } from "@zen-doc/ui/components/empty";
 import { Separator } from "@zen-doc/ui/components/separator";
 import { Skeleton } from "@zen-doc/ui/components/skeleton";
+import { format } from "date-fns";
 import {
-  ArrowRightIcon,
+  CalendarDaysIcon,
   CheckCircle2Icon,
   ChevronLeft,
   ChevronRight,
-  Search,
+  Clock3Icon,
   ShieldIcon,
-  StethoscopeIcon,
+  XCircleIcon,
 } from "lucide-react";
 import { z } from "zod";
 import { getMetadataRole } from "@/utils/clerk-auth";
 import { orpc } from "@/utils/orpc";
 
-interface ApprovedDoctor {
-  bio: string | null;
-  email: string | null;
-  imageUrl: string | null;
-  licenseNumber: string | null;
-  matchesQuery: boolean;
-  name: string;
-  permanent: boolean;
-  phone: string | null;
-  role: string;
-  userId: string;
+interface SessionItem {
+  createdAt: string;
+  doctorId: string;
+  endAt: string;
+  id: string;
+  patientId: string;
+  startAt: string;
+  status: string;
 }
 
-interface ApprovedDoctorsPage {
-  firstUserId: string | null;
-  items: ApprovedDoctor[];
-  lastUserId: string | null;
+interface SessionsPage {
+  items: SessionItem[];
   nextPage: number | null;
   page: number;
   prevPage: number | null;
 }
 
-const adminSearchSchema = z.object({
+const searchSchema = z.object({
   page: z.coerce.number().int().positive().catch(1),
-  query: z.string().catch(""),
 });
 
-export const Route = createFileRoute("/admin/doctors/")({
-  validateSearch: adminSearchSchema,
-  loaderDeps: ({ search }) => ({
-    page: search.page,
-    query: search.query,
-  }),
-  loader: async ({
-    context,
-    deps,
-  }): Promise<{ initialData: ApprovedDoctorsPage }> => {
-    const input = {
-      page: deps.page,
-      query: deps.query,
-    };
+export const Route = createFileRoute("/admin/sessions/")({
+  validateSearch: searchSchema,
+  loaderDeps: ({ search }) => ({ page: search.page }),
+  loader: async ({ context, deps }): Promise<{ initialData: SessionsPage }> => {
+    const input = { page: deps.page };
     try {
-      const initialData =
-        await context.queryClient.fetchQuery<ApprovedDoctorsPage>({
-          queryKey: orpc.approvedDoctors.queryKey({ input }),
-          queryFn: () => orpc.approvedDoctors.call(input),
-        });
+      const initialData = await context.queryClient.fetchQuery<SessionsPage>({
+        queryKey: orpc.sessions.queryKey({ input }),
+        queryFn: () => orpc.sessions.call(input),
+      });
       return { initialData };
     } catch {
       return {
         initialData: {
           items: [],
           page: 1,
-          nextPage: null,
           prevPage: null,
-          firstUserId: null,
-          lastUserId: null,
+          nextPage: null,
         },
       };
     }
   },
-  component: AdminDoctorsRoute,
+  component: AdminSessionsRoute,
 });
 
-function AdminDoctorsRoute() {
+function SessionStatusBadge({ status }: { status: string }) {
+  if (status === "requested" || status === "rescheduled") {
+    return (
+      <Badge className="gap-1" variant="secondary">
+        <Clock3Icon className="size-3.5" />
+        {status === "requested" ? "Requested" : "Rescheduled"}
+      </Badge>
+    );
+  }
+
+  if (status === "approved" || status === "attended") {
+    return (
+      <Badge className="gap-1" variant="default">
+        <CheckCircle2Icon className="size-3.5" />
+        {status === "approved" ? "Approved" : "Attended"}
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge className="gap-1" variant="destructive">
+      <XCircleIcon className="size-3.5" />
+      Failed
+    </Badge>
+  );
+}
+
+function AdminSessionsRoute() {
   const user = useUser();
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
   const loaderData = Route.useLoaderData();
-  const input = {
-    page: search.page,
-    query: search.query,
-  };
+  const input = { page: search.page };
 
-  const approvedDoctors = useQuery({
-    queryKey: orpc.approvedDoctors.queryKey({ input }),
-    queryFn: () => orpc.approvedDoctors.call(input),
+  const sessionsQuery = useQuery({
+    queryKey: orpc.sessions.queryKey({ input }),
+    queryFn: () => orpc.sessions.call(input),
     initialData: loaderData.initialData,
     enabled:
       user.isLoaded &&
@@ -113,7 +120,7 @@ function AdminDoctorsRoute() {
       getMetadataRole(user.user.publicMetadata) === "admin",
   });
 
-  const rows = approvedDoctors.data?.items ?? [];
+  const rows = sessionsQuery.data?.items ?? [];
 
   if (!user.isLoaded) {
     return (
@@ -178,15 +185,17 @@ function AdminDoctorsRoute() {
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline">Admin console</Badge>
-              <Badge variant="secondary">Doctors</Badge>
+              <Badge variant="secondary">Sessions</Badge>
             </div>
 
             <div className="space-y-2">
-              <h1 className="font-semibold text-4xl tracking-tight">Doctors</h1>
+              <h1 className="font-semibold text-4xl tracking-tight">
+                All sessions
+              </h1>
 
               <p className="max-w-2xl text-muted-foreground text-sm md:text-base">
-                View and manage all approved doctor accounts on the platform.
-                Review their profiles, credentials, and activity.
+                View all sessions across the platform, monitor their status, and
+                track platform activity over time.
               </p>
             </div>
           </div>
@@ -195,50 +204,20 @@ function AdminDoctorsRoute() {
 
       <Card className="rounded-3xl border-border/60">
         <CardHeader>
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="space-y-1">
               <h2 className="font-semibold text-xl tracking-tight">
-                Approved doctors
+                Session history
               </h2>
               <p className="text-muted-foreground text-sm">
-                Browse approved doctors and view their details.
+                All sessions ordered by most recent.
               </p>
             </div>
 
-            <div className="flex gap-2">
-              <div className="relative flex-1 md:flex-initial">
-                <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  className="h-9 w-full rounded-lg border border-border/60 bg-background pr-3 pl-9 text-sm outline-none focus:border-primary md:w-64"
-                  onChange={(event) => {
-                    navigate({
-                      search: {
-                        page: 1,
-                        query: event.target.value,
-                      },
-                      replace: true,
-                    });
-                  }}
-                  placeholder="Search approved doctors..."
-                  value={search.query}
-                />
-              </div>
-              <Button
-                onClick={() => {
-                  navigate({
-                    search: {
-                      page: 1,
-                      query: "",
-                    },
-                    replace: true,
-                  });
-                }}
-                size="sm"
-                variant="outline"
-              >
-                Reset
-              </Button>
-            </div>
+            <Badge className="gap-1" variant="secondary">
+              <CalendarDaysIcon className="size-3" />
+              {rows.length} session{rows.length === 1 ? "" : "s"}
+            </Badge>
           </div>
         </CardHeader>
 
@@ -249,86 +228,73 @@ function AdminDoctorsRoute() {
             <Empty>
               <EmptyHeader>
                 <EmptyMedia variant="icon">
-                  <StethoscopeIcon />
+                  <CalendarDaysIcon />
                 </EmptyMedia>
-                <EmptyTitle>No doctors found</EmptyTitle>
+                <EmptyTitle>No sessions yet</EmptyTitle>
                 <EmptyDescription>
-                  {search.query
-                    ? "No doctors match your search query."
-                    : "No doctors have been approved yet."}
+                  Sessions will appear once patients start booking appointments.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (
             <div className="flex flex-col gap-3">
-              {rows.map(
-                (doctor: {
-                  userId: string;
-                  name: string;
-                  email: string | null;
-                  phone: string | null;
-                  role: string;
-                  permanent: boolean;
-                }) => (
+              {rows.map((session) => {
+                const start = new Date(session.startAt);
+                const end = new Date(session.endAt);
+
+                return (
                   <Card
                     className="rounded-2xl border-border/60 transition-colors hover:bg-muted/30"
-                    key={doctor.userId}
+                    key={session.id}
                   >
-                    <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <CardContent className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div className="flex items-start gap-4">
                         <div className="rounded-2xl border bg-muted/40 p-3 text-muted-foreground">
-                          <StethoscopeIcon className="size-4" />
+                          <CalendarDaysIcon className="size-4" />
                         </div>
 
                         <div className="space-y-1">
-                          <p className="font-medium text-sm">{doctor.name}</p>
-                          <div className="flex flex-wrap gap-3">
-                            {doctor.email ? (
-                              <p className="text-muted-foreground text-xs">
-                                {doctor.email}
-                              </p>
-                            ) : null}
-                            {doctor.phone ? (
-                              <p className="text-muted-foreground text-xs">
-                                {doctor.phone}
-                              </p>
-                            ) : null}
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm">
+                              {session.doctorId.slice(0, 12)}...
+                            </p>
                           </div>
-                          <Badge className="mt-1 gap-1" variant="default">
-                            <CheckCircle2Icon className="size-3" />
-                            Approved
-                          </Badge>
+
+                          <p className="text-muted-foreground text-sm">
+                            {format(start, "EEE, MMM d • h:mm a")}
+                          </p>
+
+                          <div className="flex flex-wrap gap-3 text-muted-foreground text-xs">
+                            <span>
+                              Patient: {session.patientId.slice(0, 12)}...
+                            </span>
+                            <span>Ends at {format(end, "h:mm a")}</span>
+                          </div>
                         </div>
                       </div>
 
-                      <Link
-                        className="inline-flex items-center gap-1 rounded-lg border border-border/60 px-3 py-1.5 font-medium text-sm transition-colors hover:bg-muted/30"
-                        params={{ doctorId: doctor.userId }}
-                        to="/admin/doctors/$doctorId"
-                      >
-                        View details
-                        <ArrowRightIcon className="size-3" />
-                      </Link>
+                      <div className="flex flex-row items-center justify-between gap-3 md:flex-col md:items-end">
+                        <SessionStatusBadge status={session.status} />
+                      </div>
                     </CardContent>
                   </Card>
-                )
-              )}
+                );
+              })}
             </div>
           )}
 
           {rows.length > 0 ? (
             <div className="mt-4 flex items-center justify-between">
               <p className="text-muted-foreground text-sm">
-                Page {approvedDoctors.data?.page ?? search.page}
+                Page {sessionsQuery.data?.page ?? search.page}
               </p>
               <div className="flex gap-2">
                 <Button
-                  disabled={!approvedDoctors.data?.prevPage}
+                  disabled={!sessionsQuery.data?.prevPage}
                   onClick={() => {
                     navigate({
                       search: {
                         page: Math.max(1, search.page - 1),
-                        query: search.query,
                       },
                       replace: true,
                     });
@@ -340,12 +306,11 @@ function AdminDoctorsRoute() {
                   Prev
                 </Button>
                 <Button
-                  disabled={!approvedDoctors.data?.nextPage}
+                  disabled={!sessionsQuery.data?.nextPage}
                   onClick={() => {
                     navigate({
                       search: {
                         page: search.page + 1,
-                        query: search.query,
                       },
                       replace: true,
                     });

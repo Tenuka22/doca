@@ -8,7 +8,13 @@ import {
   SidebarRail,
   useSidebar,
 } from "@zen-doc/ui/components/sidebar";
-import { HouseIcon, LayoutDashboardIcon, ShieldIcon } from "lucide-react";
+import {
+  CalendarDaysIcon,
+  HouseIcon,
+  LayoutDashboardIcon,
+  ShieldIcon,
+  UserRoundIcon,
+} from "lucide-react";
 
 import { SidebarNavSection } from "@/components/sidebar-nav-section";
 import { SidebarUserFooter } from "@/components/sidebar-user-footer";
@@ -51,6 +57,18 @@ export function AdminSidebar() {
               label: "Doctors",
               to: "/admin/doctors",
               search: { page: 1, query: "" },
+            },
+            {
+              icon: CalendarDaysIcon,
+              label: "Sessions",
+              to: "/admin/sessions",
+              search: { page: 1 },
+            },
+            {
+              icon: UserRoundIcon,
+              label: "Patients",
+              to: "/admin/patients",
+              search: { page: 1 },
             },
           ]}
           label="Secondary"

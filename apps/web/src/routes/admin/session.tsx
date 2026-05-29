@@ -1,16 +1,9 @@
 import { useUser } from "@clerk/tanstack-react-start";
 import { createFileRoute } from "@tanstack/react-router";
+import { Badge } from "@zen-doc/ui/components/badge";
 import { Button } from "@zen-doc/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@zen-doc/ui/components/card";
-import { Input } from "@zen-doc/ui/components/input";
-import { Label } from "@zen-doc/ui/components/label";
-import { Copy, Video } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@zen-doc/ui/components/card";
+import { Copy, ShieldIcon, Video } from "lucide-react";
 import { useState } from "react";
 import { VideoRoomWeb } from "@/components/livekit/video-room";
 import { orpc } from "@/utils/orpc";
@@ -30,10 +23,33 @@ function AdminSessionPage() {
     endAt: string;
   } | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const isAdmin = user?.publicMetadata?.role === "admin";
+
+  if (!user) {
+    return null;
+  }
+
+  const isAdmin = user.publicMetadata?.role === "admin";
 
   if (!isAdmin) {
-    return <div className="p-6 text-destructive">Unauthorized</div>;
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center">
+        <Card className="w-full max-w-md rounded-3xl">
+          <CardHeader className="items-center text-center">
+            <div className="rounded-2xl border bg-muted/40 p-4">
+              <ShieldIcon className="size-6" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="font-semibold text-xl tracking-tight">
+                Unauthorized
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                You do not have admin access.
+              </p>
+            </div>
+          </CardHeader>
+        </Card>
+      </div>
+    );
   }
 
   if (activeSession) {
@@ -81,59 +97,94 @@ function AdminSessionPage() {
   };
 
   return (
-    <div className="flex w-full flex-col gap-6 p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Test Session</CardTitle>
-          <CardDescription>
-            Generate a session and share the ID with the mobile app. The desktop
-            user acts as the doctor.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">
-          <div className="flex flex-col gap-3">
-            <h3 className="font-semibold text-sm">Step 1: Generate Session</h3>
-            <Button
-              disabled={isCreating}
-              onClick={handleCreateSession}
-              variant="default"
-            >
+    <div className="flex flex-col gap-6">
+      <Card className="overflow-hidden rounded-[2rem] border-border/60 bg-gradient-to-br from-background via-background to-muted/20">
+        <CardContent>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline">Admin console</Badge>
+              <Badge variant="secondary">Test session</Badge>
+            </div>
+
+            <div className="space-y-2">
+              <h1 className="font-semibold text-4xl tracking-tight">
+                Test session
+              </h1>
+
+              <p className="max-w-2xl text-muted-foreground text-sm md:text-base">
+                Generate a test session ID and share it with the mobile app. The
+                desktop browser acts as the doctor in the video call.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <Card className="rounded-3xl border-border/60">
+          <CardHeader>
+            <div className="space-y-1">
+              <h2 className="font-semibold text-xl tracking-tight">
+                Step 1: Generate session
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Create a new session ID to share with the mobile app.
+              </p>
+            </div>
+          </CardHeader>
+
+          <CardContent className="flex flex-col gap-4">
+            <Button disabled={isCreating} onClick={handleCreateSession}>
               {isCreating ? "Creating..." : "Generate Session ID"}
             </Button>
-            {generatedSessionId && (
-              <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
+
+            {generatedSessionId ? (
+              <div className="flex items-center gap-2 rounded-2xl border bg-muted/40 p-3">
                 <code className="flex-1 break-all font-mono text-xs">
                   {generatedSessionId}
                 </code>
                 <Button onClick={handleCopy} size="icon" variant="ghost">
-                  <Copy className="h-4 w-4" />
+                  <Copy className="size-4" />
                 </Button>
-                {copied && (
-                  <span className="font-medium text-success text-xs">
+                {copied ? (
+                  <span className="font-medium text-emerald-600 text-xs">
                     Copied!
                   </span>
-                )}
+                ) : null}
               </div>
-            )}
-          </div>
+            ) : null}
+          </CardContent>
+        </Card>
 
-          <div className="flex flex-col gap-3">
-            <h3 className="font-semibold text-sm">Step 2: Join as Doctor</h3>
-            <div className="flex flex-col gap-2">
-              <Label>Session ID</Label>
-              <Input
+        <Card className="rounded-3xl border-border/60">
+          <CardHeader>
+            <div className="space-y-1">
+              <h2 className="font-semibold text-xl tracking-tight">
+                Step 2: Join as doctor
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Enter a session ID and join the video call as a doctor.
+              </p>
+            </div>
+          </CardHeader>
+
+          <CardContent className="flex flex-col gap-4">
+            <div className="rounded-2xl border bg-muted/40 p-3">
+              <input
+                className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 onChange={(e) => setSessionId(e.target.value)}
-                placeholder="Paste or use generated session ID..."
+                placeholder="Paste or type session ID..."
                 value={sessionId}
               />
             </div>
+
             <Button disabled={!sessionId} onClick={handleJoinAsDoctor}>
-              <Video className="mr-2 h-4 w-4" />
+              <Video className="mr-2 size-4" />
               Join as Doctor
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
