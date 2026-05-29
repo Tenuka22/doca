@@ -1,6 +1,7 @@
 import { SignInButton, useUser } from "@clerk/tanstack-react-start";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Badge } from "@zen-doc/ui/components/badge";
 import { Button, buttonVariants } from "@zen-doc/ui/components/button";
 import {
   Card,
@@ -189,12 +190,12 @@ function AdminDocRequestsRoute() {
           </div>
 
           <div className="overflow-hidden rounded-md border">
-            <div className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_auto] gap-3 border-b bg-muted/50 px-4 py-3 font-medium text-sm">
+            <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_auto] gap-3 border-b bg-muted/50 px-4 py-3 font-medium text-sm">
               <div>Name</div>
               <div>Email</div>
               <div>Phone</div>
               <div>Status</div>
-              <div />
+              <div>Actions</div>
             </div>
             {rows.map(
               (doctor: {
@@ -206,27 +207,40 @@ function AdminDocRequestsRoute() {
                 permanent: boolean;
               }) => (
                 <div
-                  className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_auto] gap-3 border-b px-4 py-3 text-sm last:border-b-0"
+                  className="grid grid-cols-[2fr_1.5fr_1fr_1fr_auto] gap-3 border-b px-4 py-3 text-sm last:border-b-0"
                   key={doctor.userId}
                 >
                   <div className="font-medium">{doctor.name}</div>
                   <div>{doctor.email ?? "-"}</div>
                   <div>{doctor.phone ?? "-"}</div>
-                  <div className="uppercase tracking-wide">
-                    {getDoctorStatusLabel(doctor)}
+                  <div className="flex items-center">
+                    <Badge
+                      size="icon"
+                      variant={doctor.permanent ? "secondary" : "destructive"}
+                    >
+                      {doctor.permanent ? "Approved" : "Pending"}
+                    </Badge>
                   </div>
-                  <div className="flex justify-end">
+                  <div className="flex justify-end space-x-2">
                     <Button
                       onClick={() => {
                         approveDoctor.mutate({ userId: doctor.userId });
                       }}
                       size="sm"
+                      variant="default"
                     >
                       Approve
                     </Button>
                   </div>
                 </div>
               )
+            )}
+            {rows.length === 0 && role === "admin" && (
+              <div className="py-8 text-center">
+                <p className="text-muted-foreground">
+                  No pending doctor requests
+                </p>
+              </div>
             )}
           </div>
 
@@ -280,12 +294,4 @@ function AdminDocRequestsRoute() {
       </Card>
     </div>
   );
-}
-
-function getDoctorStatusLabel(doctor: { permanent: boolean }): string {
-  if (doctor.permanent) {
-    return "permanent";
-  }
-
-  return "pending";
 }

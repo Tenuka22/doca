@@ -4,8 +4,10 @@ import { adminCreateTestSessionRoute } from "./routes/create-test-session";
 import { adminDoctorEducationEntriesRoute } from "./routes/doctor-education-entries";
 import { adminDoctorScheduleEntriesRoute } from "./routes/doctor-schedule-entries";
 import { adminPendingDoctorsRoute } from "./routes/pending-doctors";
+import { adminStatsRoute } from "./routes/stats";
 
 export const adminRouter = {
+  stats: adminStatsRoute,
   pendingDoctors: adminPendingDoctorsRoute,
   approveDoctor: adminApproveDoctorRoute,
   approvedDoctors: adminApprovedDoctorsRoute,

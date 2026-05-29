@@ -47,38 +47,30 @@ stripeApp.post("/", async (c) => {
         ? existing.balance + creditsToAdd
         : creditsToAdd;
 
-      const queries = [];
-
-      if (existing) {
-        queries.push(
-          db
+      await db.transaction(async (tx) => {
+        if (existing) {
+          await tx
             .update(userCredits)
             .set({
               balance: newBalance,
               updatedAt: new Date().toISOString(),
             })
-            .where(eq(userCredits.userId, userId))
-        );
-      } else {
-        queries.push(
-          db.insert(userCredits).values({
+            .where(eq(userCredits.userId, userId));
+        } else {
+          await tx.insert(userCredits).values({
             userId,
             balance: creditsToAdd,
-          })
-        );
-      }
+          });
+        }
 
-      queries.push(
-        db.insert(creditTransactions).values({
+        await tx.insert(creditTransactions).values({
           id: crypto.randomUUID(),
           userId,
           amount: creditsToAdd,
           type: "purchase",
           createdAt: new Date().toISOString(),
-        })
-      );
-
-      await db.batch(queries);
+        });
+      });
     }
   }
 

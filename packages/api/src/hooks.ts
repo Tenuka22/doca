@@ -37,14 +37,48 @@ export function requireAdmin(context: AuthContext): WithAuth {
   return auth;
 }
 
-export function requireDoctorOrAdmin(context: AuthContext): WithAuth {
+export async function requireDoctorOrAdmin(
+  context: AuthContext & DbOnly
+): Promise<WithAuth> {
   const auth = requireAuth(context);
+
   const role = auth.auth.sessionClaims?.metadata?.role;
-  if (role !== "doctor" && role !== "admin") {
+  if (role === "admin") {
+    return auth;
+  }
+
+  const [profile] = await context.db
+    .select()
+    .from(doctorProfiles)
+    .where(eq(doctorProfiles.userId, auth.userId))
+    .limit(1);
+
+  if (!profile?.permanent) {
     throw new ORPCError("FORBIDDEN", {
       message: "Doctor or admin access required",
     });
   }
+
+  return auth;
+}
+
+export async function requireDoctor(
+  context: AuthContext & DbOnly
+): Promise<WithAuth> {
+  const auth = requireAuth(context);
+
+  const [profile] = await context.db
+    .select()
+    .from(doctorProfiles)
+    .where(eq(doctorProfiles.userId, auth.userId))
+    .limit(1);
+
+  if (!profile?.permanent) {
+    throw new ORPCError("FORBIDDEN", {
+      message: "Doctor access required",
+    });
+  }
+
   return auth;
 }
 

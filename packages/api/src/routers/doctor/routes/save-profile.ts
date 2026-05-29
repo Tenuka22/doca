@@ -124,7 +124,7 @@ export const saveDoctorProfileRoute = protectedProcedure
         doctorId: userId,
         name: BASIC_PLAN_NAME,
         description: "Standard consultation session",
-        price: BASIC_PLAN_CREDITS,
+        creditCost: BASIC_PLAN_CREDITS,
         durationMinutes: BASIC_PLAN_DURATION_MINUTES,
         features: JSON.stringify(BASIC_PLAN_FEATURES),
         isActive: true,
