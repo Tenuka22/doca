@@ -18,7 +18,7 @@ export const purchaseCreditsRoute = protectedProcedure
     const { userId } = requireAuth(context);
     const stripe = getStripe();
     const subtotalCents = input.credits * CREDIT_PRICE_CENTS;
-    const taxCents = Math.round(subtotalCents * TAX_RATE);
+    const taxCents = Math.ceil(subtotalCents * TAX_RATE);
     const amount = subtotalCents + taxCents;
 
     const returnUrl = input.returnUrl ?? DEFAULT_RETURN_URL;

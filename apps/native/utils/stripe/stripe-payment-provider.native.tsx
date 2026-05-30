@@ -17,6 +17,8 @@ interface PaymentSheetContextValue {
   initPaymentSheet: (params: {
     paymentIntentClientSecret: string;
     merchantDisplayName?: string;
+    amount?: number;
+    currency?: string;
   }) => Promise<PaymentSheetResult>;
   presentPaymentSheet: () => Promise<PaymentSheetResult>;
 }
