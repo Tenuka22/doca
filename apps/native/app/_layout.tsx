@@ -155,6 +155,10 @@ export default function RootLayout() {
               />
               <Stack.Screen name="sprite" options={{ headerShown: false }} />
               <Stack.Screen name="test" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="stress-hub"
+                options={{ headerShown: false }}
+              />
             </Stack>
             <OnboardingCheck />
             <StatusBar style="auto" />
