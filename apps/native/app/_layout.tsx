@@ -15,6 +15,7 @@ import { getStoredSecret } from "@/utils/privacy";
 import { orpc, queryClient } from "@/utils/orpc";
 import { StripePaymentProvider } from "@/utils/stripe";
 import { useThemeColor } from "@/utils/theme";
+import { UserModeProvider } from "@/utils/user-mode";
 
 preventAutoHideAsync().catch(() => undefined);
 
@@ -132,38 +133,49 @@ export default function RootLayout() {
     >
       <ClerkApiAuthBridge />
       <QueryClientProvider client={queryClient}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <StripePaymentProvider>
-            <Stack
-              screenOptions={{
-                headerStyle: {
-                  backgroundColor: background,
-                },
-                headerTitleStyle: {
-                  fontFamily: "Satoshi",
-                  fontWeight: "500",
-                  color: foreground,
-                },
-                headerTintColor: foreground,
-                headerShadowVisible: false,
-              }}
-            >
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="(onboarding)"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen name="sprite" options={{ headerShown: false }} />
-              <Stack.Screen name="test" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="stress-hub"
-                options={{ headerShown: false }}
-              />
-            </Stack>
-            <OnboardingCheck />
-            <StatusBar style="auto" />
-          </StripePaymentProvider>
-        </GestureHandlerRootView>
+        <UserModeProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <StripePaymentProvider>
+              <Stack
+                screenOptions={{
+                  headerStyle: {
+                    backgroundColor: background,
+                  },
+                  headerTitleStyle: {
+                    fontFamily: "Satoshi",
+                    fontWeight: "500",
+                    color: foreground,
+                  },
+                  headerTintColor: foreground,
+                  headerShadowVisible: false,
+                }}
+              >
+                <Stack.Screen
+                  name="(auth)"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="(onboarding)"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="(patient)"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="(guardian)"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                  name="test"
+                  options={{ headerShown: false }}
+                />
+              </Stack>
+              <OnboardingCheck />
+              <StatusBar style="auto" />
+            </StripePaymentProvider>
+          </GestureHandlerRootView>
+        </UserModeProvider>
       </QueryClientProvider>
     </ClerkProvider>
   );

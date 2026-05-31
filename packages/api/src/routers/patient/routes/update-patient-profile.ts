@@ -1,4 +1,4 @@
-import { patientProfiles } from "@zen-doc/db";
+import { guardianProfiles, patientProfiles } from "@zen-doc/db";
 import { updatePatientProfileSchema } from "@zen-doc/db/schemas-types";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
@@ -20,6 +20,29 @@ export const updatePatientProfileRoute = protectedProcedure
     if (input._securedData !== undefined) {
       updateData._securedData = input._securedData;
       updateData.secured = true;
+    }
+
+    if (input.guardianEmail !== undefined) {
+      updateData.guardianEmail = input.guardianEmail;
+      updateData.guardianRequestStatus = "pending";
+
+      const existingGuardian =
+        await context.db.query.guardianProfiles.findFirst({
+          where: eq(guardianProfiles.email, input.guardianEmail),
+        });
+
+      if (!existingGuardian) {
+        const newGuardianId = `guardian_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        await context.db.insert(guardianProfiles).values({
+          userId: newGuardianId,
+          email: input.guardianEmail,
+          phone: input.guardianPhone ?? "",
+        });
+      }
+    }
+
+    if (input.guardianPhone !== undefined && input.guardianEmail === undefined) {
+      updateData.guardianPhone = input.guardianPhone;
     }
 
     await context.db

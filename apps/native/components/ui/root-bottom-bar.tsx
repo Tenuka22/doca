@@ -1,11 +1,19 @@
-import { Activity, Calendar, Sparkles, Stethoscope, User } from "lucide-react-native";
+import {
+  Activity,
+  Calendar,
+  HeartHandshake,
+  Sparkles,
+  Stethoscope,
+  User,
+} from "lucide-react-native";
 import { Text, useWindowDimensions, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
+import { useUserMode } from "@/utils/user-mode";
 
 const SMALL_BREAKPOINT = 400;
 
-const tabs = [
+const patientTabs = [
   { href: "/doctors", icon: Stethoscope, label: "Doctors" },
   { href: "/appointments", icon: Calendar, label: "Appointments" },
   { href: "/sprite", icon: Sparkles, label: "Sprite" },
@@ -13,12 +21,23 @@ const tabs = [
   { href: "/profile", icon: User, label: "Profile" },
 ] as const;
 
+const guardianTabs = [
+  { href: "/dashboard", icon: HeartHandshake, label: "Dashboard" },
+] as const;
+
 export const RootBottomBar = () => {
+  const { mode } = useUserMode();
   const { width } = useWindowDimensions();
   const isSmall = width < SMALL_BREAKPOINT;
 
+  const tabs = mode === "guardian" ? guardianTabs : patientTabs;
+
   return (
-    <View className="-mx-page grid h-12 grid-cols-5 gap-0 border-border border-t-[3px] bg-card">
+    <View
+      className={`-mx-page grid h-12 gap-0 border-border border-t-[3px] bg-card ${
+        mode === "guardian" ? "grid-cols-1" : "grid-cols-5"
+      }`}
+    >
       {tabs.map(({ href, icon: Icon, label }) => (
         <Button
           className="h-full w-full rounded-none"

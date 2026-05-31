@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
-import { ArrowLeft, User } from "lucide-react-native";
+import { ArrowLeft, Shield, User } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
@@ -17,6 +17,7 @@ import {
   storeSecret,
 } from "@/utils/privacy";
 import { useThemeColor } from "@/utils/theme";
+import { useUserMode } from "@/utils/user-mode";
 
 function vibrate(pattern: number | number[]) {
   if (typeof window !== "undefined" && "navigator" in window) {
@@ -41,6 +42,8 @@ export default function ProfileScreen() {
   const [initialPhone, setInitialPhone] = useState("");
   const [initialFullName, setInitialFullName] = useState("");
   const [initialAddress, setInitialAddress] = useState("");
+  const [guardianEmail, setGuardianEmail] = useState("");
+  const [guardianPhone, setGuardianPhone] = useState("");
 
   const profileQuery = useQuery(orpc.getPatientProfile.queryOptions());
 
@@ -52,6 +55,8 @@ export default function ProfileScreen() {
 
     setAlias(data.alias ?? "");
     setInitialAlias(data.alias ?? "");
+    setGuardianEmail(data.guardianEmail ?? "");
+    setGuardianPhone(data.guardianPhone ?? "");
 
     if (data._securedData) {
       getStoredSecret().then(async (secret) => {
@@ -106,6 +111,8 @@ export default function ProfileScreen() {
     updateMutation.mutate({
       alias,
       _securedData,
+      guardianEmail: guardianEmail || undefined,
+      guardianPhone: guardianPhone || undefined,
     });
   };
 
@@ -244,6 +251,52 @@ export default function ProfileScreen() {
             )}
           </View>
         </View>
+
+        <View className="overflow-hidden rounded-card border-2 border-border bg-card">
+          <View className="items-center gap-2 border-border border-b-2 px-card py-4">
+            <Shield color={colors.primary} size={22} />
+            <Text className="font-black font-sans text-lg text-foreground tracking-tight">
+              Guardian
+            </Text>
+          </View>
+
+          <View className="gap-4 px-card py-card">
+            {profileQuery.data?.guardianUserId ? (
+              <View className="gap-2 rounded-lg bg-muted p-4">
+                <Text className="font-bold font-sans text-foreground text-sm">
+                  Guardian assigned
+                </Text>
+                <Text className="font-normal font-sans text-muted-foreground text-xs">
+                  {profileQuery.data.guardianEmail}
+                </Text>
+              </View>
+            ) : (
+              <>
+                <Field
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  label="Guardian Email"
+                  onChangeText={setGuardianEmail}
+                  placeholder="guardian@example.com"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={guardianEmail}
+                />
+                <Field
+                  keyboardType="phone-pad"
+                  label="Guardian Phone"
+                  onChangeText={setGuardianPhone}
+                  placeholder="+1 (555) 000-0000"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={guardianPhone}
+                />
+              </>
+            )}
+          </View>
+        </View>
+
+        {__DEV__ && (
+          <DevModeToggle />
+        )}
       </Screen>
       <ScreenBottomBar>
         <View className="flex-1 flex-row items-center gap-2">
@@ -264,5 +317,32 @@ export default function ProfileScreen() {
         </View>
       </ScreenBottomBar>
     </>
+  );
+}
+
+function DevModeToggle() {
+  const { mode, toggleMode } = useUserMode();
+
+  return (
+    <View className="overflow-hidden rounded-card border-2 border-dashed border-orange-500 bg-orange-500/5">
+      <View className="items-center gap-2 border-border border-b-2 px-card py-3">
+        <Text className="font-black font-sans text-orange-500 text-xs uppercase tracking-[0.2em]">
+          Dev Mode
+        </Text>
+      </View>
+      <View className="flex-row items-center justify-between gap-4 px-card py-4">
+        <View className="flex-1 gap-1">
+          <Text className="font-bold font-sans text-foreground text-sm">
+            User Mode
+          </Text>
+          <Text className="font-normal font-sans text-muted-foreground text-xs">
+            Current: {mode === "patient" ? "Patient" : "Guardian"}
+          </Text>
+        </View>
+        <Button onPress={toggleMode} size="sm" variant="secondary">
+          Switch to {mode === "patient" ? "Guardian" : "Patient"}
+        </Button>
+      </View>
+    </View>
   );
 }
