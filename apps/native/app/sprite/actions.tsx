@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { Stack, useRouter } from "expo-router";
 import type { Href } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import {
   ArrowLeft,
   Check,
@@ -189,7 +189,7 @@ export default function SpriteActionsScreen() {
                       {completed ? (
                         <Check color="#166534" size={18} />
                       ) : (
-                        <Text className="font-bold font-sans text-primary text-lg">
+                        <Text className="font-bold font-sans text-lg text-primary">
                           ›
                         </Text>
                       )}

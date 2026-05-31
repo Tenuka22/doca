@@ -21,7 +21,7 @@ export const RootBottomBar = () => (
       >
         <View className="flex-row items-center justify-center gap-2 py-4">
           <Icon color="#ffffff" size={18} />
-          <Text className="font-bold font-sans text-xs text-white uppercase">
+          <Text className="font-bold font-sans text-white text-xs uppercase">
             {label}
           </Text>
         </View>

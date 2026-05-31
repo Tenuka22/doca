@@ -8,16 +8,21 @@ export const completeOnboardingRoute = protectedProcedure
   .input(completeOnboardingSchema)
   .handler(async ({ context, input }) => {
     const { userId } = requireAuth(context);
-    const { mode, alias, phone, email, guardianEmail, guardianPhone } = input;
+    const { mode, alias, guardianEmail, guardianPhone, _securedData } = input;
+
+    const upsertData = {
+      userId,
+      alias,
+      _securedData: _securedData ?? null,
+      secured: !!_securedData,
+      isOnboardingComplete: true,
+    };
 
     if (mode === "self") {
-      await context.db.insert(patientProfiles).values({
-        userId,
-        alias,
-        phone: phone ?? null,
-        email: email ?? null,
-        isOnboardingComplete: true,
-      });
+      await context.db
+        .insert(patientProfiles)
+        .values(upsertData)
+        .onConflictDoUpdate({ target: patientProfiles.userId, set: upsertData });
 
       return { success: true, mode: "self" };
     }
@@ -27,14 +32,23 @@ export const completeOnboardingRoute = protectedProcedure
         throw new Error("Guardian email and phone are required");
       }
 
-      await context.db.insert(patientProfiles).values({
-        userId,
-        alias,
-        guardianEmail,
-        guardianPhone,
-        guardianRequestStatus: "pending",
-        isOnboardingComplete: true,
-      });
+      await context.db
+        .insert(patientProfiles)
+        .values({
+          ...upsertData,
+          guardianEmail,
+          guardianPhone,
+          guardianRequestStatus: "pending",
+        })
+        .onConflictDoUpdate({
+          target: patientProfiles.userId,
+          set: {
+            ...upsertData,
+            guardianEmail,
+            guardianPhone,
+            guardianRequestStatus: "pending",
+          },
+        });
 
       return { success: true, mode: "has_guardian" };
     }
@@ -67,11 +81,10 @@ export const completeOnboardingRoute = protectedProcedure
         });
       }
 
-      await context.db.insert(patientProfiles).values({
-        userId,
-        alias,
-        isOnboardingComplete: true,
-      });
+      await context.db
+        .insert(patientProfiles)
+        .values(upsertData)
+        .onConflictDoUpdate({ target: patientProfiles.userId, set: upsertData });
 
       return { success: true, mode: "guardian" };
     }

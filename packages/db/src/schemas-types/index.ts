@@ -87,19 +87,26 @@ export const onboardingModeSchema = z.enum([
   "guardian",
 ]);
 
+export const patientPrivacyDataSchema = z.object({
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  fullName: z.string().min(1).max(200).optional(),
+  address: z.string().max(500).optional(),
+});
+
+export type PatientPrivacyData = z.infer<typeof patientPrivacyDataSchema>;
+
 export const completeOnboardingSchema = z.object({
   mode: onboardingModeSchema,
   alias: z.string().min(1).max(100),
-  phone: z.string().optional(),
-  email: z.string().email().optional(),
   guardianEmail: z.string().email().optional(),
   guardianPhone: z.string().optional(),
+  _securedData: z.string().optional(),
 });
 
 export const updatePatientProfileSchema = z.object({
   alias: z.string().min(1).max(100).optional(),
-  phone: z.string().optional(),
-  email: z.string().email().optional(),
+  _securedData: z.string().optional(),
 });
 
 export const cancelSessionSchema = z.object({

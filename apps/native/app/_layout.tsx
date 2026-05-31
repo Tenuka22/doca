@@ -11,6 +11,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
+import { getStoredSecret } from "@/utils/privacy";
 import { orpc, queryClient } from "@/utils/orpc";
 import { StripePaymentProvider } from "@/utils/stripe";
 import { useThemeColor } from "@/utils/theme";
@@ -76,10 +77,25 @@ function OnboardingCheck() {
       isLoaded &&
       isSignedIn &&
       !patientProfileQuery.isLoading &&
-      !guardianProfileQuery.isLoading &&
-      !(hasPatientProfile || hasGuardianProfile)
+      !guardianProfileQuery.isLoading
     ) {
-      router.replace("/onboarding");
+      const profile = patientProfileQuery.data;
+      const encryptionIncomplete =
+        hasPatientProfile &&
+        (!profile?.secured || (profile?.secured && !profile?._securedData));
+
+      if (!(hasPatientProfile || hasGuardianProfile) || encryptionIncomplete) {
+        router.replace("/onboarding");
+        return;
+      }
+
+      if (profile?.secured && profile?._securedData) {
+        getStoredSecret().then((secret) => {
+          if (!secret) {
+            router.replace("/onboarding");
+          }
+        });
+      }
     }
   }, [
     guardianProfileQuery.isLoading,
@@ -87,6 +103,7 @@ function OnboardingCheck() {
     isSignedIn,
     hasGuardianProfile,
     hasPatientProfile,
+    patientProfileQuery.data,
     patientProfileQuery.isLoading,
     router,
   ]);

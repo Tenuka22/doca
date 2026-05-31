@@ -51,9 +51,9 @@ function playToneSequence() {
 }
 
 interface Pebble {
+  size: number;
   x: number;
   y: number;
-  size: number;
 }
 
 export default function MeditationActionScreen() {
@@ -76,13 +76,15 @@ export default function MeditationActionScreen() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const progress = useRef(new Animated.Value(0)).current;
 
-  const pebbles = useMemo<Pebble[]>(() => {
-    return Array.from({ length: PEBBLE_COUNT }, () => ({
-      x: Math.random() * 80 + 10,
-      y: Math.random() * 80 + 10,
-      size: Math.random() * 6 + 4,
-    }));
-  }, []);
+  const pebbles = useMemo<Pebble[]>(
+    () =>
+      Array.from({ length: PEBBLE_COUNT }, () => ({
+        x: Math.random() * 80 + 10,
+        y: Math.random() * 80 + 10,
+        size: Math.random() * 6 + 4,
+      })),
+    []
+  );
 
   const completeMutation = useMutation(
     orpc.completeWellnessAction.mutationOptions({
@@ -192,8 +194,8 @@ export default function MeditationActionScreen() {
                   const threshold = (i + 1) / PEBBLE_COUNT;
                   return (
                     <View
-                      key={i}
                       className="absolute"
+                      key={i}
                       style={{
                         left: `${pebble.x}%`,
                         top: `${pebble.y}%`,
@@ -250,11 +252,7 @@ export default function MeditationActionScreen() {
                     ? `You completed a ${minutes}-minute meditation and earned Moonlight Credits!`
                     : `You completed a ${minutes}-minute meditation.`}
                 </Text>
-                <Button
-                  className="w-full"
-                  href="/sprite"
-                  variant="secondary"
-                >
+                <Button className="w-full" href="/sprite" variant="secondary">
                   Back to Dashboard
                 </Button>
               </View>
@@ -269,7 +267,20 @@ export default function MeditationActionScreen() {
         </View>
       </Screen>
       <ScreenBottomBar>
-        {!running && !done ? (
+        {running || done ? (
+          running ? (
+            <View className="flex-1 items-center justify-center rounded-control border-2 border-border bg-background px-3 py-2">
+              <Text className="font-bold font-sans text-[10px] text-muted-foreground uppercase tracking-[0.18em]">
+                Duration
+              </Text>
+              <Text className="font-black font-sans text-foreground text-sm">
+                {minutes} min
+              </Text>
+            </View>
+          ) : (
+            <View className="flex-1" />
+          )
+        ) : (
           <View className="flex-1 flex-row gap-1">
             {[5, 10, 15, 20].map((m) => (
               <Pressable
@@ -291,24 +302,9 @@ export default function MeditationActionScreen() {
               </Pressable>
             ))}
           </View>
-        ) : running ? (
-          <View className="flex-1 items-center justify-center rounded-control border-2 border-border bg-background px-3 py-2">
-            <Text className="font-bold font-sans text-muted-foreground text-[10px] uppercase tracking-[0.18em]">
-              Duration
-            </Text>
-            <Text className="font-black font-sans text-foreground text-sm">
-              {minutes} min
-            </Text>
-          </View>
-        ) : (
-          <View className="flex-1" />
         )}
         {done ? (
-          <Button
-            className="h-12"
-            onPress={handleStart}
-            variant="primary"
-          >
+          <Button className="h-12" onPress={handleStart} variant="primary">
             Start
           </Button>
         ) : (

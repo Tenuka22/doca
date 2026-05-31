@@ -1,8 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { ArrowLeft } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Easing, Pressable, Text, View } from "react-native";
-import { ArrowLeft } from "lucide-react-native";
 
 import { Button } from "@/components/ui/button";
 import { Screen } from "@/components/ui/screen";
@@ -303,7 +303,9 @@ export default function BreathingActionScreen() {
                         outputRange: [48, 224],
                       }),
                       backgroundColor:
-                        currentPhase === "hold" ? colors.secondary : colors.primary,
+                        currentPhase === "hold"
+                          ? colors.secondary
+                          : colors.primary,
                     }}
                   />
                 </View>
@@ -373,7 +375,7 @@ export default function BreathingActionScreen() {
       </Screen>
       <ScreenBottomBar>
         <View className="flex-1 items-center justify-center rounded-control border-2 border-border bg-background px-3 py-2">
-          <Text className="font-bold font-sans text-muted-foreground text-[10px] uppercase tracking-[0.18em]">
+          <Text className="font-bold font-sans text-[10px] text-muted-foreground uppercase tracking-[0.18em]">
             Progress
           </Text>
           <Text className="font-black font-sans text-foreground text-sm">
@@ -381,19 +383,11 @@ export default function BreathingActionScreen() {
           </Text>
         </View>
         {running ? (
-          <Button
-            className="h-12"
-            onPress={handleStop}
-            variant="secondary"
-          >
+          <Button className="h-12" onPress={handleStop} variant="secondary">
             Stop
           </Button>
         ) : (
-          <Button
-            className="h-12"
-            onPress={handleStart}
-            variant="primary"
-          >
+          <Button className="h-12" onPress={handleStart} variant="primary">
             Start
           </Button>
         )}

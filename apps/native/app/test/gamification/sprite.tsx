@@ -376,22 +376,42 @@ export function SpriteMascot({
                 <Animated.View
                   className="h-[52px] w-[52px] rounded bg-[#1B2A41]"
                   style={{
-                  transform: [
-                    { scaleY: Animated.multiply(animRefs.eyeScaleY, tapSquishY) },
-                    { scaleX: Animated.multiply(animRefs.eyeScaleX, tapSquishX) },
-                    { translateX: animRefs.pupilX },
-                    { translateY: animRefs.pupilY },
-                  ],
-                }}
-              />
-              <Animated.View
-                className="h-[52px] w-[52px] rounded bg-[#1B2A41]"
-                style={{
-                  transform: [
-                    { scaleY: Animated.multiply(animRefs.eyeScaleY, tapSquishY) },
-                    { scaleX: Animated.multiply(animRefs.eyeScaleX, tapSquishX) },
-                    { translateX: animRefs.pupilX },
-                    { translateY: animRefs.pupilY },
+                    transform: [
+                      {
+                        scaleY: Animated.multiply(
+                          animRefs.eyeScaleY,
+                          tapSquishY
+                        ),
+                      },
+                      {
+                        scaleX: Animated.multiply(
+                          animRefs.eyeScaleX,
+                          tapSquishX
+                        ),
+                      },
+                      { translateX: animRefs.pupilX },
+                      { translateY: animRefs.pupilY },
+                    ],
+                  }}
+                />
+                <Animated.View
+                  className="h-[52px] w-[52px] rounded bg-[#1B2A41]"
+                  style={{
+                    transform: [
+                      {
+                        scaleY: Animated.multiply(
+                          animRefs.eyeScaleY,
+                          tapSquishY
+                        ),
+                      },
+                      {
+                        scaleX: Animated.multiply(
+                          animRefs.eyeScaleX,
+                          tapSquishX
+                        ),
+                      },
+                      { translateX: animRefs.pupilX },
+                      { translateY: animRefs.pupilY },
                     ],
                   }}
                 />

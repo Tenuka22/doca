@@ -348,10 +348,10 @@ export default function AppointmentsScreen() {
           const isActive = selectedFilter === value;
           return (
             <Pressable
+              accessibilityLabel={label}
               className={`h-12 flex-1 items-center justify-center self-stretch rounded-control border-2 border-border ${isActive ? "bg-orange-500" : "bg-background"}`}
               key={value}
               onPress={() => toggleFilter(value)}
-              accessibilityLabel={label}
             >
               <Icon color={isActive ? "#ffffff" : "#f97316"} size={14} />
               <Text

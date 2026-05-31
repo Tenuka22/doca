@@ -9,6 +9,13 @@ import { Field } from "@/components/ui/field";
 import { Screen } from "@/components/ui/screen";
 import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
 import { orpc, queryClient } from "@/utils/orpc";
+import {
+  decryptData,
+  encryptData,
+  generateUserSecret,
+  getStoredSecret,
+  storeSecret,
+} from "@/utils/privacy";
 import { useThemeColor } from "@/utils/theme";
 
 function vibrate(pattern: number | number[]) {
@@ -24,19 +31,54 @@ export default function ProfileScreen() {
   const router = useRouter();
   const colors = useThemeColor();
   const [alias, setAlias] = useState("");
-  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [dirty, setDirty] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [address, setAddress] = useState("");
+  const [corruptedData, setCorruptedData] = useState(false);
+  const [initialAlias, setInitialAlias] = useState("");
+  const [initialEmail, setInitialEmail] = useState("");
+  const [initialPhone, setInitialPhone] = useState("");
+  const [initialFullName, setInitialFullName] = useState("");
+  const [initialAddress, setInitialAddress] = useState("");
 
-  const profileQuery = useQuery(
-    orpc.getPatientProfile.queryOptions()
-  );
+  const profileQuery = useQuery(orpc.getPatientProfile.queryOptions());
 
   useEffect(() => {
-    if (profileQuery.data) {
-      setAlias(profileQuery.data.alias ?? "");
-      setPhone(profileQuery.data.phone ?? "");
-      setEmail(profileQuery.data.email ?? "");
+    const data = profileQuery.data;
+    if (!data) {
+      return;
+    }
+
+    setAlias(data.alias ?? "");
+    setInitialAlias(data.alias ?? "");
+
+    if (data._securedData) {
+      getStoredSecret().then(async (secret) => {
+        if (!secret) {
+          router.replace("/onboarding");
+          return;
+        }
+
+        const decrypted = await decryptData(data._securedData!, secret);
+
+        if (decrypted) {
+          const decryptedEmail = (decrypted.email as string) ?? "";
+          const decryptedPhone = (decrypted.phone as string) ?? "";
+          const decryptedFullName = (decrypted.fullName as string) ?? "";
+          const decryptedAddress = (decrypted.address as string) ?? "";
+          setEmail(decryptedEmail);
+          setPhone(decryptedPhone);
+          setFullName(decryptedFullName);
+          setAddress(decryptedAddress);
+          setInitialEmail(decryptedEmail);
+          setInitialPhone(decryptedPhone);
+          setInitialFullName(decryptedFullName);
+          setInitialAddress(decryptedAddress);
+        } else {
+          setCorruptedData(true);
+        }
+      });
     }
   }, [profileQuery.data]);
 
@@ -44,18 +86,47 @@ export default function ProfileScreen() {
     orpc.updatePatientProfile.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["getPatientProfile"] });
-        setDirty(false);
         vibrate([40, 20, 40]);
       },
     })
   );
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    let secret = await getStoredSecret();
+    if (!secret) {
+      secret = generateUserSecret();
+      await storeSecret(secret);
+    }
+
+    const _securedData = await encryptData(
+      { email, phone, fullName, address },
+      secret
+    );
+
     updateMutation.mutate({
       alias,
-      phone: phone || undefined,
-      email: email || undefined,
+      _securedData,
     });
+  };
+
+  const handleRecreateSecret = async () => {
+    setCorruptedData(false);
+    const secret = generateUserSecret();
+    await storeSecret(secret);
+
+    if (profileQuery.data?._securedData) {
+      const decrypted = await decryptData(
+        profileQuery.data._securedData,
+        secret
+      );
+
+      if (decrypted) {
+        setEmail((decrypted.email as string) ?? "");
+        setPhone((decrypted.phone as string) ?? "");
+        setFullName((decrypted.fullName as string) ?? "");
+        setAddress((decrypted.address as string) ?? "");
+      }
+    }
   };
 
   const handleBack = () => {
@@ -68,9 +139,11 @@ export default function ProfileScreen() {
   };
 
   const changed =
-    alias !== (profileQuery.data?.alias ?? "") ||
-    phone !== (profileQuery.data?.phone ?? "") ||
-    email !== (profileQuery.data?.email ?? "");
+    alias !== initialAlias ||
+    email !== initialEmail ||
+    phone !== initialPhone ||
+    fullName !== initialFullName ||
+    address !== initialAddress;
 
   return (
     <>
@@ -91,24 +164,29 @@ export default function ProfileScreen() {
               label="Display Name"
               onChangeText={(text) => {
                 setAlias(text);
-                setDirty(true);
               }}
               placeholder="Your name"
               placeholderTextColor={colors.mutedForeground}
               value={alias}
             />
 
-            <Field
-              keyboardType="phone-pad"
-              label="Phone"
-              onChangeText={(text) => {
-                setPhone(text);
-                setDirty(true);
-              }}
-              placeholder="Phone number"
-              placeholderTextColor={colors.mutedForeground}
-              value={phone}
-            />
+            {corruptedData && (
+              <View className="gap-3 rounded-lg border-2 border-destructive bg-destructive/10 p-4">
+                <Text className="font-bold font-sans text-destructive text-sm">
+                  Your encrypted data could not be decrypted
+                </Text>
+                <Text className="font-normal font-sans text-destructive/80 text-xs">
+                  This can happen if your device secret was lost or changed.
+                  Please re-enter your information below to create a new secret.
+                </Text>
+                <Button
+                  onPress={handleRecreateSecret}
+                  variant="secondary"
+                >
+                  Generate new secret & re-enter data
+                </Button>
+              </View>
+            )}
 
             <Field
               autoCapitalize="none"
@@ -116,28 +194,51 @@ export default function ProfileScreen() {
               label="Email"
               onChangeText={(text) => {
                 setEmail(text);
-                setDirty(true);
               }}
-              placeholder="Email address"
+              placeholder="email@example.com"
               placeholderTextColor={colors.mutedForeground}
               value={email}
             />
 
-            <Button
-              disabled={!changed || updateMutation.isPending}
-              onPress={handleSave}
-            >
-              {updateMutation.isPending ? "Saving..." : "Save Changes"}
-            </Button>
+            <Field
+              keyboardType="phone-pad"
+              label="Phone"
+              onChangeText={(text) => {
+                setPhone(text);
+              }}
+              placeholder="Phone number"
+              placeholderTextColor={colors.mutedForeground}
+              value={phone}
+            />
+
+            <Field
+              label="Full Name"
+              onChangeText={(text) => {
+                setFullName(text);
+              }}
+              placeholder="Your full name"
+              placeholderTextColor={colors.mutedForeground}
+              value={fullName}
+            />
+
+            <Field
+              label="Address"
+              onChangeText={(text) => {
+                setAddress(text);
+              }}
+              placeholder="Your address"
+              placeholderTextColor={colors.mutedForeground}
+              value={address}
+            />
 
             {updateMutation.isSuccess && (
-              <Text className="text-center font-bold font-sans text-success text-sm">
+              <Text className="font-bold font-sans text-sm text-success">
                 Profile updated successfully!
               </Text>
             )}
 
             {updateMutation.isError && (
-              <Text className="text-center font-bold font-sans text-destructive text-sm">
+              <Text className="font-bold font-sans text-destructive text-sm">
                 Failed to update profile. Please try again.
               </Text>
             )}
@@ -145,13 +246,22 @@ export default function ProfileScreen() {
         </View>
       </Screen>
       <ScreenBottomBar>
-        <View className="flex-1" />
-        <Pressable
-          className="aspect-square h-12 items-center justify-center self-stretch rounded-control border-2 border-border bg-background"
-          onPress={handleBack}
-        >
-          <ArrowLeft color="#ffffff" size={16} />
-        </Pressable>
+        <View className="flex-1 flex-row items-center gap-2">
+          <View className="flex-1">
+            <Button
+              disabled={!changed || updateMutation.isPending}
+              onPress={handleSave}
+            >
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </View>
+          <Pressable
+            className="aspect-square h-12 items-center justify-center self-stretch rounded-control border-2 border-border bg-background"
+            onPress={handleBack}
+          >
+            <ArrowLeft color="#ffffff" size={16} />
+          </Pressable>
+        </View>
       </ScreenBottomBar>
     </>
   );

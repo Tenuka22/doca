@@ -135,17 +135,17 @@ export const doctorScheduleEntries = sqliteTable(
 export const patientProfiles = sqliteTable("patient_profiles", {
   userId: text("user_id").primaryKey(),
   alias: text("alias").notNull(),
-  phone: text("phone"),
-  email: text("email"),
   guardianUserId: text("guardian_user_id"),
   guardianEmail: text("guardian_email"),
   guardianPhone: text("guardian_phone"),
-  guardianRequestStatus: text("guardian_request_status"), // "pending" | "approved" | null
+  guardianRequestStatus: text("guardian_request_status"),
   isOnboardingComplete: integer("is_onboarding_complete", {
     mode: "boolean",
   })
     .notNull()
     .default(false),
+  _securedData: text("_secured_data"),
+  secured: integer("secured", { mode: "boolean" }).notNull().default(false),
   createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
   updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
 });
@@ -348,6 +348,8 @@ export type DoctorWeeklyAvailability =
   typeof doctorWeeklyAvailability.$inferSelect;
 export type DoctorCredit = typeof doctorCredits.$inferSelect;
 export type DoctorCashoutRequest = typeof doctorCashoutRequests.$inferSelect;
+export type SessionTaskAssignment =
+  typeof sessionTaskAssignments.$inferSelect;
 export type SessionAttendanceEvent =
   typeof sessionAttendanceEvents.$inferSelect;
 export type SessionSnapshot = typeof sessionSnapshots.$inferSelect;

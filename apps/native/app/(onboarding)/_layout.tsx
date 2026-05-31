@@ -54,8 +54,16 @@ export default function OnboardingLayout() {
     return null;
   }
 
-  if (hasPatientProfile || hasGuardianProfile) {
+  if (hasGuardianProfile) {
     return <Redirect href="/" />;
+  }
+
+  if (hasPatientProfile) {
+    const profile = patientProfileQuery.data;
+
+    if (profile?.secured && profile?._securedData) {
+      return <Redirect href="/" />;
+    }
   }
 
   return (

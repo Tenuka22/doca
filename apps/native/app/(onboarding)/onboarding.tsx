@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Screen } from "@/components/ui/screen";
 import { orpc } from "@/utils/orpc";
+import { encryptData, generateUserSecret, storeSecret } from "@/utils/privacy";
 import { useThemeColor } from "@/utils/theme";
 
 type OnboardingMode = "self" | "has_guardian" | "guardian" | null;
@@ -48,16 +49,28 @@ function SelectableCard({
 
 const selfSchema = z.object({
   alias: z.string().min(1, "Alias is required"),
+  email: z.string().email("Valid email required").optional().or(z.literal("")),
+  phone: z.string().optional(),
+  fullName: z.string().max(200).optional(),
+  address: z.string().max(500).optional(),
 });
 
 const hasGuardianSchema = z.object({
   alias: z.string().min(1, "Alias is required"),
+  email: z.string().email("Valid email required").optional().or(z.literal("")),
+  phone: z.string().optional(),
+  fullName: z.string().max(200).optional(),
+  address: z.string().max(500).optional(),
   guardianEmail: z.string().email("Valid email required"),
   guardianPhone: z.string().min(1, "Phone is required"),
 });
 
 const guardianSchema = z.object({
   alias: z.string().min(1, "Alias is required"),
+  email: z.string().email("Valid email required").optional().or(z.literal("")),
+  phone: z.string().optional(),
+  fullName: z.string().max(200).optional(),
+  address: z.string().max(500).optional(),
   guardianEmail: z.string().email("Valid email required"),
 });
 
@@ -74,15 +87,36 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState<"select" | "form">("select");
 
   const selfForm = useForm<SelfForm>({
-    defaultValues: { alias: "" },
+    defaultValues: {
+      alias: "",
+      email: "",
+      phone: "",
+      fullName: "",
+      address: "",
+    },
   });
 
   const hasGuardianForm = useForm<HasGuardianForm>({
-    defaultValues: { alias: "", guardianEmail: "", guardianPhone: "" },
+    defaultValues: {
+      alias: "",
+      email: "",
+      phone: "",
+      fullName: "",
+      address: "",
+      guardianEmail: "",
+      guardianPhone: "",
+    },
   });
 
   const guardianForm = useForm<GuardianForm>({
-    defaultValues: { alias: "", guardianEmail: "" },
+    defaultValues: {
+      alias: "",
+      email: "",
+      phone: "",
+      fullName: "",
+      address: "",
+      guardianEmail: "",
+    },
   });
 
   const pendingGuardiansQuery = useQuery({
@@ -119,26 +153,68 @@ export default function OnboardingScreen() {
     setStep("form");
   };
 
-  const onSelfSubmit = (data: SelfForm) => {
+  const onSelfSubmit = async (data: SelfForm) => {
+    const secret = generateUserSecret();
+    await storeSecret(secret);
+
+    const _securedData = await encryptData(
+      {
+        email: data.email ?? "",
+        phone: data.phone ?? "",
+        fullName: data.fullName ?? "",
+        address: data.address ?? "",
+      },
+      secret
+    );
+
     completeOnboarding.mutate({
       mode: "self",
       alias: data.alias,
+      _securedData,
     });
   };
 
-  const onHasGuardianSubmit = (data: HasGuardianForm) => {
+  const onHasGuardianSubmit = async (data: HasGuardianForm) => {
+    const secret = generateUserSecret();
+    await storeSecret(secret);
+
+    const _securedData = await encryptData(
+      {
+        email: data.email ?? "",
+        phone: data.phone ?? "",
+        fullName: data.fullName ?? "",
+        address: data.address ?? "",
+      },
+      secret
+    );
+
     completeOnboarding.mutate({
       mode: "has_guardian",
       alias: data.alias,
+      _securedData,
       guardianEmail: data.guardianEmail,
       guardianPhone: data.guardianPhone,
     });
   };
 
-  const onGuardianSubmit = (data: GuardianForm) => {
+  const onGuardianSubmit = async (data: GuardianForm) => {
+    const secret = generateUserSecret();
+    await storeSecret(secret);
+
+    const _securedData = await encryptData(
+      {
+        email: data.email ?? "",
+        phone: data.phone ?? "",
+        fullName: data.fullName ?? "",
+        address: data.address ?? "",
+      },
+      secret
+    );
+
     completeOnboarding.mutate({
       mode: "guardian",
       alias: data.alias,
+      _securedData,
       guardianEmail: data.guardianEmail,
     });
   };
@@ -220,6 +296,65 @@ export default function OnboardingScreen() {
                 </View>
               )}
             />
+
+            <Controller
+              control={selfForm.control}
+              name="email"
+              render={({ field, fieldState }) => (
+                <Field
+                  autoCapitalize="none"
+                  error={fieldState.error?.message}
+                  keyboardType="email-address"
+                  label="Email"
+                  onChangeText={field.onChange}
+                  placeholder="email@example.com"
+                  value={field.value}
+                />
+              )}
+            />
+
+            <Controller
+              control={selfForm.control}
+              name="phone"
+              render={({ field, fieldState }) => (
+                <Field
+                  error={fieldState.error?.message}
+                  keyboardType="phone-pad"
+                  label="Phone"
+                  onChangeText={field.onChange}
+                  placeholder="+1 (555) 000-0000"
+                  value={field.value}
+                />
+              )}
+            />
+
+            <Controller
+              control={selfForm.control}
+              name="fullName"
+              render={({ field, fieldState }) => (
+                <Field
+                  error={fieldState.error?.message}
+                  label="Full Name"
+                  onChangeText={field.onChange}
+                  placeholder="Your full name"
+                  value={field.value}
+                />
+              )}
+            />
+
+            <Controller
+              control={selfForm.control}
+              name="address"
+              render={({ field, fieldState }) => (
+                <Field
+                  error={fieldState.error?.message}
+                  label="Address"
+                  onChangeText={field.onChange}
+                  placeholder="Your address"
+                  value={field.value}
+                />
+              )}
+            />
           </View>
 
           <View className="mt-4 gap-3">
@@ -273,6 +408,65 @@ export default function OnboardingScreen() {
                     label="Your Alias"
                     onChangeText={field.onChange}
                     placeholder="Enter a nickname"
+                    value={field.value}
+                  />
+                )}
+              />
+
+              <Controller
+                control={hasGuardianForm.control}
+                name="email"
+                render={({ field, fieldState }) => (
+                  <Field
+                    autoCapitalize="none"
+                    error={fieldState.error?.message}
+                    keyboardType="email-address"
+                    label="Email"
+                    onChangeText={field.onChange}
+                    placeholder="email@example.com"
+                    value={field.value}
+                  />
+                )}
+              />
+
+              <Controller
+                control={hasGuardianForm.control}
+                name="phone"
+                render={({ field, fieldState }) => (
+                  <Field
+                    error={fieldState.error?.message}
+                    keyboardType="phone-pad"
+                    label="Phone"
+                    onChangeText={field.onChange}
+                    placeholder="+1 (555) 000-0000"
+                    value={field.value}
+                  />
+                )}
+              />
+
+              <Controller
+                control={hasGuardianForm.control}
+                name="fullName"
+                render={({ field, fieldState }) => (
+                  <Field
+                    error={fieldState.error?.message}
+                    label="Full Name"
+                    onChangeText={field.onChange}
+                    placeholder="Your full name"
+                    value={field.value}
+                  />
+                )}
+              />
+
+              <Controller
+                control={hasGuardianForm.control}
+                name="address"
+                render={({ field, fieldState }) => (
+                  <Field
+                    error={fieldState.error?.message}
+                    label="Address"
+                    onChangeText={field.onChange}
+                    placeholder="Your address"
                     value={field.value}
                   />
                 )}
@@ -369,6 +563,65 @@ export default function OnboardingScreen() {
                     This is how patients will identify you.
                   </Text>
                 </View>
+              )}
+            />
+
+            <Controller
+              control={guardianForm.control}
+              name="email"
+              render={({ field, fieldState }) => (
+                <Field
+                  autoCapitalize="none"
+                  error={fieldState.error?.message}
+                  keyboardType="email-address"
+                  label="Email"
+                  onChangeText={field.onChange}
+                  placeholder="email@example.com"
+                  value={field.value}
+                />
+              )}
+            />
+
+            <Controller
+              control={guardianForm.control}
+              name="phone"
+              render={({ field, fieldState }) => (
+                <Field
+                  error={fieldState.error?.message}
+                  keyboardType="phone-pad"
+                  label="Phone"
+                  onChangeText={field.onChange}
+                  placeholder="+1 (555) 000-0000"
+                  value={field.value}
+                />
+              )}
+            />
+
+            <Controller
+              control={guardianForm.control}
+              name="fullName"
+              render={({ field, fieldState }) => (
+                <Field
+                  error={fieldState.error?.message}
+                  label="Full Name"
+                  onChangeText={field.onChange}
+                  placeholder="Your full name"
+                  value={field.value}
+                />
+              )}
+            />
+
+            <Controller
+              control={guardianForm.control}
+              name="address"
+              render={({ field, fieldState }) => (
+                <Field
+                  error={fieldState.error?.message}
+                  label="Address"
+                  onChangeText={field.onChange}
+                  placeholder="Your address"
+                  value={field.value}
+                />
               )}
             />
 

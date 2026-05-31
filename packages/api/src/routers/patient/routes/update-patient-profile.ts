@@ -9,12 +9,22 @@ export const updatePatientProfileRoute = protectedProcedure
   .handler(async ({ context, input }) => {
     const { userId } = requireAuth(context);
 
+    const updateData: Record<string, unknown> = {
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (input.alias !== undefined) {
+      updateData.alias = input.alias;
+    }
+
+    if (input._securedData !== undefined) {
+      updateData._securedData = input._securedData;
+      updateData.secured = true;
+    }
+
     await context.db
       .update(patientProfiles)
-      .set({
-        ...input,
-        updatedAt: new Date().toISOString(),
-      })
+      .set(updateData)
       .where(eq(patientProfiles.userId, userId));
 
     const updated = await context.db.query.patientProfiles.findFirst({

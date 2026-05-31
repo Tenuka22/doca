@@ -1,13 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { Stack, useRouter } from "expo-router";
 import { ArrowLeft, ChevronRight, HeartPulse, Moon } from "lucide-react-native";
+import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Screen } from "@/components/ui/screen";
 import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
 import { SpriteAnimation } from "@/components/ui/sprite-animation";
-import { WellnessActionCard } from "@/components/ui/wellness-action-card";
 import { orpc } from "@/utils/orpc";
 
 function moodToAction(mood: string): "idle" | "happy" | "thinking" | "alert" {
@@ -109,13 +108,13 @@ export default function SpriteScreen() {
           {/* Header */}
           <View className="flex-row items-start justify-between gap-2">
             <View className="flex-1 gap-2">
-              <Text className="font-bold font-sans text-xs uppercase tracking-[0.25em] text-primary">
+              <Text className="font-bold font-sans text-primary text-xs uppercase tracking-[0.25em]">
                 Wellness
               </Text>
-              <Text className="font-black font-sans text-4xl tracking-tight text-foreground">
+              <Text className="font-black font-sans text-4xl text-foreground tracking-tight">
                 Your Sprite
               </Text>
-              <Text className="font-normal font-sans text-base leading-6 text-muted-foreground">
+              <Text className="font-normal font-sans text-base text-muted-foreground leading-6">
                 Keep your Sprite healthy through consistent wellness actions.
                 Rewarded for showing up every day.
               </Text>
@@ -184,14 +183,16 @@ export default function SpriteScreen() {
                 <View className="h-3 overflow-hidden rounded-full bg-muted">
                   <View
                     className="h-full rounded-full bg-orange-500"
-                    style={{ width: `${Math.min(100, (todayActions.length / 5) * 100)}%` }}
+                    style={{
+                      width: `${Math.min(100, (todayActions.length / 5) * 100)}%`,
+                    }}
                   />
                 </View>
               </View>
 
               <View className="flex-row gap-2">
                 <View className="flex-1 rounded-control border-2 border-border bg-background px-3 py-3">
-                  <Text className="font-bold font-sans text-muted-foreground text-[10px] uppercase tracking-[0.18em]">
+                  <Text className="font-bold font-sans text-[10px] text-muted-foreground uppercase tracking-[0.18em]">
                     Streak
                   </Text>
                   <Text className="mt-1 font-black font-sans text-2xl text-foreground">
@@ -199,7 +200,7 @@ export default function SpriteScreen() {
                   </Text>
                 </View>
                 <View className="flex-1 rounded-control border-2 border-border bg-background px-3 py-3">
-                  <Text className="font-bold font-sans text-muted-foreground text-[10px] uppercase tracking-[0.18em]">
+                  <Text className="font-bold font-sans text-[10px] text-muted-foreground uppercase tracking-[0.18em]">
                     Credits
                   </Text>
                   <Text className="mt-1 font-black font-sans text-2xl text-foreground">
@@ -211,18 +212,17 @@ export default function SpriteScreen() {
           </View>
 
           {/* Action Buttons */}
-
         </ScrollView>
       </Screen>
       <ScreenBottomBar>
-        <View className="flex-1 items-center h-12 flex-row justify-center rounded-control border-2 border-border bg-background px-3 py-2 gap-2">
-          <Moon  color="#f97316" size={18} />
+        <View className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-control border-2 border-border bg-background px-3 py-2">
+          <Moon color="#f97316" size={18} />
           <Text className="font-black font-sans text-foreground text-lg">
             {credits?.balance ?? 0}
           </Text>
         </View>
         <Button
-          className="flex-1 h-12"
+          className="h-12 flex-1"
           href="/sprite/actions"
           icon={<ChevronRight color="#ffffff" size={16} />}
           variant="primary"

@@ -206,6 +206,13 @@
       "name": "@zen-doc/config",
       "version": "0.0.0",
     },
+    "packages/crypto": {
+      "name": "@zen-doc/crypto",
+      "devDependencies": {
+        "@zen-doc/config": "workspace:*",
+        "typescript": "^6",
+      },
+    },
     "packages/db": {
       "name": "@zen-doc/db",
       "dependencies": {
@@ -1423,6 +1430,8 @@
     "@zen-doc/api": ["@zen-doc/api@workspace:packages/api"],
 
     "@zen-doc/config": ["@zen-doc/config@workspace:packages/config"],
+
+    "@zen-doc/crypto": ["@zen-doc/crypto@workspace:packages/crypto"],
 
     "@zen-doc/db": ["@zen-doc/db@workspace:packages/db"],
 

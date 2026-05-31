@@ -1,0 +1,14 @@
+{
+  "name": "@zen-doc/crypto",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "devDependencies": {
+    "@zen-doc/config": "workspace:*",
+    "typescript": "^6"
+  }
+}
