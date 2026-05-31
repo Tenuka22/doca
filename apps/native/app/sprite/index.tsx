@@ -3,12 +3,10 @@ import { Stack } from "expo-router";
 import { ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { MoonlightCreditsDisplay } from "@/components/ui/moonlight-credits-display";
 import { Screen } from "@/components/ui/screen";
 import type { SpriteAction } from "@/components/ui/sprite-animation";
 import { SpriteAnimation } from "@/components/ui/sprite-animation";
-import { SpriteHealthBar } from "@/components/ui/sprite-health-bar";
 import { WellnessActionCard } from "@/components/ui/wellness-action-card";
 import { orpc } from "@/utils/orpc";
 
@@ -33,27 +31,19 @@ const WELLNESS_ACTIONS = [
     credits: 10,
   },
   {
-    icon: "B",
-    title: "Evening Breath",
-    description: "Wind down with a guided evening breathing session.",
-    timeSlot: "evening" as const,
-    actionType: "breathing_evening",
-    credits: 10,
-  },
-  {
-    icon: "B",
-    title: "Night Calm",
-    description: "Deep breathing for a restful night's sleep.",
-    timeSlot: "night" as const,
-    actionType: "breathing_night",
-    credits: 10,
-  },
-  {
     icon: "M",
     title: "Morning Meditation",
     description: "Set your intention for the day with a short meditation.",
     timeSlot: "morning" as const,
     actionType: "meditation_morning",
+    credits: 10,
+  },
+  {
+    icon: "B",
+    title: "Evening Breath",
+    description: "Wind down with a guided evening breathing session.",
+    timeSlot: "evening" as const,
+    actionType: "breathing_evening",
     credits: 10,
   },
   {
@@ -64,7 +54,23 @@ const WELLNESS_ACTIONS = [
     actionType: "meditation_evening",
     credits: 10,
   },
+  {
+    icon: "B",
+    title: "Night Calm",
+    description: "Deep breathing for a restful night's sleep.",
+    timeSlot: "night" as const,
+    actionType: "breathing_night",
+    credits: 10,
+  },
 ] as const;
+
+const SLOT_HEADERS: Record<string, { label: string; icon: string }> = {
+  morning: { label: "Morning", icon: "☀" },
+  evening: { label: "Evening", icon: "☽" },
+  night: { label: "Night", icon: "☾" },
+};
+
+const SLOTS = ["morning", "evening", "night"] as const;
 
 export default function SpriteScreen() {
   const spriteQuery = useQuery(
@@ -112,58 +118,72 @@ export default function SpriteScreen() {
             </Text>
           </View>
 
-          {/* Sprite Visual */}
-          <Card>
-            <View className="items-center py-4">
-              <View className="h-32 w-32 items-center justify-center rounded-[34px] border-2 border-border bg-muted/30">
-                <SpriteAnimation
-                  action={moodToAction(sprite?.mood ?? "idle")}
-                  size="md"
-                />
-              </View>
+          {/* Sprite Visual - no border, large */}
+          <View className="items-center py-4">
+            <View className="h-48 w-48 items-center justify-center">
+              <SpriteAnimation
+                action={moodToAction(sprite?.mood ?? "idle")}
+                size="lg"
+              />
             </View>
-          </Card>
+          </View>
 
-          {/* Sprite Health */}
-          {sprite && (
-            <SpriteHealthBar
-              health={sprite.health}
-              mood={sprite.mood}
-              streakDays={sprite.streakDays}
-            />
-          )}
-
-          {/* Moonlight Credits */}
-          {credits && (
-            <MoonlightCreditsDisplay
-              balance={credits.balance}
-              consistencyScore={credits.consistencyScore}
-              totalEarned={credits.totalEarned}
-            />
-          )}
-
-          {/* Today's Actions */}
-          <View className="gap-3">
+          {/* Today's Actions - grouped by time slot */}
+          <View className="gap-4">
             <Text className="font-bold font-sans text-foreground text-sm uppercase tracking-[0.2em]">
               Today's Wellness Actions
             </Text>
 
-            {WELLNESS_ACTIONS.map((action) => {
-              const completed = completedTypes.has(action.actionType);
+            {SLOTS.map((slot) => {
+              const slotActions = WELLNESS_ACTIONS.filter(
+                (a) => a.timeSlot === slot
+              );
+              if (slotActions.length === 0) {
+                return null;
+              }
 
               return (
-                <WellnessActionCard
-                  completed={completed}
-                  credits={action.credits}
-                  description={action.description}
-                  icon={completed ? "✓" : action.icon}
-                  key={action.actionType}
-                  timeSlot={action.timeSlot}
-                  title={action.title}
-                />
+                <View className="gap-2" key={slot}>
+                  <View className="flex-row items-center gap-2">
+                    <Text className="font-bold font-sans text-muted-foreground text-xs uppercase tracking-[0.18em]">
+                      {SLOT_HEADERS[slot]?.icon} {SLOT_HEADERS[slot]?.label}
+                    </Text>
+                    <View className="h-px flex-1 bg-border" />
+                  </View>
+
+                  {slotActions.map((action) => {
+                    const completed = completedTypes.has(action.actionType);
+
+                    return (
+                      <WellnessActionCard
+                        completed={completed}
+                        credits={action.credits}
+                        description={action.description}
+                        icon={completed ? "✓" : action.icon}
+                        key={action.actionType}
+                        timeSlot={action.timeSlot}
+                        title={action.title}
+                      />
+                    );
+                  })}
+                </View>
               );
             })}
           </View>
+
+          {/* Moonlight Credits Bar */}
+          {credits && (
+            <View className="rounded-card border-2 border-border bg-card px-card py-card">
+              <Text className="mb-2 font-bold font-sans text-foreground text-xs uppercase tracking-[0.2em]">
+                Moonlight Credits
+              </Text>
+              <MoonlightCreditsDisplay
+                balance={credits.balance}
+                consistencyScore={credits.consistencyScore}
+                totalEarned={credits.totalEarned}
+              />
+            </View>
+          )}
 
           {/* Action Buttons */}
           <View className="gap-2">

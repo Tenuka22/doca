@@ -22,6 +22,34 @@ function vibrate(pattern: number | number[]) {
   }
 }
 
+function playTone(frequency: number, duration: number) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const AudioContextClass =
+    window.AudioContext ??
+    (window as Window & { webkitAudioContext?: typeof AudioContext })
+      .webkitAudioContext;
+  if (!AudioContextClass) {
+    return;
+  }
+  const context = new AudioContextClass();
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.type = "sine";
+  oscillator.frequency.value = frequency;
+  gain.gain.setValueAtTime(0.0001, context.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.08, context.currentTime + 0.04);
+  gain.gain.exponentialRampToValueAtTime(
+    0.0001,
+    context.currentTime + duration
+  );
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  oscillator.start(context.currentTime);
+  oscillator.stop(context.currentTime + duration + 0.05);
+}
+
 export default function BreathingActionScreen() {
   const colors = useThemeColor();
   const router = useRouter();
@@ -112,15 +140,7 @@ export default function BreathingActionScreen() {
 
     fill.setValue(startValue);
 
-    if (currentPhase === "hold") {
-      Animated.timing(fill, {
-        toValue: endValue,
-        duration,
-        easing: Easing.linear,
-        useNativeDriver: false,
-      }).start();
-      vibrate([20, 30, 20]);
-    } else if (currentPhase === "inhale") {
+    if (currentPhase === "inhale") {
       Animated.timing(fill, {
         toValue: endValue,
         duration,
@@ -128,6 +148,16 @@ export default function BreathingActionScreen() {
         useNativeDriver: false,
       }).start();
       vibrate(25);
+      playTone(220, 0.1);
+    } else if (currentPhase === "hold") {
+      Animated.timing(fill, {
+        toValue: endValue,
+        duration,
+        easing: Easing.linear,
+        useNativeDriver: false,
+      }).start();
+      vibrate([20, 30, 20]);
+      playTone(330, 0.08);
     } else if (currentPhase === "exhale") {
       Animated.timing(fill, {
         toValue: endValue,
@@ -136,6 +166,7 @@ export default function BreathingActionScreen() {
         useNativeDriver: false,
       }).start();
       vibrate(25);
+      playTone(180, 0.15);
     } else {
       Animated.timing(fill, {
         toValue: endValue,
@@ -236,7 +267,7 @@ export default function BreathingActionScreen() {
               </Text>
             </View>
 
-            {/* Breathing Visual */}
+            {/* Breathing Visual - simplified: one container, one scaling square */}
             <View className="items-center gap-4 rounded-card border-2 border-border bg-background px-card py-card">
               <View className="items-center gap-1">
                 <Text className="text-center font-bold font-sans text-muted-foreground text-xs uppercase tracking-[0.2em]">
@@ -253,12 +284,18 @@ export default function BreathingActionScreen() {
               </View>
 
               <View className="w-full items-center justify-center py-2">
-                <View className="relative h-48 w-48 items-center justify-center rounded-[34px] border-2 border-border bg-muted/30">
-                  <View className="absolute inset-4 rounded-[30px] border-2 border-border bg-background" />
-                  <View className="absolute inset-8 rounded-[24px] border-2 border-border bg-background" />
+                <View className="h-48 w-48 items-center justify-center rounded-[34px] border-2 border-border bg-muted/30">
                   <Animated.View
-                    className="absolute h-24 w-24 rounded-[20px] border-2 border-border"
+                    className="rounded-[20px] border-2 border-border"
                     style={{
+                      width: fill.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [48, 144],
+                      }),
+                      height: fill.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [48, 144],
+                      }),
                       backgroundColor: fill.interpolate({
                         inputRange: [0, 0.15, 1],
                         outputRange: [
@@ -267,14 +304,6 @@ export default function BreathingActionScreen() {
                           colors.secondary,
                         ],
                       }),
-                      transform: [
-                        {
-                          scale: fill.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0.2, 1],
-                          }),
-                        },
-                      ],
                     }}
                   />
                 </View>
