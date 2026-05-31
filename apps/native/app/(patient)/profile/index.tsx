@@ -44,6 +44,8 @@ export default function ProfileScreen() {
   const [initialAddress, setInitialAddress] = useState("");
   const [guardianEmail, setGuardianEmail] = useState("");
   const [guardianPhone, setGuardianPhone] = useState("");
+  const [initialGuardianEmail, setInitialGuardianEmail] = useState("");
+  const [initialGuardianPhone, setInitialGuardianPhone] = useState("");
 
   const profileQuery = useQuery(orpc.getPatientProfile.queryOptions());
 
@@ -57,6 +59,8 @@ export default function ProfileScreen() {
     setInitialAlias(data.alias ?? "");
     setGuardianEmail(data.guardianEmail ?? "");
     setGuardianPhone(data.guardianPhone ?? "");
+    setInitialGuardianEmail(data.guardianEmail ?? "");
+    setInitialGuardianPhone(data.guardianPhone ?? "");
 
     if (data._securedData) {
       getStoredSecret().then(async (secret) => {
@@ -150,7 +154,9 @@ export default function ProfileScreen() {
     email !== initialEmail ||
     phone !== initialPhone ||
     fullName !== initialFullName ||
-    address !== initialAddress;
+    address !== initialAddress ||
+    guardianEmail !== initialGuardianEmail ||
+    guardianPhone !== initialGuardianPhone;
 
   return (
     <>
