@@ -11,6 +11,7 @@ export const purchaseCreditsRoute = protectedProcedure
     z.object({
       credits: z.number().int().positive().default(DEFAULT_CREDIT_QUANTITY),
       returnUrl: z.string().url().optional(),
+      patientUserId: z.string().optional(),
     })
   )
   .handler(async ({ context, input }) => {
@@ -20,6 +21,8 @@ export const purchaseCreditsRoute = protectedProcedure
     const taxCents = Math.ceil(subtotalCents * TAX_RATE);
     const amount = subtotalCents + taxCents;
 
+    const creditUserId = input.patientUserId ?? userId;
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency: "usd",
@@ -28,7 +31,8 @@ export const purchaseCreditsRoute = protectedProcedure
       },
       metadata: {
         type: "credit_topup",
-        userId,
+        userId: creditUserId,
+        purchasedByUserId: input.patientUserId ? userId : null,
         credits: String(input.credits),
       },
     });

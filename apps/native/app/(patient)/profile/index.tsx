@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
+import { CreditPurchase } from "@/components/ui/credit-purchase";
 import { Field } from "@/components/ui/field";
 import { Screen } from "@/components/ui/screen";
 import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
@@ -297,6 +298,17 @@ export default function ProfileScreen() {
                 />
               </>
             )}
+          </View>
+        </View>
+
+        <View className="overflow-hidden rounded-card border-2 border-border bg-card">
+          <View className="border-border border-b-2 px-card py-4">
+            <Text className="font-black font-sans text-lg text-foreground tracking-tight">
+              Credits
+            </Text>
+          </View>
+          <View className="px-card py-card">
+            <CreditPurchase />
           </View>
         </View>
 

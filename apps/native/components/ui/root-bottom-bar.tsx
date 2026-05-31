@@ -2,6 +2,8 @@ import {
   Activity,
   Calendar,
   HeartHandshake,
+  HeartPulse,
+  Shield,
   Sparkles,
   Stethoscope,
   User,
@@ -23,6 +25,10 @@ const patientTabs = [
 
 const guardianTabs = [
   { href: "/dashboard", icon: HeartHandshake, label: "Dashboard" },
+  { href: "/patient-stress", icon: Activity, label: "Stress" },
+  { href: "/patient-activity", icon: HeartPulse, label: "Activity" },
+  { href: "/patient-profile", icon: User, label: "Patient" },
+  { href: "/guardian-profile", icon: Shield, label: "Profile" },
 ] as const;
 
 export const RootBottomBar = () => {
@@ -33,11 +39,7 @@ export const RootBottomBar = () => {
   const tabs = mode === "guardian" ? guardianTabs : patientTabs;
 
   return (
-    <View
-      className={`-mx-page grid h-12 gap-0 border-border border-t-[3px] bg-card ${
-        mode === "guardian" ? "grid-cols-1" : "grid-cols-5"
-      }`}
-    >
+    <View className="-mx-page grid h-12 grid-cols-5 gap-0 border-border border-t-[3px] bg-card">
       {tabs.map(({ href, icon: Icon, label }) => (
         <Button
           className="h-full w-full rounded-none"

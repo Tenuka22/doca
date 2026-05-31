@@ -1,32 +1,31 @@
 import { Stack } from "expo-router";
-import { HeartHandshake } from "lucide-react-native";
+import { Activity } from "lucide-react-native";
 import { Text, View } from "react-native";
 
 import { RootBottomBar } from "@/components/ui/root-bottom-bar";
 import { Screen } from "@/components/ui/screen";
 import { useThemeColor } from "@/utils/theme";
 
-export default function GuardianDashboardScreen() {
+export default function PatientStressScreen() {
   const colors = useThemeColor();
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <Screen
-        contentClassName="flex-1 gap-section px-page py-page bg-background"
+        contentClassName="flex-1 justify-center gap-section px-page py-page bg-background"
         scrollClassName="flex-1 bg-background"
       >
-        <View className="items-center gap-6 pt-8">
+        <View className="items-center gap-6">
           <View className="h-20 w-20 items-center justify-center rounded-full border-2 border-border bg-muted">
-            <HeartHandshake color={colors.primary} size={36} />
+            <Activity color={colors.primary} size={36} />
           </View>
-          <View className="items-center gap-2">
+          <View className="gap-2">
             <Text className="text-center font-black font-sans text-3xl text-foreground tracking-tight">
-              Guardian Dashboard
+              Patient Stress
             </Text>
             <Text className="max-w-[300px] text-center font-normal font-sans text-muted-foreground text-base leading-6">
-              Welcome to your guardian dashboard. Use the tabs below to monitor
-              and support your patient.
+              Monitor your patient's stress levels and trends.
             </Text>
           </View>
         </View>
