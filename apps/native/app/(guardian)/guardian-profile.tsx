@@ -2,6 +2,7 @@ import { Stack, useRouter } from "expo-router";
 import { ArrowLeft, Shield } from "lucide-react-native";
 import { Pressable, Text, View } from "react-native";
 
+import { Button } from "@/components/ui/button";
 import { CreditPurchase } from "@/components/ui/credit-purchase";
 import { Screen } from "@/components/ui/screen";
 import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
@@ -80,14 +81,9 @@ export default function GuardianProfileScreen() {
                   Switch to Patient
                 </Text>
               </View>
-              <Pressable
-                className="rounded-control border-2 border-border bg-background px-4 py-2"
-                onPress={toggleMode}
-              >
-                <Text className="font-bold font-sans text-foreground text-sm">
-                  Switch
-                </Text>
-              </Pressable>
+              <Button onPress={toggleMode} size="sm" variant="secondary">
+                Switch
+              </Button>
             </View>
           </View>
         )}
