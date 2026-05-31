@@ -26,26 +26,29 @@ export const listDoctorsRoute = publicProcedure
     const profiles = await context.db
       .select()
       .from(doctorProfiles)
+      .where(eq(doctorProfiles.permanent, true))
       .orderBy(desc(doctorProfiles.createdAt));
 
-    const search = input.search.toLowerCase();
-    const filteredProfiles = search
-      ? profiles.filter((profile) => {
-          const haystack = [
-            profile.displayName,
-            profile.headline,
-            profile.location,
-            profile.specialties,
-            profile.languages,
-            profile.focusAreas,
-          ]
-            .filter((value): value is string => typeof value === "string")
-            .join(" ")
-            .toLowerCase();
+    const rawSearch = input.search.toLowerCase().trim();
+    const searchTerms = rawSearch ? rawSearch.split(/\s+/) : [];
+    const filteredProfiles =
+      searchTerms.length > 0
+        ? profiles.filter((profile) => {
+            const haystack = [
+              profile.displayName,
+              profile.headline,
+              profile.location,
+              profile.specialties,
+              profile.languages,
+              profile.focusAreas,
+            ]
+              .filter((value): value is string => typeof value === "string")
+              .join(" ")
+              .toLowerCase();
 
-          return haystack.includes(search);
-        })
-      : profiles;
+            return searchTerms.every((term) => haystack.includes(term));
+          })
+        : profiles;
 
     const offset = (input.page - 1) * input.pageSize;
     const pageItems = filteredProfiles.slice(offset, offset + input.pageSize);

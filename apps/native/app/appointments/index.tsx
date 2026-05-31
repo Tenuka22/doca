@@ -1,12 +1,31 @@
 import { useUser } from "@clerk/expo";
 import { useQuery } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { Calendar, Check, Clock, User, Video, X } from "lucide-react-native";
-import { useCallback, useState } from "react";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import {
+  ArrowLeft,
+  Calendar,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  List,
+  Stethoscope,
+  User,
+  Video,
+  X,
+} from "lucide-react-native";
+import { useCallback, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Screen } from "@/components/ui/screen";
+import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
 import { useSessionTiming } from "@/hooks/use-session-timing";
 import { orpc } from "@/utils/orpc";
 import { useThemeColor } from "@/utils/theme";
@@ -87,6 +106,9 @@ export default function AppointmentsScreen() {
   const [showSuccessBanner, setShowSuccessBanner] = useState(
     bookingSuccess === "true"
   );
+  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const perPage = 5;
 
   const profileQuery = useQuery(orpc.getPatientProfile.queryOptions());
 
@@ -94,6 +116,26 @@ export default function AppointmentsScreen() {
 
   const sessions = sessionsQuery.data?.sessions ?? [];
   const hasProfile = profileQuery.data?.isOnboardingComplete ?? false;
+
+  const filteredSessions = useMemo(() => {
+    if (selectedFilter === "all") {
+      return sessions;
+    }
+    return sessions.filter((s) => s.status === selectedFilter);
+  }, [sessions, selectedFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredSessions.length / perPage));
+  const paginatedSessions = filteredSessions.slice(
+    (page - 1) * perPage,
+    page * perPage
+  );
+  const hasMore = page < totalPages;
+  const hasPrev = page > 1;
+
+  const toggleFilter = useCallback((value: string) => {
+    setSelectedFilter(value);
+    setPage(1);
+  }, []);
 
   const handleJoinSession = useCallback(
     (id: string) => {
@@ -147,7 +189,7 @@ export default function AppointmentsScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <Screen contentClassName="gap-6 px-page py-page">
+      <Screen contentClassName="gap-6 px-page py-page pb-40">
         <View className="gap-3">
           <Text className="font-black font-sans text-4xl text-foreground uppercase tracking-tight">
             Appointments
@@ -181,20 +223,36 @@ export default function AppointmentsScreen() {
           </View>
         ) : null}
 
-        {sessions.length === 0 ? (
-          <Card className="gap-3">
-            <Calendar color={colors.foreground} size={24} />
-            <Text className="font-bold font-sans text-base text-foreground">
-              No appointments yet
-            </Text>
-            <Text className="font-medium font-sans text-muted-foreground text-sm">
-              Book a session with a doctor to see your appointments here.
-            </Text>
-          </Card>
+        {filteredSessions.length === 0 ? (
+          <View className="gap-4">
+            <Card className="gap-3">
+              <Calendar color={colors.foreground} size={24} />
+              <Text className="font-bold font-sans text-base text-foreground">
+                {sessions.length === 0
+                  ? "No appointments yet"
+                  : "No matching appointments"}
+              </Text>
+              <Text className="font-medium font-sans text-muted-foreground text-sm">
+                {sessions.length === 0
+                  ? "Book a session with a doctor to see your appointments here."
+                  : "Try changing your filter to see more appointments."}
+              </Text>
+            </Card>
+            {sessions.length === 0 && (
+              <Button
+                className="w-full"
+                href="/doctors"
+                icon={<Stethoscope color="#ffffff" size={16} />}
+                variant="primary"
+              >
+                Go to Doctors
+              </Button>
+            )}
+          </View>
         ) : (
           <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
             <View className="gap-4 pb-4">
-              {sessions.map((session) => {
+              {paginatedSessions.map((session) => {
                 const startAt = new Date(session.startAt);
                 const endAt = new Date(session.endAt);
                 const dateLabel = startAt.toLocaleDateString("en-US", {
@@ -255,6 +313,70 @@ export default function AppointmentsScreen() {
           </ScrollView>
         )}
       </Screen>
+      <ScreenBottomBar>
+        <View className="flex-row gap-2">
+          <Pressable
+            className="aspect-square items-center justify-center self-stretch rounded-control border-2 border-border bg-background"
+            disabled={!hasPrev}
+            onPress={() => setPage((current) => Math.max(1, current - 1))}
+          >
+            <ChevronLeft
+              color={hasPrev ? colors.foreground : colors.mutedForeground}
+              size={18}
+              strokeWidth={2.5}
+            />
+          </Pressable>
+          <Pressable
+            className="aspect-square items-center justify-center self-stretch rounded-control border-2 border-border bg-background"
+            disabled={!hasMore}
+            onPress={() => setPage((current) => current + 1)}
+          >
+            <ChevronRight
+              color={hasMore ? colors.foreground : colors.mutedForeground}
+              size={18}
+              strokeWidth={2.5}
+            />
+          </Pressable>
+        </View>
+
+        {[
+          { icon: List, label: "All", value: "all" },
+          { icon: Clock, label: "Requested", value: "requested" },
+          { icon: Check, label: "Approved", value: "approved" },
+          { icon: Calendar, label: "Attended", value: "attended" },
+        ].map(({ icon: Icon, label, value }) => {
+          const isActive = selectedFilter === value;
+          return (
+            <Pressable
+              className={`h-12 flex-1 items-center justify-center self-stretch rounded-control border-2 border-border ${isActive ? "bg-orange-500" : "bg-background"}`}
+              key={value}
+              onPress={() => toggleFilter(value)}
+              accessibilityLabel={label}
+            >
+              <Icon color={isActive ? "#ffffff" : "#f97316"} size={14} />
+              <Text
+                className={`hidden text-center font-bold font-sans text-[10px] uppercase tracking-[0.12em] sm:flex ${isActive ? "text-white" : "text-orange-500"}`}
+                numberOfLines={1}
+              >
+                {label}
+              </Text>
+            </Pressable>
+          );
+        })}
+
+        <Pressable
+          className="aspect-square items-center justify-center self-stretch rounded-control border-2 border-border bg-background"
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/");
+            }
+          }}
+        >
+          <ArrowLeft color={colors.foreground} size={18} strokeWidth={2.5} />
+        </Pressable>
+      </ScreenBottomBar>
     </>
   );
 }

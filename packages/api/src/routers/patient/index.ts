@@ -10,6 +10,7 @@ import { predictStressRoute } from "./routes/predict-stress";
 import { purchaseCreditsRoute } from "./routes/purchase-credits";
 import { createSubscriptionRoute } from "./routes/subscription/create-subscription";
 import { getUserSubscriptionRoute } from "./routes/subscription/get-user-subscription";
+import { updatePatientProfileRoute } from "./routes/update-patient-profile";
 
 export const patientRouter = {
   getPatientProfile: getPatientProfileRoute,
@@ -18,6 +19,7 @@ export const patientRouter = {
   getPendingGuardianRequests: getPendingGuardianRequestsRoute,
   approveGuardianRequest: approveGuardianRequestRoute,
   completeOnboarding: completeOnboardingRoute,
+  updatePatientProfile: updatePatientProfileRoute,
   ingestModelFeatures: ingestModelFeaturesRoute,
   predictStress: predictStressRoute,
   getUserCredits: getUserCreditsRoute,

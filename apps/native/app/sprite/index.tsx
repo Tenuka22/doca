@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { Stack } from "expo-router";
-import { ScrollView, Text, View } from "react-native";
-
+import { useState } from "react";
+import { Stack, useRouter } from "expo-router";
+import { ArrowLeft, ChevronRight, HeartPulse, Moon } from "lucide-react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { Button } from "@/components/ui/button";
-import { MoonlightCreditsDisplay } from "@/components/ui/moonlight-credits-display";
 import { Screen } from "@/components/ui/screen";
+import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
 import { SpriteAnimation } from "@/components/ui/sprite-animation";
 import { WellnessActionCard } from "@/components/ui/wellness-action-card";
 import { orpc } from "@/utils/orpc";
@@ -72,6 +73,7 @@ const SLOT_HEADERS: Record<string, { label: string; icon: string }> = {
 const SLOTS = ["morning", "evening", "night"] as const;
 
 export default function SpriteScreen() {
+  const router = useRouter();
   const spriteQuery = useQuery(
     orpc.getSpriteState.queryOptions({ queryKey: ["getSpriteState"] })
   );
@@ -91,6 +93,7 @@ export default function SpriteScreen() {
     }) ?? [];
 
   const completedTypes = new Set(todayActions.map((a) => a.actionType));
+  const [mascotPressed, setMascotPressed] = useState(false);
 
   return (
     <>
@@ -101,94 +104,144 @@ export default function SpriteScreen() {
       >
         <ScrollView
           className="flex-1"
-          contentContainerClassName="gap-section py-page"
+          contentContainerClassName="gap-section py-page pb-24"
         >
           {/* Header */}
-          <View className="gap-2">
-            <Text className="font-bold font-sans text-primary text-xs uppercase tracking-[0.25em]">
-              Wellness
-            </Text>
-            <Text className="font-black font-sans text-4xl text-foreground tracking-tight">
-              Your Sprite
-            </Text>
-            <Text className="font-normal font-sans text-base text-muted-foreground leading-6">
-              Keep your Sprite healthy through consistent wellness actions.
-              Rewarded for showing up every day.
-            </Text>
+          <View className="flex-row items-start justify-between gap-2">
+            <View className="flex-1 gap-2">
+              <Text className="font-bold font-sans text-xs uppercase tracking-[0.25em] text-primary">
+                Wellness
+              </Text>
+              <Text className="font-black font-sans text-4xl tracking-tight text-foreground">
+                Your Sprite
+              </Text>
+              <Text className="font-normal font-sans text-base leading-6 text-muted-foreground">
+                Keep your Sprite healthy through consistent wellness actions.
+                Rewarded for showing up every day.
+              </Text>
+            </View>
           </View>
 
           {/* Sprite Visual - no border, large */}
-          <View className="items-center py-4">
-            <View className="h-48 w-48 items-center justify-center">
-              <SpriteAnimation action={moodToAction(sprite?.mood ?? "idle")} size="lg" />
-            </View>
+          <View className="items-center py-6">
+            <Pressable
+              className="h-80 w-80 items-center justify-center"
+              onPressIn={() => setMascotPressed(true)}
+              onPressOut={() => setMascotPressed(false)}
+            >
+              <View
+                className="items-center justify-center"
+                style={{
+                  transform: [
+                    { translateY: mascotPressed ? 4 : 0 },
+                    { scale: mascotPressed ? 0.98 : 1 },
+                  ],
+                }}
+              >
+                <SpriteAnimation
+                  action={moodToAction(sprite?.mood ?? "idle")}
+                  size="lg"
+                />
+              </View>
+            </Pressable>
           </View>
 
-          {/* Today's Actions - grouped by time slot */}
+          {/* Sprite Stats */}
           <View className="gap-4">
-            <Text className="font-bold font-sans text-foreground text-sm uppercase tracking-[0.2em]">
-              Today's Wellness Actions
-            </Text>
-
-            {SLOTS.map((slot) => {
-              const slotActions = WELLNESS_ACTIONS.filter(
-                (a) => a.timeSlot === slot
-              );
-              if (slotActions.length === 0) {
-                return null;
-              }
-
-              return (
-                <View className="gap-2" key={slot}>
-                  <View className="flex-row items-center gap-2">
-                    <Text className="font-bold font-sans text-muted-foreground text-xs uppercase tracking-[0.18em]">
-                      {SLOT_HEADERS[slot]?.icon} {SLOT_HEADERS[slot]?.label}
-                    </Text>
-                    <View className="h-px flex-1 bg-border" />
-                  </View>
-
-                  {slotActions.map((action) => {
-                    const completed = completedTypes.has(action.actionType);
-
-                    return (
-                      <WellnessActionCard
-                        completed={completed}
-                        credits={action.credits}
-                        description={action.description}
-                        icon={completed ? "✓" : action.icon}
-                        key={action.actionType}
-                        timeSlot={action.timeSlot}
-                        title={action.title}
-                      />
-                    );
-                  })}
-                </View>
-              );
-            })}
-          </View>
-
-          {/* Moonlight Credits Bar */}
-          {credits && (
-            <View className="rounded-card border-2 border-border bg-card px-card py-card">
-              <Text className="mb-2 font-bold font-sans text-foreground text-xs uppercase tracking-[0.2em]">
-                Moonlight Credits
+            <View className="flex-row items-center justify-between">
+              <Text className="font-bold font-sans text-foreground text-sm uppercase tracking-[0.2em]">
+                Sprite Stats
               </Text>
-              <MoonlightCreditsDisplay
-                balance={credits.balance}
-                consistencyScore={credits.consistencyScore}
-                totalEarned={credits.totalEarned}
-              />
+              <Text className="font-bold font-sans text-muted-foreground text-xs uppercase tracking-[0.18em]">
+                Live
+              </Text>
             </View>
-          )}
+
+            <View className="gap-3 rounded-card border-2 border-border bg-card p-4">
+              <View className="flex-row items-center gap-3">
+                <View className="rounded-full bg-orange-500/15 p-3">
+                  <HeartPulse color="#f97316" size={18} />
+                </View>
+                <View className="flex-1 gap-1">
+                  <Text className="font-bold font-sans text-muted-foreground text-xs uppercase tracking-[0.18em]">
+                    Mood
+                  </Text>
+                  <Text className="font-black font-sans text-foreground text-lg uppercase tracking-tight">
+                    {sprite?.mood ?? "idle"}
+                  </Text>
+                </View>
+              </View>
+
+              <View className="gap-2">
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-bold font-sans text-muted-foreground text-xs uppercase tracking-[0.18em]">
+                    Progress
+                  </Text>
+                  <Text className="font-bold font-sans text-foreground text-xs uppercase tracking-[0.18em]">
+                    {todayActions.length}/5
+                  </Text>
+                </View>
+                <View className="h-3 overflow-hidden rounded-full bg-muted">
+                  <View
+                    className="h-full rounded-full bg-orange-500"
+                    style={{ width: `${Math.min(100, (todayActions.length / 5) * 100)}%` }}
+                  />
+                </View>
+              </View>
+
+              <View className="flex-row gap-2">
+                <View className="flex-1 rounded-control border-2 border-border bg-background px-3 py-3">
+                  <Text className="font-bold font-sans text-muted-foreground text-[10px] uppercase tracking-[0.18em]">
+                    Streak
+                  </Text>
+                  <Text className="mt-1 font-black font-sans text-2xl text-foreground">
+                    {todayActions.length}
+                  </Text>
+                </View>
+                <View className="flex-1 rounded-control border-2 border-border bg-background px-3 py-3">
+                  <Text className="font-bold font-sans text-muted-foreground text-[10px] uppercase tracking-[0.18em]">
+                    Credits
+                  </Text>
+                  <Text className="mt-1 font-black font-sans text-2xl text-foreground">
+                    {credits?.balance ?? 0}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
 
           {/* Action Buttons */}
-          <View className="gap-2">
-            <Button className="w-full" href="/sprite/actions" variant="primary">
-              Start Wellness Action
-            </Button>
-          </View>
+
         </ScrollView>
       </Screen>
+      <ScreenBottomBar>
+        <View className="flex-1 items-center h-12 flex-row justify-center rounded-control border-2 border-border bg-background px-3 py-2 gap-2">
+          <Moon  color="#f97316" size={18} />
+          <Text className="font-black font-sans text-foreground text-lg">
+            {credits?.balance ?? 0}
+          </Text>
+        </View>
+        <Button
+          className="flex-1 h-12"
+          href="/sprite/actions"
+          icon={<ChevronRight color="#ffffff" size={16} />}
+          variant="primary"
+        >
+          Actions
+        </Button>
+        <Pressable
+          className="aspect-square items-center justify-center self-stretch rounded-control border-2 border-border bg-background"
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/");
+            }
+          }}
+        >
+          <ArrowLeft color="#ffffff" size={16} />
+        </Pressable>
+      </ScreenBottomBar>
     </>
   );
 }

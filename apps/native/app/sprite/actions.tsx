@@ -1,12 +1,55 @@
 import { useQuery } from "@tanstack/react-query";
-import { Stack } from "expo-router";
-import { Check, CloudSun, Moon, Sun, TreePine } from "lucide-react-native";
-import { ScrollView, Text, View } from "react-native";
+import { Stack, useRouter } from "expo-router";
+import type { Href } from "expo-router";
+import {
+  ArrowLeft,
+  Check,
+  CloudSun,
+  Moon,
+  Sun,
+  TreePine,
+} from "lucide-react-native";
+import { useEffect } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
-import { Button } from "@/components/ui/button";
 import { Screen } from "@/components/ui/screen";
+import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
 import { orpc } from "@/utils/orpc";
 import { useThemeColor } from "@/utils/theme";
+
+function vibrate(pattern: number | number[]) {
+  if (typeof window !== "undefined" && "navigator" in window) {
+    const nav = window.navigator as Navigator & {
+      vibrate?: (pattern: number | number[]) => boolean;
+    };
+    nav.vibrate?.(pattern);
+  }
+}
+
+function playSoftChime() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const AudioContextClass =
+    window.AudioContext ??
+    (window as Window & { webkitAudioContext?: typeof AudioContext })
+      .webkitAudioContext;
+  if (!AudioContextClass) {
+    return;
+  }
+  const context = new AudioContextClass();
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.type = "sine";
+  oscillator.frequency.value = 523.25;
+  gain.gain.setValueAtTime(0.0001, context.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.06, context.currentTime + 0.03);
+  gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.4);
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  oscillator.start(context.currentTime);
+  oscillator.stop(context.currentTime + 0.45);
+}
 
 const ACTION_ROUTES: Record<string, string> = {
   breathing_morning:
@@ -23,6 +66,7 @@ const ACTION_ROUTES: Record<string, string> = {
 
 export default function SpriteActionsScreen() {
   const colors = useThemeColor();
+  const router = useRouter();
   const tasksQuery = useQuery(
     orpc.getTodayTasks.queryOptions({ queryKey: ["getTodayTasks"] })
   );
@@ -30,6 +74,12 @@ export default function SpriteActionsScreen() {
   const tasks = tasksQuery.data?.tasks ?? [];
   const timeOfDay = tasksQuery.data?.timeOfDay ?? "morning";
   const completedCount = tasks.filter((t) => t.completed).length;
+
+  useEffect(() => {
+    if (tasksQuery.isFetched) {
+      playSoftChime();
+    }
+  }, [tasksQuery.isFetched]);
 
   return (
     <>
@@ -40,7 +90,7 @@ export default function SpriteActionsScreen() {
       >
         <ScrollView
           className="flex-1"
-          contentContainerClassName="gap-section py-page"
+          contentContainerClassName="gap-section py-page pb-24"
         >
           {/* Header with tree */}
           <View className="items-center gap-2">
@@ -62,153 +112,91 @@ export default function SpriteActionsScreen() {
             </Text>
           </View>
 
-          {/* Overall Progress */}
-          {tasksQuery.data && (
-            <View className="rounded-card border-2 border-border bg-card px-card py-card">
-              <View className="flex-row items-center justify-between">
-                <Text className="font-bold font-sans text-foreground text-sm">
-                  Today's Progress
-                </Text>
-                <Text className="font-black font-sans text-foreground text-xl">
-                  {completedCount}/{tasks.length}
-                </Text>
-              </View>
-              <View className="mt-2 h-3 overflow-hidden rounded-full border-2 border-border bg-muted">
-                <View
-                  className="h-full rounded-full bg-primary"
-                  style={{
-                    width: `${
-                      tasks.length > 0
-                        ? (completedCount / tasks.length) * 100
-                        : 0
-                    }%`,
-                  }}
-                />
-              </View>
-            </View>
-          )}
-
-          {/* Tree Branches */}
+          {/* Task Cards */}
           {tasks.length > 0 ? (
-            <View className="gap-1">
-              {tasks.map((task, index) => {
+            <View className="gap-3">
+              {tasks.map((task) => {
                 const completed = task.completed;
-                const isFirst = index === 0;
-                const isLast = index === tasks.length - 1;
+                const route = ACTION_ROUTES[task.actionType];
 
                 return (
-                  <View key={task.actionType}>
-                    {/* Branch connector */}
-                    <View className="flex-row items-center pl-2">
-                      <View
-                        className={`w-0.5 ${isFirst ? "h-4" : "h-4"} ${isLast ? "flex-1" : "h-8"} bg-foreground/20`}
-                      />
-                    </View>
-
-                    {/* Task card as tree branch */}
+                  <Pressable
+                    className={`flex-row items-center gap-4 rounded-card border-2 bg-card px-4 py-4 ${
+                      completed
+                        ? "border-green-300 opacity-60"
+                        : "border-border"
+                    }`}
+                    key={task.actionType}
+                    onPress={() => {
+                      vibrate(20);
+                      router.push(route as Href);
+                    }}
+                  >
+                    {/* Time slot icon */}
                     <View
-                      className={`flex-row items-center gap-3 rounded-card border-2 bg-card px-card py-3 ${
-                        completed
-                          ? "border-green-300 opacity-60"
-                          : "border-border"
+                      className={`rounded-full p-3 ${
+                        task.timeSlot === "morning"
+                          ? "bg-amber-100"
+                          : task.timeSlot === "afternoon"
+                            ? "bg-orange-100"
+                            : "bg-indigo-100"
                       }`}
                     >
-                      {/* Branch indicator */}
-                      <View className="items-center">
-                        <View className="h-0.5 w-4 bg-foreground/20" />
-                        <View className="h-8 w-0.5 bg-foreground/20" />
-                      </View>
+                      {task.timeSlot === "morning" && (
+                        <Sun color="#92400e" size={20} />
+                      )}
+                      {task.timeSlot === "afternoon" && (
+                        <CloudSun color="#9a3412" size={20} />
+                      )}
+                      {task.timeSlot === "night" && (
+                        <Moon color="#3730a3" size={20} />
+                      )}
+                    </View>
 
-                      {/* Task content */}
-                      <View className="flex-1 gap-1.5">
-                        <View className="flex-row items-center gap-2">
-                          <View
-                            className={`rounded-full px-2 py-0.5 ${
-                              task.timeSlot === "morning"
-                                ? "bg-amber-200"
-                                : task.timeSlot === "afternoon"
-                                  ? "bg-orange-200"
-                                  : "bg-indigo-200"
-                            }`}
-                          >
-                            <View className="flex-row items-center gap-1">
-                              {task.timeSlot === "morning" && (
-                                <Sun color="#92400e" size={12} />
-                              )}
-                              {task.timeSlot === "afternoon" && (
-                                <CloudSun color="#9a3412" size={12} />
-                              )}
-                              {task.timeSlot === "night" && (
-                                <Moon color="#3730a3" size={12} />
-                              )}
-                              <Text
-                                className={`font-bold text-[10px] uppercase tracking-wider ${
-                                  task.timeSlot === "morning"
-                                    ? "text-amber-900"
-                                    : task.timeSlot === "afternoon"
-                                      ? "text-orange-900"
-                                      : "text-indigo-900"
-                                }`}
-                              >
-                                {task.timeSlot}
-                              </Text>
-                            </View>
-                          </View>
-                          {completed && (
-                            <View className="flex-row items-center gap-1 rounded-full bg-green-200 px-2 py-0.5">
-                              <Check color="#166534" size={10} />
-                              <Text className="font-bold text-[10px] text-green-800 uppercase tracking-wider">
-                                Done
-                              </Text>
-                            </View>
-                          )}
-                        </View>
-                        <Text className="font-extrabold font-sans text-foreground text-xl tracking-tight">
-                          {task.title}
+                    {/* Content */}
+                    <View className="flex-1 gap-1">
+                      <View className="flex-row items-center gap-2">
+                        <Text
+                          className={`font-bold text-[10px] uppercase tracking-wider ${
+                            task.timeSlot === "morning"
+                              ? "text-amber-800"
+                              : task.timeSlot === "afternoon"
+                                ? "text-orange-800"
+                                : "text-indigo-800"
+                          }`}
+                        >
+                          {task.timeSlot}
                         </Text>
-                        <Text className="font-normal font-sans text-muted-foreground text-sm leading-5">
-                          {task.description}
-                        </Text>
-                        {!completed && (
-                          <View className="flex-row items-center gap-2">
-                            <View className="h-2 flex-1 overflow-hidden rounded-full border border-border bg-muted">
-                              <View
-                                className="h-full rounded-full bg-primary"
-                                style={{ width: "0%" }}
-                              />
-                            </View>
-                            <Text className="font-bold font-sans text-foreground text-xs">
-                              {task.requiredCycles} cycle
-                              {task.requiredCycles > 1 ? "s" : ""}
+                        {completed && (
+                          <View className="flex-row items-center gap-1 rounded-full bg-green-200 px-2 py-0.5">
+                            <Check color="#166534" size={10} />
+                            <Text className="font-bold text-[10px] text-green-800 uppercase tracking-wider">
+                              Done
                             </Text>
                           </View>
                         )}
                       </View>
+                      <Text className="font-extrabold font-sans text-foreground text-lg tracking-tight">
+                        {task.title}
+                      </Text>
+                      <Text className="font-normal font-sans text-muted-foreground text-sm leading-5">
+                        {task.description}
+                      </Text>
+                    </View>
 
-                      {/* Action button */}
-                      {!completed && (
-                        <Button
-                          className="min-w-[90px]"
-                          href={ACTION_ROUTES[task.actionType]}
-                          variant="primary"
-                        >
-                          Start
-                        </Button>
-                      )}
-                      {completed && (
-                        <View className="h-10 w-10 items-center justify-center rounded-full border-2 border-green-300 bg-green-100">
-                          <Check color="#166534" size={18} />
-                        </View>
+                    {/* Right arrow */}
+                    <View className="h-10 w-10 items-center justify-center">
+                      {completed ? (
+                        <Check color="#166534" size={18} />
+                      ) : (
+                        <Text className="font-bold font-sans text-primary text-lg">
+                          ›
+                        </Text>
                       )}
                     </View>
-                  </View>
+                  </Pressable>
                 );
               })}
-
-              {/* Root of the tree */}
-              <View className="flex-row items-center pl-2">
-                <View className="h-8 w-0.5 bg-foreground/20" />
-              </View>
             </View>
           ) : (
             <View className="items-center gap-2 rounded-card border-2 border-border bg-card px-card py-card">
@@ -230,12 +218,31 @@ export default function SpriteActionsScreen() {
               </Text>
             </View>
           )}
-
-          <Button className="w-full" href="/sprite" variant="secondary">
-            Back to Sprite Dashboard ›
-          </Button>
         </ScrollView>
       </Screen>
+      <ScreenBottomBar>
+        <View className="h-12 flex-1 flex-row items-center justify-center gap-2 rounded-control border-2 border-border bg-background px-3 py-2">
+          <Text className="font-bold font-sans text-muted-foreground text-xs uppercase tracking-[0.18em]">
+            Today's Progress
+          </Text>
+          <Text className="font-black font-sans text-foreground text-lg">
+            {completedCount}/{tasks.length}
+          </Text>
+        </View>
+        <Pressable
+          className="aspect-square items-center justify-center self-stretch rounded-control border-2 border-border bg-background"
+          onPress={() => {
+            vibrate(15);
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/");
+            }
+          }}
+        >
+          <ArrowLeft color="#ffffff" size={16} />
+        </Pressable>
+      </ScreenBottomBar>
     </>
   );
 }

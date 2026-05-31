@@ -1,6 +1,5 @@
 import { Text, View } from "react-native";
 import type { SpriteAction } from "@/components/ui/sprite-animation";
-import { SpriteAnimation } from "@/components/ui/sprite-animation";
 
 interface SpriteHealthBarProps {
   health: number;

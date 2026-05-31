@@ -63,14 +63,14 @@ export const Button = ({
       {({ pressed }) => (
         <>
           <View
-            className="absolute inset-0 rounded-control bg-border"
+            className="absolute inset-0 size-full rounded-control bg-border"
             style={{
               transform: [{ translateX: 4 }, { translateY: 4 }],
             }}
           />
 
           <View
-            className={`w-full flex-row items-center justify-center rounded-control border-2 border-border ${paddingClass} ${
+            className={`w-full flex-row items-center justify-center rounded-control border-1 border-border ${paddingClass} ${
               variant === "primary" ? "bg-primary" : "bg-card"
             }`}
             style={{

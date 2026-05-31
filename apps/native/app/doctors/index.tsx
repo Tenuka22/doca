@@ -1,7 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import {
+  ArrowLeft,
   BriefcaseMedical,
+  ChevronLeft,
+  ChevronRight,
   Circle,
   GraduationCap,
   MapPin,
@@ -9,43 +12,51 @@ import {
   Stethoscope,
 } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { ActivityIndicator, Image, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Screen } from "@/components/ui/screen";
+import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
 import { useDoctorMaterialPreviewUrl } from "@/utils/doctor-materials";
 import { orpc } from "@/utils/orpc";
 import { useThemeColor } from "@/utils/theme";
 
-const listChips = [
-  { label: "Licensed", value: "license" },
-  { label: "Video", value: "video" },
-  { label: "In person", value: "in_person" },
-  { label: "English", value: "english" },
-] as const;
-
 export default function DoctorsScreen() {
   const colors = useThemeColor();
+  const router = useRouter();
   const [search, setSearch] = useState("");
+  const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const pageSize = 6;
 
+  const combinedSearch = [search, ...selectedChips].filter(Boolean).join(" ");
+
   const doctorsQuery = useQuery({
-    queryKey: ["doctors", page, search],
-    queryFn: () => orpc.listDoctors.call({ page, pageSize, search }),
+    queryKey: ["doctors", page, combinedSearch],
+    queryFn: () =>
+      orpc.listDoctors.call({ page, pageSize, search: combinedSearch }),
   });
 
   const doctors = doctorsQuery.data?.doctors ?? [];
   const hasMore = doctorsQuery.data?.hasMore ?? false;
   const totalDoctors = doctorsQuery.data?.total ?? 0;
 
+  function toggleChip(value: string) {
+    setSelectedChips((current) =>
+      current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value]
+    );
+    setPage(1);
+  }
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <Screen contentClassName="gap-section px-page py-page">
+      <Screen contentClassName="gap-section px-page py-page pb-40">
         {/* --- Hero Header ------------------------------------------------------- */}
         <View className="gap-2 border-border border-b pb-6">
           <View className="flex-row items-center gap-3">
@@ -65,7 +76,7 @@ export default function DoctorsScreen() {
           </Text>
         </View>
 
-        {/* --- Search & Filters -------------------------------------------------- */}
+        {/* --- Search ----------------------------------------------------------- */}
         <View className="gap-4">
           <Field
             label="Search Directory"
@@ -76,26 +87,6 @@ export default function DoctorsScreen() {
             placeholder="Search name, specialty, language..."
             value={search}
           />
-
-          <View className="flex-row flex-wrap gap-2">
-            {listChips.map((chip) => {
-              const isActive =
-                search.toLowerCase() === chip.value.toLowerCase();
-              return (
-                <Button
-                  key={chip.value}
-                  onPress={() => {
-                    setSearch(isActive ? "" : chip.value);
-                    setPage(1);
-                  }}
-                  size="sm"
-                  variant={isActive ? "primary" : "secondary"}
-                >
-                  {chip.label}
-                </Button>
-              );
-            })}
-          </View>
         </View>
 
         {/* --- Result Count ------------------------------------------------------ */}
@@ -139,6 +130,7 @@ export default function DoctorsScreen() {
               <Button
                 onPress={() => {
                   setSearch("");
+                  setSelectedChips([]);
                   setPage(1);
                 }}
                 size="sm"
@@ -163,26 +155,71 @@ export default function DoctorsScreen() {
               />
             ))}
         </View>
-
-        {/* --- Pagination -------------------------------------------------------- */}
-        <View className="mt-2 flex-row items-center justify-between gap-4">
-          <Button
-            className="flex-1"
+      </Screen>
+      <ScreenBottomBar>
+        <View className="flex-row gap-2">
+          <Pressable
+            className="aspect-square items-center justify-center self-stretch rounded-control border-2 border-border bg-background"
             disabled={page === 1}
             onPress={() => setPage((current) => Math.max(1, current - 1))}
-            variant="secondary"
           >
-            PREVIOUS
-          </Button>
-          <Button
-            className="flex-1"
+            <ChevronLeft
+              color={page > 1 ? colors.foreground : colors.mutedForeground}
+              size={18}
+              strokeWidth={2.5}
+            />
+          </Pressable>
+          <Pressable
+            className="aspect-square items-center justify-center self-stretch rounded-control border-2 border-border bg-background"
             disabled={!hasMore}
             onPress={() => setPage((current) => current + 1)}
           >
-            NEXT
-          </Button>
+            <ChevronRight
+              color={hasMore ? colors.foreground : colors.mutedForeground}
+              size={18}
+              strokeWidth={2.5}
+            />
+          </Pressable>
         </View>
-      </Screen>
+
+        {[
+          { icon: Stethoscope, label: "License", value: "license" },
+          { icon: BriefcaseMedical, label: "Video", value: "video" },
+          { icon: MapPin, label: "In person", value: "in_person" },
+          { icon: GraduationCap, label: "English", value: "english" },
+        ].map(({ icon: Icon, label, value }) => {
+          const isActive = selectedChips.includes(value);
+          return (
+            <Pressable
+              className={`h-12 flex-1 items-center justify-center self-stretch rounded-control border-2 border-border ${isActive ? "bg-orange-500" : "bg-background"}`}
+              key={value}
+              onPress={() => toggleChip(value)}
+              accessibilityLabel={label}
+            >
+              <Icon color={isActive ? "#ffffff" : "#f97316"} size={14} />
+              <Text
+                className={`hidden text-center font-bold font-sans text-[10px] uppercase tracking-[0.12em] sm:flex ${isActive ? "text-white" : "text-orange-500"}`}
+                numberOfLines={1}
+              >
+                {label}
+              </Text>
+            </Pressable>
+          );
+        })}
+
+        <Pressable
+          className="aspect-square items-center justify-center self-stretch rounded-control border-2 border-border bg-background"
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/");
+            }
+          }}
+        >
+          <ArrowLeft color={colors.foreground} size={18} strokeWidth={2.5} />
+        </Pressable>
+      </ScreenBottomBar>
     </>
   );
 }

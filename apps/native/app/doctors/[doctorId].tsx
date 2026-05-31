@@ -1,26 +1,38 @@
 import { useQuery } from "@tanstack/react-query";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ArrowLeft,
   Award,
   BookOpen,
   BriefcaseMedical,
   Building,
-  Camera,
   Clock,
   FileText,
   GraduationCap,
   Heart,
+  Image as ImageIcon,
   MapPin,
+  Play,
   School2,
   Sparkles,
   Stethoscope,
+  X,
 } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { ActivityIndicator, Image, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Screen } from "@/components/ui/screen";
+import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
 import { useDoctorMaterialPreviewUrl } from "@/utils/doctor-materials";
 import {
   capitalizeWords,
@@ -31,6 +43,7 @@ import {
   specialtyLabels,
 } from "@/utils/doctor-profile";
 import { orpc } from "@/utils/orpc";
+import { useIsDoctorSaved } from "@/utils/saved-doctors";
 import { useThemeColor } from "@/utils/theme";
 
 /* ─── Tag Chip ─────────────────────────────────────────────────────────────── */
@@ -249,7 +262,7 @@ function ProfileHeader({
     <Card className="gap-0 overflow-hidden p-0">
       <View className="items-center gap-4 bg-primary/5 p-6">
         {portraitPreviewUrl ? (
-          <View className="h-20 w-20 overflow-hidden rounded-full border-2 border-border bg-muted">
+          <View className="h-24 w-24 overflow-hidden rounded-full border-2 border-border bg-muted">
             <Image
               className="h-full w-full"
               source={{ uri: portraitPreviewUrl }}
@@ -257,8 +270,8 @@ function ProfileHeader({
             />
           </View>
         ) : (
-          <View className="h-20 w-20 items-center justify-center rounded-full border-2 border-border bg-primary">
-            <Text className="font-black font-sans text-2xl text-primary-foreground tracking-tighter">
+          <View className="h-24 w-24 items-center justify-center rounded-full border-2 border-border bg-primary">
+            <Text className="font-black font-sans text-3xl text-primary-foreground tracking-tighter">
               {initials}
             </Text>
           </View>
@@ -307,36 +320,6 @@ function ProfileHeader({
   );
 }
 
-/* ─── Action Buttons ─────────────────────────────────────────────────────────── */
-
-function ActionButtons({ doctorId }: { doctorId: string }) {
-  const [isFavorite, setIsFavorite] = useState(false);
-  const colors = useThemeColor();
-
-  return (
-    <View className="flex-row gap-3">
-      <Button
-        className="flex-1"
-        icon={
-          <Heart
-            color={colors.foreground}
-            fill={isFavorite ? colors.foreground : "transparent"}
-            size={16}
-            strokeWidth={2.5}
-          />
-        }
-        onPress={() => setIsFavorite((current) => !current)}
-        variant="secondary"
-      >
-        {isFavorite ? "SAVED" : "SAVE"}
-      </Button>
-      <Button className="flex-1" href={`/doctors/${doctorId}/booking`}>
-        BOOK CONSULT
-      </Button>
-    </View>
-  );
-}
-
 /* ─── Bio Section ────────────────────────────────────────────────────────────── */
 
 function BioSection({ bio }: { bio?: string | null }) {
@@ -368,6 +351,215 @@ function BioSection({ bio }: { bio?: string | null }) {
         </View>
       </View>
     </Card>
+  );
+}
+
+/* ─── Media Viewer Modal ─────────────────────────────────────────────────────── */
+
+function MediaViewerModal({
+  file,
+  onClose,
+}: {
+  file: {
+    id: string;
+    fileKind: string;
+    caption?: string | null;
+    fileName: string;
+  } | null;
+  onClose: () => void;
+}) {
+  const previewUrl = useDoctorMaterialPreviewUrl(file?.id ?? null);
+  const colors = useThemeColor();
+  const isVideo = file?.fileKind === "intro_video";
+
+  return (
+    <Modal
+      animationType="fade"
+      onRequestClose={onClose}
+      transparent
+      visible={file !== null}
+    >
+      <Pressable
+        className="flex-1 items-center justify-center bg-black/80"
+        onPress={onClose}
+      >
+        <Pressable className="w-full max-w-lg px-6">
+          <View className="mb-4 flex-row items-center justify-between">
+            <View className="flex-1">
+              {file?.caption && (
+                <Text className="font-bold font-sans text-sm text-white/80 uppercase tracking-wider">
+                  {file.caption}
+                </Text>
+              )}
+              <Text className="font-black font-sans text-[10px] text-white/50 uppercase tracking-widest">
+                {file ? capitalizeWords(file.fileKind) : ""}
+              </Text>
+            </View>
+            <Pressable
+              className="h-10 w-10 items-center justify-center rounded-full bg-white/20"
+              onPress={onClose}
+            >
+              <X color="#ffffff" size={20} strokeWidth={2.5} />
+            </Pressable>
+          </View>
+
+          <View className="overflow-hidden rounded-2xl border-2 border-white/20 bg-muted">
+            {previewUrl ? (
+              <View>
+                <Image
+                  className="h-96 w-full"
+                  source={{ uri: previewUrl }}
+                  style={{ resizeMode: "contain" }}
+                />
+                {isVideo && (
+                  <View className="absolute inset-0 items-center justify-center">
+                    <View className="h-16 w-16 items-center justify-center rounded-full bg-white/90">
+                      <Play
+                        color={colors.foreground}
+                        fill={colors.foreground}
+                        size={28}
+                        strokeWidth={2.5}
+                      />
+                    </View>
+                  </View>
+                )}
+              </View>
+            ) : (
+              <View className="h-96 w-full items-center justify-center">
+                <ActivityIndicator color={colors.primary} size="large" />
+              </View>
+            )}
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+/* ─── Media Showcase ───────────────────────────────────────────────────────── */
+
+function MediaPreviewCard({
+  caption,
+  fileId,
+  fileKind,
+  onPress,
+}: {
+  caption?: string | null;
+  fileId: string;
+  fileKind: string;
+  onPress: () => void;
+}) {
+  const previewUrl = useDoctorMaterialPreviewUrl(fileId);
+  const colors = useThemeColor();
+  const isVideo = fileKind === "intro_video";
+
+  return (
+    <Pressable onPress={onPress}>
+      <View className="w-52 overflow-hidden rounded-card border-2 border-border bg-card">
+        {previewUrl ? (
+          <View className="h-36 w-full bg-muted">
+            <Image
+              className="h-full w-full"
+              source={{ uri: previewUrl }}
+              style={{ resizeMode: "cover" }}
+            />
+            {isVideo && (
+              <View className="absolute inset-0 items-center justify-center bg-black/30">
+                <View className="h-12 w-12 items-center justify-center rounded-full bg-white/90">
+                  <Play
+                    color={colors.foreground}
+                    fill={colors.foreground}
+                    size={22}
+                    strokeWidth={2.5}
+                  />
+                </View>
+              </View>
+            )}
+          </View>
+        ) : (
+          <View className="h-36 w-full items-center justify-center bg-muted">
+            {isVideo ? (
+              <Play color={colors.mutedForeground} size={32} strokeWidth={2} />
+            ) : (
+              <ImageIcon
+                color={colors.mutedForeground}
+                size={32}
+                strokeWidth={2}
+              />
+            )}
+          </View>
+        )}
+        <View className="px-3 py-2">
+          <Text className="font-black font-sans text-[9px] text-muted-foreground uppercase tracking-widest">
+            {capitalizeWords(fileKind)}
+          </Text>
+          {caption && (
+            <Text
+              className="font-bold font-sans text-foreground text-xs uppercase tracking-tight"
+              numberOfLines={1}
+            >
+              {caption}
+            </Text>
+          )}
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+function MediaShowcase({
+  files,
+}: {
+  files: {
+    id: string;
+    fileKind: string;
+    caption?: string | null;
+    fileName: string;
+  }[];
+}) {
+  const colors = useThemeColor();
+  const [selectedFile, setSelectedFile] = useState<(typeof files)[0] | null>(
+    null
+  );
+  const mediaFiles = files.filter((f) =>
+    ["qualification", "intro_video"].includes(f.fileKind)
+  );
+
+  return (
+    <View className="gap-3">
+      <SectionHeader
+        icon={
+          <ImageIcon color={colors.foreground} size={18} strokeWidth={2.5} />
+        }
+        title="Media"
+      />
+      {mediaFiles.length === 0 ? (
+        <Text className="font-medium font-sans text-muted-foreground text-sm italic">
+          No media assets uploaded.
+        </Text>
+      ) : (
+        <ScrollView
+          contentContainerClassName="gap-3"
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        >
+          {mediaFiles.map((file) => (
+            <MediaPreviewCard
+              caption={file.caption}
+              fileId={file.id}
+              fileKind={file.fileKind}
+              key={file.id}
+              onPress={() => setSelectedFile(file)}
+            />
+          ))}
+        </ScrollView>
+      )}
+
+      <MediaViewerModal
+        file={selectedFile}
+        onClose={() => setSelectedFile(null)}
+      />
+    </View>
   );
 }
 
@@ -682,58 +874,49 @@ function PlansSection({ doctorId }: { doctorId: string }) {
   );
 }
 
-/* ─── Resources Section ──────────────────────────────────────────────────────── */
+/* ─── Save Button ──────────────────────────────────────────────────────────────── */
 
-const RESOURCE_KINDS = ["portrait", "qualification", "intro_video"];
-
-function ResourcesSection({
-  files,
-}: {
-  files: {
-    id: string;
-    fileKind: string;
-    caption?: string | null;
-    fileName: string;
-  }[];
-}) {
+function SaveButton({ doctorId }: { doctorId: string }) {
   const colors = useThemeColor();
-  const filtered = files.filter((f) => RESOURCE_KINDS.includes(f.fileKind));
+  const { isSaved, toggleSave } = useIsDoctorSaved(doctorId);
 
   return (
-    <Card className="gap-section">
-      <SectionHeader
-        icon={<Camera color={colors.foreground} size={18} strokeWidth={2.5} />}
-        title="Resources"
+    <Pressable
+      className="flex-1 flex-row items-center justify-center gap-2 rounded-control border-2 border-border bg-card px-4"
+      onPress={toggleSave}
+    >
+      <Heart
+        color={isSaved ? colors.foreground : colors.mutedForeground}
+        fill={isSaved ? colors.foreground : "transparent"}
+        size={18}
+        strokeWidth={2.5}
       />
-      {filtered.length === 0 ? (
-        <Text className="font-medium font-sans text-muted-foreground text-sm italic">
-          No resources uploaded.
-        </Text>
-      ) : (
-        <View className="gap-2">
-          {filtered.map((file) => (
-            <View
-              className="flex-row items-center gap-3 rounded-card border-2 border-border bg-card p-3"
-              key={file.id}
-            >
-              <FileText
-                color={colors.mutedForeground}
-                size={20}
-                strokeWidth={2}
-              />
-              <View className="flex-1 gap-0.5">
-                <Text className="font-black font-sans text-foreground text-xs uppercase tracking-wider">
-                  {capitalizeWords(file.fileKind)}
-                </Text>
-                <Text className="font-bold font-sans text-[10px] text-muted-foreground uppercase">
-                  {file.caption ?? file.fileName}
-                </Text>
-              </View>
-            </View>
-          ))}
-        </View>
-      )}
-    </Card>
+      <Text className="font-black font-sans text-foreground text-sm uppercase tracking-widest">
+        {isSaved ? "Saved" : "Save"}
+      </Text>
+    </Pressable>
+  );
+}
+
+/* ─── Back Icon Button ─────────────────────────────────────────────────────────── */
+
+function BackIconButton() {
+  const colors = useThemeColor();
+  const router = useRouter();
+
+  return (
+    <Pressable
+      className="w-12 items-center justify-center self-stretch rounded-control border-2 border-border bg-background"
+      onPress={() => {
+        if (router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace("/doctors");
+        }
+      }}
+    >
+      <ArrowLeft color={colors.foreground} size={20} strokeWidth={2.5} />
+    </Pressable>
   );
 }
 
@@ -775,9 +958,7 @@ export default function DoctorProfileScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <Screen contentClassName="gap-section px-page py-page">
-        <BackButton />
-
+      <Screen contentClassName="gap-section px-page py-page pb-28">
         <ProfileHeader
           initials={initials}
           portraitPreviewUrl={portraitPreviewUrl}
@@ -785,11 +966,9 @@ export default function DoctorProfileScreen() {
           yearsOfExperience={yearsOfExperience}
         />
 
-        <ActionButtons doctorId={id ?? ""} />
-
         <BioSection bio={profile.bio} />
 
-        <DetailsSection profile={profile} />
+        <MediaShowcase files={files} />
 
         <TagsOverviewSection profile={profile} />
 
@@ -799,8 +978,18 @@ export default function DoctorProfileScreen() {
 
         <PlansSection doctorId={id ?? ""} />
 
-        <ResourcesSection files={files} />
+        <DetailsSection profile={profile} />
       </Screen>
+
+      <ScreenBottomBar>
+        <View className="flex-1 flex-row gap-2">
+          <SaveButton doctorId={id ?? ""} />
+          <Button className="flex-1" href={`/doctors/${id}/booking`}>
+            BOOK CONSULT
+          </Button>
+        </View>
+        <BackIconButton />
+      </ScreenBottomBar>
     </>
   );
 }
