@@ -1,10 +1,13 @@
-import { Stack } from "expo-router";
+import { useMutation } from "@tanstack/react-query";
+import { Stack, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Text, View } from "react-native";
 
+import { Heart } from "lucide-react-native";
+
 import { Button } from "@/components/ui/button";
 import { Screen } from "@/components/ui/screen";
-import { useThemeColor } from "@/utils/theme";
+import { orpc, queryClient } from "@/utils/orpc";
 
 function vibrate(pattern: number | number[]) {
   if (typeof window !== "undefined" && "navigator" in window) {
@@ -19,7 +22,6 @@ function playToneSequence() {
   if (typeof window === "undefined") {
     return;
   }
-
   const AudioContextClass =
     window.AudioContext ??
     (window as Window & { webkitAudioContext?: typeof AudioContext })
@@ -27,11 +29,9 @@ function playToneSequence() {
   if (!AudioContextClass) {
     return;
   }
-
   const context = new AudioContextClass();
   const notes = [261.63, 329.63, 392, 523.25];
   let currentTime = context.currentTime + 0.05;
-
   for (const frequency of notes) {
     const oscillator = context.createOscillator();
     const gain = context.createGain();
@@ -48,13 +48,34 @@ function playToneSequence() {
   }
 }
 
-export default function PowerNapScreen() {
-  const colors = useThemeColor();
-  const [minutes, setMinutes] = useState(15);
+export default function MeditationActionScreen() {
+  const { type, action: actionType } = useLocalSearchParams<{
+    type: string;
+    action: string;
+  }>();
+
+  const [minutes, setMinutes] = useState(10);
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
+
+  const statusText = done
+    ? "Meditation complete"
+    : running
+      ? "In progress"
+      : "Ready to begin";
+  const statusLabel = running ? "Meditating" : done ? "Done ✓" : "Ready";
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const progress = useRef(new Animated.Value(0)).current;
+
+  const completeMutation = useMutation(
+    orpc.completeWellnessAction.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["getSpriteState"] });
+        queryClient.invalidateQueries({ queryKey: ["getMoonlightCredits"] });
+        queryClient.invalidateQueries({ queryKey: ["getWellnessHistory"] });
+      },
+    })
+  );
 
   useEffect(() => {
     if (timerRef.current) {
@@ -80,12 +101,22 @@ export default function PowerNapScreen() {
       useNativeDriver: false,
     }).start();
     vibrate([40, 40, 40]);
+
     timerRef.current = setTimeout(
       () => {
         setRunning(false);
         setDone(true);
         vibrate([80, 60, 80, 60, 120]);
         playToneSequence();
+
+        if (actionType) {
+          completeMutation.mutate({
+            actionType: actionType as
+              | "meditation_morning"
+              | "meditation_evening",
+            durationSeconds: minutes * 60,
+          });
+        }
       },
       minutes * 60 * 1000
     );
@@ -104,14 +135,14 @@ export default function PowerNapScreen() {
         <View className="overflow-hidden rounded-card border-2 border-border bg-card">
           <View className="border-border border-b-2 px-card py-card">
             <Text className="font-bold font-sans text-primary text-xs uppercase tracking-[0.3em]">
-              Wellness Action
+              {type === "morning" ? "Morning" : "Evening"} Meditation
             </Text>
             <Text className="font-black font-sans text-4xl text-foreground tracking-tight">
-              Power Nap
+              Meditation
             </Text>
             <Text className="mt-2 font-normal font-sans text-base text-muted-foreground leading-6">
-              Set a short timer, sleep, and wake up to a small melody with
-              alarm-style haptics.
+              Set a timer for mindfulness. Completion earns Moonlight Credits
+              and keeps your Sprite healthy.
             </Text>
           </View>
 
@@ -119,9 +150,7 @@ export default function PowerNapScreen() {
             <View className="items-center gap-4 rounded-card border-2 border-border bg-background px-card py-card">
               <View className="h-44 w-full items-center justify-center rounded-[34px] border-2 border-border bg-muted/30">
                 <View className="h-16 w-16 items-center justify-center rounded-[18px] border-2 border-border bg-primary/60">
-                  <Text className="font-black font-sans text-primary-foreground text-xl">
-                    Z
-                  </Text>
+                  <Heart color="#ffffff" size={28} />
                 </View>
               </View>
 
@@ -133,11 +162,7 @@ export default function PowerNapScreen() {
                   {minutes} min
                 </Text>
                 <Text className="font-normal font-sans text-muted-foreground text-sm">
-                  {done
-                    ? "Wake up melody played"
-                    : running
-                      ? "Nap in progress"
-                      : "Ready to nap"}
+                  {statusText}
                 </Text>
               </View>
 
@@ -146,7 +171,7 @@ export default function PowerNapScreen() {
                   Status
                 </Text>
                 <Text className="font-black font-sans text-2xl text-foreground">
-                  {running ? "Sleeping" : done ? "Done" : "Idle"}
+                  {statusLabel}
                 </Text>
               </View>
             </View>
@@ -173,6 +198,13 @@ export default function PowerNapScreen() {
             </View>
 
             <View className="flex-row gap-2">
+              <Button
+                className="flex-1"
+                onPress={() => setMinutes(5)}
+                variant="secondary"
+              >
+                5m
+              </Button>
               <Button
                 className="flex-1"
                 onPress={() => setMinutes(10)}
@@ -208,9 +240,27 @@ export default function PowerNapScreen() {
               />
             </View>
 
+            {done && (
+              <View className="items-center gap-2 rounded-card border-2 border-border bg-background px-card py-card">
+                <Text className="font-black font-sans text-2xl text-primary">
+                  ✓ Complete
+                </Text>
+                <Text className="text-center font-normal font-sans text-muted-foreground text-sm">
+                  You completed a {minutes}-minute meditation and earned
+                  Moonlight Credits!
+                </Text>
+              </View>
+            )}
+
+            {completeMutation.isPending && (
+              <Text className="text-center font-bold font-sans text-primary text-sm">
+                Saving to your wellness record...
+              </Text>
+            )}
+
             <Button
               className="w-full"
-              href="/test/gamification/actions"
+              href="/sprite/actions"
               variant="secondary"
             >
               Back to Actions ›

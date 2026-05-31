@@ -2,7 +2,9 @@ import { Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { MoonlightCreditsDisplay } from "@/components/ui/moonlight-credits-display";
 import { Screen } from "@/components/ui/screen";
+import { SpriteHealthBar } from "@/components/ui/sprite-health-bar";
 
 export default function GamificationTestScreen() {
   return (
@@ -15,30 +17,43 @@ export default function GamificationTestScreen() {
           Gamification
         </Text>
         <Text className="mt-1 font-normal font-sans text-base text-muted-foreground leading-6">
-          This is the gamify logic testing area.
+          Test the gamify logic — Sprite health, wellness actions, and Moonlight
+          Credits.
         </Text>
       </View>
+
+      <SpriteHealthBar health={88} mood="happy" streakDays={5} />
+
+      <MoonlightCreditsDisplay
+        balance={120}
+        consistencyScore={72}
+        totalEarned={240}
+      />
 
       <Card className="gap-4">
         <View className="gap-1">
           <Text className="font-bold font-sans text-primary text-xs uppercase tracking-[0.18em]">
-            Scenario
+            Routes
           </Text>
           <Text className="font-extrabold font-sans text-2xl text-foreground tracking-tight">
-            Rewards and progression
+            Sprite & Wellness
           </Text>
           <Text className="mt-1 font-normal font-sans text-muted-foreground text-sm leading-6">
-            Add gamification flows here to verify points, badges, streaks, and
-            unlock states.
+            Full gamification flow: consistency rewards, sprite health tracking,
+            Moonlight Credits.
           </Text>
         </View>
+
+        <Button className="w-full" href="/sprite" variant="primary">
+          Open Sprite Dashboard ›
+        </Button>
 
         <Button
           className="w-full"
           href="/test/gamification/sprite"
           variant="secondary"
         >
-          Open Sprite Lab ›
+          Open Sprite Animation Lab ›
         </Button>
 
         <Button
@@ -46,7 +61,7 @@ export default function GamificationTestScreen() {
           href="/test/gamification/actions"
           variant="secondary"
         >
-          Open Wellness Actions ›
+          Open Wellness Actions (Legacy) ›
         </Button>
 
         <Button className="w-full" href="/test" variant="secondary">

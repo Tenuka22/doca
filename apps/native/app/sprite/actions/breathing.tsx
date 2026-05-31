@@ -1,20 +1,16 @@
-import { Stack } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Easing, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { Screen } from "@/components/ui/screen";
+import { orpc, queryClient } from "@/utils/orpc";
 import { useThemeColor } from "@/utils/theme";
 
 type BreathingPhase = "inhale" | "hold" | "exhale" | "rest";
 
-const DEFAULT_PHASES = {
-  inhale: 4,
-  hold: 4,
-  exhale: 6,
-  rest: 2,
-};
-
+const DEFAULT_PHASES = { inhale: 4, hold: 4, exhale: 6, rest: 2 };
 const PHASES: BreathingPhase[] = ["inhale", "hold", "exhale", "rest"];
 
 function vibrate(pattern: number | number[]) {
@@ -26,19 +22,60 @@ function vibrate(pattern: number | number[]) {
   }
 }
 
-export default function BreathingExerciseScreen() {
+export default function BreathingActionScreen() {
   const colors = useThemeColor();
+  const router = useRouter();
+  const { type, action: actionType } = useLocalSearchParams<{
+    type: string;
+    action: string;
+  }>();
+
+  const tasksQuery = useQuery(
+    orpc.getTodayTasks.queryOptions({ queryKey: ["getTodayTasks"] })
+  );
+
+  const currentTask = tasksQuery.data?.tasks.find(
+    (t) => t.actionType === actionType
+  );
+  const requiredCycles = currentTask?.requiredCycles ?? 4;
+
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [cycles, setCycles] = useState(0);
   const [running, setRunning] = useState(false);
-  const [settings, setSettings] = useState(DEFAULT_PHASES);
+  const [completed, setCompleted] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fill = useRef(new Animated.Value(0)).current;
 
   const currentPhase = PHASES[phaseIndex] ?? "inhale";
-  const duration = settings[currentPhase] * 1000;
-
+  const duration = DEFAULT_PHASES[currentPhase] * 1000;
   const phaseLabel = currentPhase.toUpperCase();
+  const progress = Math.min(cycles / requiredCycles, 1);
+
+  const completeMutation = useMutation(
+    orpc.completeWellnessAction.mutationOptions({
+      onSuccess: (result) => {
+        queryClient.invalidateQueries({ queryKey: ["getSpriteState"] });
+        queryClient.invalidateQueries({ queryKey: ["getMoonlightCredits"] });
+        queryClient.invalidateQueries({ queryKey: ["getWellnessHistory"] });
+        queryClient.invalidateQueries({ queryKey: ["getTodayTasks"] });
+        setCompleted(true);
+        setRunning(false);
+      },
+    })
+  );
+
+  const handleComplete = useCallback(() => {
+    if (!actionType) {
+      return;
+    }
+    completeMutation.mutate({
+      actionType: actionType as
+        | "breathing_morning"
+        | "breathing_evening"
+        | "breathing_night",
+      durationSeconds: cycles * 16,
+    });
+  }, [actionType, completeMutation, cycles]);
 
   useEffect(() => {
     if (timerRef.current) {
@@ -132,10 +169,17 @@ export default function BreathingExerciseScreen() {
     vibrate([20, 30, 20]);
   }, [currentPhase, running]);
 
+  useEffect(() => {
+    if (cycles >= requiredCycles && running) {
+      setRunning(false);
+    }
+  }, [cycles, requiredCycles, running]);
+
   const handleStart = () => {
     setCycles(0);
     setPhaseIndex(0);
     setRunning(true);
+    setCompleted(false);
   };
 
   const handleStop = () => {
@@ -143,35 +187,68 @@ export default function BreathingExerciseScreen() {
     setPhaseIndex(0);
   };
 
+  const isComplete = cycles >= requiredCycles;
+
   return (
     <>
-      <Stack.Screen options={{ headerShown: false, title: "Breathing" }} />
+      <Stack.Screen options={{ headerShown: false }} />
       <Screen contentClassName="gap-section bg-background px-page py-page">
         <View className="overflow-hidden rounded-card border-2 border-border bg-card">
           <View className="gap-4 border-border border-b-2 px-card py-card">
             <Text className="font-bold font-sans text-primary text-xs uppercase tracking-[0.3em]">
-              Wellness Action
+              {type === "morning"
+                ? "Morning"
+                : type === "afternoon"
+                  ? "Afternoon"
+                  : "Night"}{" "}
+              Breathing
             </Text>
             <Text className="font-black font-sans text-4xl text-foreground tracking-tight">
-              Breathing Exercise
+              {currentTask?.title ?? "Breath Rhythm"}
             </Text>
             <Text className="max-w-[28rem] font-normal font-sans text-base text-muted-foreground leading-6">
-              A guided breathing loop with stronger feedback, live phase pacing,
-              and adjustable rhythm.
+              {currentTask?.description ??
+                "Complete a breathing session to earn Moonlight Credits."}
             </Text>
           </View>
 
           <View className="gap-4 px-card py-card">
+            {/* Cycles Progress */}
+            <View className="rounded-card border-2 border-border bg-background px-card py-card">
+              <View className="mb-2 flex-row items-center justify-between">
+                <Text className="font-bold font-sans text-muted-foreground text-xs uppercase tracking-[0.18em]">
+                  Progress
+                </Text>
+                <Text className="font-black font-sans text-foreground text-lg">
+                  {Math.min(cycles, requiredCycles)}/{requiredCycles} cycles
+                </Text>
+              </View>
+              <View className="h-3 overflow-hidden rounded-full border-2 border-border bg-muted">
+                <View
+                  className="h-full rounded-full bg-primary"
+                  style={{ width: `${progress * 100}%` }}
+                />
+              </View>
+              <Text className="mt-1 text-right font-normal font-sans text-muted-foreground text-xs">
+                {isComplete
+                  ? "All cycles complete!"
+                  : `${requiredCycles - cycles} cycle${requiredCycles - cycles > 1 ? "s" : ""} to go`}
+              </Text>
+            </View>
+
+            {/* Breathing Visual */}
             <View className="items-center gap-4 rounded-card border-2 border-border bg-background px-card py-card">
               <View className="items-center gap-1">
                 <Text className="text-center font-bold font-sans text-muted-foreground text-xs uppercase tracking-[0.2em]">
-                  Current Phase
+                  {running ? "Current Phase" : "Ready"}
                 </Text>
                 <Text className="text-center font-black font-sans text-4xl text-foreground tracking-tight">
-                  {phaseLabel}
+                  {running ? phaseLabel : "Breathe"}
                 </Text>
                 <Text className="text-center font-normal font-sans text-muted-foreground text-sm">
-                  {settings[currentPhase]} seconds
+                  {running
+                    ? `${DEFAULT_PHASES[currentPhase]} seconds`
+                    : "Press Start to begin"}
                 </Text>
               </View>
 
@@ -217,78 +294,59 @@ export default function BreathingExerciseScreen() {
                     Status
                   </Text>
                   <Text className="mt-1 font-black font-sans text-2xl text-foreground">
-                    {running ? "Running" : "Paused"}
+                    {completed
+                      ? "Done ✓"
+                      : isComplete
+                        ? "Ready ✓"
+                        : running
+                          ? "Running"
+                          : "Ready"}
                   </Text>
                 </View>
               </View>
             </View>
 
-            <View className="flex-row gap-2">
-              <Button
-                className="flex-1"
-                disabled={running}
-                onPress={handleStart}
-                variant="primary"
-              >
-                Start
-              </Button>
-              <Button
-                className="flex-1"
-                onPress={handleStop}
-                variant="secondary"
-              >
-                Reset
-              </Button>
-            </View>
-
-            <View className="gap-3">
-              <Text className="font-bold font-sans text-foreground text-sm uppercase tracking-[0.16em]">
-                Timing
-              </Text>
-              {PHASES.map((phase) => (
-                <View
-                  className="flex-row items-center justify-between rounded-card border-2 border-border bg-muted px-card py-control"
-                  key={phase}
+            {completed || isComplete ? (
+              <View className="items-center gap-3 rounded-card border-2 border-green-300 bg-green-50 px-card py-card">
+                <Text className="font-black font-sans text-2xl text-green-800">
+                  ✓ {completed ? "Session Complete" : "All Cycles Done"}
+                </Text>
+                <Text className="text-center font-normal font-sans text-green-700 text-sm">
+                  {completed
+                    ? `You earned Moonlight Credits for completing ${cycles} breathing cycles!`
+                    : "Great work! Complete the session to earn credits."}
+                </Text>
+                {!completed && (
+                  <Button
+                    className="w-full"
+                    loading={completeMutation.isPending}
+                    onPress={handleComplete}
+                    variant="primary"
+                  >
+                    Complete & Earn Credits
+                  </Button>
+                )}
+                {completed && (
+                  <Button className="w-full" href="/sprite" variant="primary">
+                    Back to Dashboard
+                  </Button>
+                )}
+              </View>
+            ) : (
+              <View className="flex-row gap-2">
+                <Button
+                  className="flex-1"
+                  onPress={running ? handleStop : handleStart}
+                  variant={running ? "secondary" : "primary"}
                 >
-                  <Text className="font-bold font-sans text-foreground capitalize">
-                    {phase}
-                  </Text>
-                  <View className="flex-row items-center gap-2">
-                    <Button
-                      onPress={() =>
-                        setSettings((value) => ({
-                          ...value,
-                          [phase]: Math.max(1, value[phase] - 1),
-                        }))
-                      }
-                      size="sm"
-                      variant="secondary"
-                    >
-                      -
-                    </Button>
-                    <Text className="w-8 text-center font-bold font-sans text-foreground">
-                      {settings[phase]}s
-                    </Text>
-                    <Button
-                      onPress={() =>
-                        setSettings((value) => ({
-                          ...value,
-                          [phase]: value[phase] + 1,
-                        }))
-                      }
-                      size="sm"
-                      variant="secondary"
-                    >
-                      +
-                    </Button>
-                  </View>
-                </View>
-              ))}
-            </View>
+                  {running ? "Stop" : "Start"}
+                </Button>
+              </View>
+            )}
 
             <Button
               className="w-full"
-              href="/test/gamification/actions"
+              href="/sprite/actions"
               variant="secondary"
             >
               Back to Actions ›

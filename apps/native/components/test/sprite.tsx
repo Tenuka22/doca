@@ -76,11 +76,11 @@ export function Sprite({ action = "idle", duration = 2000 }: RobotProps) {
             </View>
 
             <View
-              className={`absolute bottom-3 h-2 w-6 rounded-full border-b-2 border-border transition-all duration-300 ${bodyState.mouth}`}
+              className={`absolute bottom-3 h-2 w-6 rounded-full border-border border-b-2 transition-all duration-300 ${bodyState.mouth}`}
             />
           </View>
 
-          <View className="h-3 w-2 border-x-2 border-border" />
+          <View className="h-3 w-2 border-border border-x-2" />
 
           <View
             className={`flex h-24 w-20 flex-col items-center justify-center gap-2 rounded-xl border-2 border-border ${bodyColorClass} transition-all duration-500 ease-in-out ${bodyState.body}`}
@@ -99,8 +99,8 @@ export function Sprite({ action = "idle", duration = 2000 }: RobotProps) {
       <View className="mt-4 flex-row flex-wrap justify-center gap-2">
         {ACTIONS.map((item) => (
           <View
-            key={item}
             className={`rounded-chip border-2 border-border px-chip py-chip ${currentAction === item ? "bg-primary" : "bg-secondary"}`}
+            key={item}
           >
             <Text
               className={`font-bold font-sans text-xs uppercase tracking-[0.12em] ${currentAction === item ? "text-primary-foreground" : "text-secondary-foreground"}`}

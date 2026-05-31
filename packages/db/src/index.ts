@@ -13,8 +13,6 @@ import {
   type DoctorScheduleEntry as DoctorScheduleEntrySchema,
   type DoctorSession as DoctorSessionSchema,
   type DoctorWeeklyAvailability as DoctorWeeklyAvailabilitySchema,
-  type SessionTaskAssignment as SessionTaskAssignmentSchema,
-  sessionTaskAssignments as sessionTaskAssignmentsTable,
   doctorCashoutRequests as doctorCashoutRequestsTable,
   doctorCredits as doctorCreditsTable,
   doctorEducationEntries as doctorEducationEntriesTable,
@@ -26,15 +24,25 @@ import {
   doctorWeeklyAvailability as doctorWeeklyAvailabilityTable,
   type GuardianProfile as GuardianProfileSchema,
   guardianProfiles as guardianProfilesTable,
+  type MoonlightCredit as MoonlightCreditSchema,
+  type MoonlightCreditTransaction as MoonlightCreditTransactionSchema,
+  moonlightCredits as moonlightCreditsTable,
+  moonlightCreditTransactions as moonlightCreditTransactionsTable,
   type PatientProfile as PatientProfileSchema,
   patientProfiles as patientProfilesTable,
   type SessionAttendanceEvent as SessionAttendanceEventSchema,
   type SessionSnapshot as SessionSnapshotSchema,
+  type SessionTaskAssignment as SessionTaskAssignmentSchema,
+  type SpriteState as SpriteStateSchema,
   sessionAttendanceEvents as sessionAttendanceEventsTable,
   sessionSnapshots as sessionSnapshotsTable,
+  sessionTaskAssignments as sessionTaskAssignmentsTable,
+  spriteStates as spriteStatesTable,
   type UserCredit as UserCreditSchema,
   userCredits as userCreditsTable,
   userSubscriptions as userSubscriptionsTable,
+  type WellnessAction as WellnessActionSchema,
+  wellnessActions as wellnessActionsTable,
 } from "./schema";
 
 export {
@@ -65,6 +73,10 @@ export const doctorCashoutRequests = doctorCashoutRequestsTable;
 export const sessionAttendanceEvents = sessionAttendanceEventsTable;
 export const sessionSnapshots = sessionSnapshotsTable;
 export const sessionTaskAssignments = sessionTaskAssignmentsTable;
+export const spriteStates = spriteStatesTable;
+export const wellnessActions = wellnessActionsTable;
+export const moonlightCredits = moonlightCreditsTable;
+export const moonlightCreditTransactions = moonlightCreditTransactionsTable;
 
 export type DoctorProfile = DoctorProfileSchema;
 export type DoctorFile = DoctorFileSchema;
@@ -82,6 +94,10 @@ export type DoctorCashoutRequest = DoctorCashoutRequestSchema;
 export type SessionAttendanceEvent = SessionAttendanceEventSchema;
 export type SessionSnapshot = SessionSnapshotSchema;
 export type SessionTaskAssignment = SessionTaskAssignmentSchema;
+export type SpriteState = SpriteStateSchema;
+export type WellnessAction = WellnessActionSchema;
+export type MoonlightCredit = MoonlightCreditSchema;
+export type MoonlightCreditTransaction = MoonlightCreditTransactionSchema;
 
 export function createDb() {
   return drizzle(env.DB, {
@@ -102,6 +118,10 @@ export function createDb() {
       sessionAttendanceEvents,
       sessionSnapshots,
       sessionTaskAssignments,
+      spriteStates,
+      wellnessActions,
+      moonlightCredits,
+      moonlightCreditTransactions,
     },
   });
 }

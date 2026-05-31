@@ -136,6 +136,7 @@ export default function RootLayout() {
                 name="(onboarding)"
                 options={{ headerShown: false }}
               />
+              <Stack.Screen name="sprite" options={{ headerShown: false }} />
               <Stack.Screen name="test" options={{ headerShown: false }} />
             </Stack>
             <OnboardingCheck />

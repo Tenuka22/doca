@@ -1,6 +1,6 @@
 import { useAuth, useClerk } from "@clerk/expo";
 import { Stack } from "expo-router";
-import { Calendar, Stethoscope } from "lucide-react-native";
+import { Calendar, Sparkles, Stethoscope } from "lucide-react-native";
 import { Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,13 @@ export default function HomeScreen() {
         {isSignedIn ? (
           <View className="flex-row items-center gap-2">
             <CreditHeaderButton />
+            <Button
+              href="/sprite"
+              icon={<Sparkles color={colors.primaryForeground} size={16} />}
+              size="sm"
+            >
+              Sprite
+            </Button>
             <Button
               href="/appointments"
               icon={<Calendar color={colors.foreground} size={16} />}
@@ -106,8 +113,9 @@ export default function HomeScreen() {
             </>
           )}
 
-          {/* Test Suite Trigger Link */}
+          {/* Quick Links */}
           <View className="mt-4 items-center">
+            <TextLink href="/sprite">Wellness Sprite</TextLink>
             <TextLink href="/test">Open test suite</TextLink>
             <TextLink href="/doctors">Browse doctors</TextLink>
             <TextLink href="/appointments">View appointments</TextLink>

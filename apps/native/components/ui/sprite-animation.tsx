@@ -1,45 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Animated,
-  Easing,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Animated, Easing, StyleSheet, View } from "react-native";
 
-import { useThemeColor } from "@/utils/theme";
+export type SpriteAction = "idle" | "sleep" | "yawn";
 
-// ─── types ─────────────────────
-type SpriteAction =
-  | "idle"
-  | "sleep"
-  | "yawn"
-  | "angry"
-  | "sick"
-  | "vomity"
-  | "shivering"
-  | "hot"
-  | "cool";
-
-const ACTIONS: SpriteAction[] = [
-  "idle",
-  "sleep",
-  "yawn",
-  "angry",
-  "sick",
-  "vomity",
-  "shivering",
-  "hot",
-  "cool",
-];
-
-interface SpriteProps {
-  action: SpriteAction;
-  duration?: number;
+interface SpriteAnimationProps {
+  action?: SpriteAction;
+  size?: "sm" | "md" | "lg";
 }
 
-// ─── palette: red · white · black ────────────────────────────────────────────
 const C = {
   face: "#FFFFFF",
   faceShadow: "#F0F0F0",
@@ -72,23 +40,28 @@ const C = {
 const sineIO = Easing.inOut(Easing.sin);
 const springOut = Easing.out(Easing.back(1.6));
 
-// ─── Chibi Robot ───────────────
-function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
+const SCALES: Record<string, number> = {
+  sm: 0.4,
+  md: 0.7,
+  lg: 1,
+};
+
+export function SpriteAnimation({
+  action = "idle",
+  size = "md",
+}: SpriteAnimationProps) {
   const [currentAction, setCurrentAction] = useState<SpriteAction>(action);
-  const colors = useThemeColor();
+  const scale = SCALES[size];
 
   useEffect(() => {
     setCurrentAction(action);
   }, [action]);
 
-  // ── animated values ─────────
   const float = useRef(new Animated.Value(0)).current;
   const shadowScaleX = useRef(new Animated.Value(1)).current;
-
   const bodyTilt = useRef(new Animated.Value(0)).current;
   const pupilX = useRef(new Animated.Value(0)).current;
   const pupilY = useRef(new Animated.Value(0)).current;
-  const pupilScale = useRef(new Animated.Value(1)).current;
   const eyeScale = useRef(new Animated.Value(1)).current;
   const lidScale = useRef(new Animated.Value(0)).current;
   const cheekOpacity = useRef(new Animated.Value(0)).current;
@@ -101,17 +74,13 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
   const zzzScale = useRef(new Animated.Value(0.5)).current;
   const bodyJoltX = useRef(new Animated.Value(0)).current;
   const bodyJoltScale = useRef(new Animated.Value(1)).current;
-  const bodyShakeX = useRef(new Animated.Value(0)).current;
-  const sweatOpacity = useRef(new Animated.Value(0)).current;
-  const sweatY = useRef(new Animated.Value(0)).current;
 
-  // ── perpetual float ─────────
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
         Animated.parallel([
           Animated.timing(float, {
-            toValue: -11,
+            toValue: -11 * scale,
             duration: 1700,
             easing: sineIO,
             useNativeDriver: true,
@@ -141,9 +110,8 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
     );
     loop.start();
     return () => loop.stop();
-  }, []);
+  }, [scale]);
 
-  // ── helper: random blink ────
   const scheduleBlink = useCallback(() => {
     const delay = 2200 + Math.random() * 2000;
     return setTimeout(() => {
@@ -217,7 +185,6 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
     }, delay);
   }, []);
 
-  // ── helper: random body tilt
   const scheduleTilt = useCallback(() => {
     const delay = 3000 + Math.random() * 3000;
     return setTimeout(() => {
@@ -240,7 +207,6 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
     }, delay);
   }, []);
 
-  // ── action animations ───────
   useEffect(() => {
     [
       lidScale,
@@ -258,29 +224,19 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
       pupilX,
       pupilY,
       eyeScale,
-      bodyShakeX,
-      sweatOpacity,
-      sweatY,
-      pupilScale,
     ].forEach((v) => v.stopAnimation());
 
-    // resets
     lidScale.setValue(0);
     eyeScale.setValue(1);
-    pupilScale.setValue(1);
     zzzOpacity.setValue(0);
     zzzY.setValue(0);
     zzzScale.setValue(0.5);
     bodyJoltX.setValue(0);
     bodyJoltScale.setValue(1);
-    bodyShakeX.setValue(0);
-    sweatOpacity.setValue(0);
-    sweatY.setValue(0);
     pupilX.setValue(0);
     pupilY.setValue(0);
     bodyTilt.setValue(0);
 
-    // ── IDLE ───────────────────
     if (currentAction === "idle") {
       cheekOpacity.setValue(0.45);
 
@@ -391,7 +347,6 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
       };
     }
 
-    // ── SLEEP ───────────────────
     if (currentAction === "sleep") {
       Animated.timing(lidScale, {
         toValue: 1,
@@ -473,13 +428,13 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
             }),
             Animated.timing(zzzY, {
               toValue: -58,
-              duration: duration * 0.72,
+              duration: 2600 * 0.72,
               easing: Easing.out(Easing.ease),
               useNativeDriver: true,
             }),
             Animated.timing(zzzScale, {
               toValue: 1.3,
-              duration: duration * 0.72,
+              duration: 2600 * 0.72,
               easing: Easing.out(Easing.ease),
               useNativeDriver: true,
             }),
@@ -492,11 +447,10 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
         ]).start();
       };
       launchZzz();
-      const zId = setInterval(launchZzz, duration * 0.88);
+      const zId = setInterval(launchZzz, 2600 * 0.88);
       return () => clearInterval(zId);
     }
 
-    // ── YAWN ────────────────────
     if (currentAction === "yawn") {
       Animated.sequence([
         Animated.timing(bodyJoltScale, {
@@ -538,21 +492,21 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
       Animated.sequence([
         Animated.timing(eyeScale, {
           toValue: 1.45,
-          duration: duration * 0.2,
+          duration: 2600 * 0.2,
           easing: springOut,
           useNativeDriver: true,
         }),
-        Animated.delay(duration * 0.2),
+        Animated.delay(2600 * 0.2),
         Animated.timing(eyeScale, {
           toValue: 0.45,
-          duration: duration * 0.3,
+          duration: 2600 * 0.3,
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
-        Animated.delay(duration * 0.1),
+        Animated.delay(2600 * 0.1),
         Animated.timing(eyeScale, {
           toValue: 1.0,
-          duration: duration * 0.2,
+          duration: 2600 * 0.2,
           easing: sineIO,
           useNativeDriver: true,
         }),
@@ -562,28 +516,28 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
         Animated.parallel([
           Animated.timing(leftArmRot, {
             toValue: -8,
-            duration: duration * 0.35,
+            duration: 2600 * 0.35,
             easing: springOut,
             useNativeDriver: true,
           }),
           Animated.timing(rightArmRot, {
             toValue: 8,
-            duration: duration * 0.35,
+            duration: 2600 * 0.35,
             easing: springOut,
             useNativeDriver: true,
           }),
         ]),
-        Animated.delay(duration * 0.2),
+        Animated.delay(2600 * 0.2),
         Animated.parallel([
           Animated.timing(leftArmRot, {
             toValue: 0,
-            duration: duration * 0.45,
+            duration: 2600 * 0.45,
             easing: sineIO,
             useNativeDriver: true,
           }),
           Animated.timing(rightArmRot, {
             toValue: 0,
-            duration: duration * 0.45,
+            duration: 2600 * 0.45,
             easing: sineIO,
             useNativeDriver: true,
           }),
@@ -604,7 +558,7 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
               useNativeDriver: true,
             }),
           ]),
-          { iterations: Math.ceil((duration * 0.4) / 220) }
+          { iterations: Math.ceil((2600 * 0.4) / 220) }
         ),
         Animated.timing(antGlow, {
           toValue: 0.6,
@@ -614,593 +568,22 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
       ]).start();
 
       Animated.sequence([
-        Animated.delay(duration * 0.25),
+        Animated.delay(2600 * 0.25),
         Animated.timing(bodyTilt, {
           toValue: 8,
-          duration: duration * 0.45,
+          duration: 2600 * 0.45,
           easing: sineIO,
           useNativeDriver: true,
         }),
         Animated.timing(bodyTilt, {
           toValue: 0,
-          duration: duration * 0.3,
+          duration: 2600 * 0.3,
           easing: sineIO,
           useNativeDriver: true,
         }),
       ]).start();
     }
-
-    // ── ANGRY ───────────────────
-    if (currentAction === "angry") {
-      cheekOpacity.setValue(0.95);
-      pupilScale.setValue(0.55);
-
-      Animated.timing(eyeScale, {
-        toValue: 0.22,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-
-      Animated.parallel([
-        Animated.timing(leftArmRot, {
-          toValue: -7,
-          duration: 300,
-          easing: springOut,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rightArmRot, {
-          toValue: 7,
-          duration: 300,
-          easing: springOut,
-          useNativeDriver: true,
-        }),
-      ]).start();
-
-      Animated.timing(bodyTilt, {
-        toValue: 5,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-
-      const shakeLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(bodyShakeX, {
-            toValue: -2.5,
-            duration: 60,
-            useNativeDriver: true,
-          }),
-          Animated.timing(bodyShakeX, {
-            toValue: 2.5,
-            duration: 60,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      shakeLoop.start();
-
-      const antLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(antGlow, {
-            toValue: 1,
-            duration: 180,
-            easing: sineIO,
-            useNativeDriver: true,
-          }),
-          Animated.timing(antGlow, {
-            toValue: 0.5,
-            duration: 180,
-            easing: sineIO,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      antLoop.start();
-
-      const heartLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(heartScale, {
-            toValue: 1.5,
-            duration: 100,
-            useNativeDriver: true,
-          }),
-          Animated.timing(heartScale, {
-            toValue: 1,
-            duration: 100,
-            useNativeDriver: true,
-          }),
-          Animated.delay(400),
-        ])
-      );
-      heartLoop.start();
-
-      return () => {
-        shakeLoop.stop();
-        antLoop.stop();
-        heartLoop.stop();
-      };
-    }
-
-    // ── SICK ────────────────────
-    if (currentAction === "sick") {
-      Animated.timing(eyeScale, {
-        toValue: 0.55,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
-      Animated.timing(lidScale, {
-        toValue: 0.5,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
-
-      Animated.timing(cheekOpacity, {
-        toValue: 0.12,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
-
-      Animated.parallel([
-        Animated.timing(leftArmRot, {
-          toValue: 6,
-          duration: 600,
-          easing: springOut,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rightArmRot, {
-          toValue: -6,
-          duration: 600,
-          easing: springOut,
-          useNativeDriver: true,
-        }),
-      ]).start();
-
-      Animated.timing(bodyTilt, {
-        toValue: 6,
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
-
-      Animated.timing(antGlow, {
-        toValue: 0.15,
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
-
-      const heartLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(heartScale, {
-            toValue: 1.06,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-          Animated.timing(heartScale, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true,
-          }),
-          Animated.delay(1800),
-        ])
-      );
-      heartLoop.start();
-
-      const launchSweat = () => {
-        sweatY.setValue(0);
-        sweatOpacity.setValue(0);
-        Animated.sequence([
-          Animated.timing(sweatOpacity, {
-            toValue: 0.8,
-            duration: 200,
-            useNativeDriver: true,
-          }),
-          Animated.parallel([
-            Animated.timing(sweatY, {
-              toValue: 35,
-              duration: 1200,
-              easing: Easing.out(Easing.ease),
-              useNativeDriver: true,
-            }),
-            Animated.timing(sweatOpacity, {
-              toValue: 0,
-              duration: 1200,
-              easing: Easing.out(Easing.ease),
-              useNativeDriver: true,
-            }),
-          ]),
-        ]).start();
-      };
-      launchSweat();
-      const sId = setInterval(launchSweat, 1800);
-
-      return () => {
-        heartLoop.stop();
-        clearInterval(sId);
-      };
-    }
-
-    // ── VOMITY ──────────────────
-    if (currentAction === "vomity") {
-      Animated.timing(eyeScale, {
-        toValue: 0.08,
-        duration: 150,
-        useNativeDriver: true,
-      }).start();
-
-      Animated.timing(cheekOpacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-
-      Animated.parallel([
-        Animated.timing(leftArmRot, {
-          toValue: -3,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rightArmRot, {
-          toValue: 3,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
-
-      Animated.timing(bodyTilt, {
-        toValue: 12,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-
-      Animated.timing(antGlow, {
-        toValue: 0.1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-
-      const convulse = () => {
-        Animated.sequence([
-          Animated.timing(bodyJoltScale, {
-            toValue: 1.06,
-            duration: 80,
-            useNativeDriver: true,
-          }),
-          Animated.timing(bodyJoltScale, {
-            toValue: 1,
-            duration: 150,
-            useNativeDriver: true,
-          }),
-        ]).start();
-        Animated.sequence([
-          Animated.timing(bodyJoltX, {
-            toValue: -4,
-            duration: 50,
-            useNativeDriver: true,
-          }),
-          Animated.timing(bodyJoltX, {
-            toValue: 4,
-            duration: 50,
-            useNativeDriver: true,
-          }),
-          Animated.timing(bodyJoltX, {
-            toValue: 0,
-            duration: 50,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      };
-
-      convulse();
-      const cId = setInterval(convulse, 900);
-
-      const heartLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(heartScale, {
-            toValue: 1.1,
-            duration: 80,
-            useNativeDriver: true,
-          }),
-          Animated.timing(heartScale, {
-            toValue: 1,
-            duration: 80,
-            useNativeDriver: true,
-          }),
-          Animated.delay(700),
-        ])
-      );
-      heartLoop.start();
-
-      return () => {
-        clearInterval(cId);
-        heartLoop.stop();
-      };
-    }
-
-    // ── SHIVERING ───────────────
-    if (currentAction === "shivering") {
-      cheekOpacity.setValue(0.25);
-
-      Animated.timing(eyeScale, {
-        toValue: 1.05,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-
-      Animated.parallel([
-        Animated.timing(leftArmRot, {
-          toValue: 4,
-          duration: 400,
-          easing: springOut,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rightArmRot, {
-          toValue: -4,
-          duration: 400,
-          easing: springOut,
-          useNativeDriver: true,
-        }),
-      ]).start();
-
-      const shakeLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(bodyShakeX, {
-            toValue: -3,
-            duration: 45,
-            useNativeDriver: true,
-          }),
-          Animated.timing(bodyShakeX, {
-            toValue: 3,
-            duration: 45,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      shakeLoop.start();
-
-      const antLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(antGlow, {
-            toValue: 0.9,
-            duration: 80,
-            useNativeDriver: true,
-          }),
-          Animated.timing(antGlow, {
-            toValue: 0.2,
-            duration: 80,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      antLoop.start();
-
-      const heartLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(heartScale, {
-            toValue: 1.35,
-            duration: 90,
-            useNativeDriver: true,
-          }),
-          Animated.timing(heartScale, {
-            toValue: 1,
-            duration: 90,
-            useNativeDriver: true,
-          }),
-          Animated.delay(200),
-        ])
-      );
-      heartLoop.start();
-
-      return () => {
-        shakeLoop.stop();
-        antLoop.stop();
-        heartLoop.stop();
-      };
-    }
-
-    // ── HOT ─────────────────────
-    if (currentAction === "hot") {
-      Animated.timing(cheekOpacity, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-
-      Animated.timing(eyeScale, {
-        toValue: 0.55,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-
-      Animated.timing(bodyTilt, {
-        toValue: -8,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
-
-      const fanLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(leftArmRot, {
-            toValue: -5,
-            duration: 250,
-            easing: sineIO,
-            useNativeDriver: true,
-          }),
-          Animated.timing(leftArmRot, {
-            toValue: 5,
-            duration: 250,
-            easing: sineIO,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      fanLoop.start();
-
-      const fanLoopR = Animated.loop(
-        Animated.sequence([
-          Animated.timing(rightArmRot, {
-            toValue: 5,
-            duration: 250,
-            easing: sineIO,
-            useNativeDriver: true,
-          }),
-          Animated.timing(rightArmRot, {
-            toValue: -5,
-            duration: 250,
-            easing: sineIO,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      fanLoopR.start();
-
-      Animated.timing(antGlow, {
-        toValue: 0.2,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
-
-      const launchSweat = () => {
-        sweatY.setValue(0);
-        sweatOpacity.setValue(0);
-        Animated.sequence([
-          Animated.timing(sweatOpacity, {
-            toValue: 0.9,
-            duration: 150,
-            useNativeDriver: true,
-          }),
-          Animated.parallel([
-            Animated.timing(sweatY, {
-              toValue: 40,
-              duration: 1000,
-              easing: Easing.out(Easing.ease),
-              useNativeDriver: true,
-            }),
-            Animated.timing(sweatOpacity, {
-              toValue: 0,
-              duration: 1000,
-              easing: Easing.out(Easing.ease),
-              useNativeDriver: true,
-            }),
-          ]),
-        ]).start();
-      };
-      launchSweat();
-      const sId = setInterval(launchSweat, 1400);
-
-      const heartLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(heartScale, {
-            toValue: 1.4,
-            duration: 120,
-            useNativeDriver: true,
-          }),
-          Animated.timing(heartScale, {
-            toValue: 1,
-            duration: 120,
-            useNativeDriver: true,
-          }),
-          Animated.delay(300),
-        ])
-      );
-      heartLoop.start();
-
-      return () => {
-        fanLoop.stop();
-        fanLoopR.stop();
-        clearInterval(sId);
-        heartLoop.stop();
-      };
-    }
-
-    // ── COOL ────────────────────
-    if (currentAction === "cool") {
-      cheekOpacity.setValue(0.3);
-
-      Animated.timing(eyeScale, {
-        toValue: 0.75,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
-
-      Animated.parallel([
-        Animated.timing(leftArmRot, {
-          toValue: -5,
-          duration: 500,
-          easing: springOut,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rightArmRot, {
-          toValue: 5,
-          duration: 500,
-          easing: springOut,
-          useNativeDriver: true,
-        }),
-      ]).start();
-
-      Animated.timing(bodyTilt, {
-        toValue: -6,
-        duration: 500,
-        useNativeDriver: true,
-      }).start();
-
-      const swayLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(bodyTilt, {
-            toValue: -3,
-            duration: 2000,
-            easing: sineIO,
-            useNativeDriver: true,
-          }),
-          Animated.timing(bodyTilt, {
-            toValue: -9,
-            duration: 2000,
-            easing: sineIO,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      swayLoop.start();
-
-      const antLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(antGlow, {
-            toValue: 0.8,
-            duration: 800,
-            easing: sineIO,
-            useNativeDriver: true,
-          }),
-          Animated.timing(antGlow, {
-            toValue: 0.3,
-            duration: 800,
-            easing: sineIO,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      antLoop.start();
-
-      const heartLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(heartScale, {
-            toValue: 1.15,
-            duration: 250,
-            useNativeDriver: true,
-          }),
-          Animated.timing(heartScale, {
-            toValue: 1,
-            duration: 250,
-            useNativeDriver: true,
-          }),
-          Animated.delay(1800),
-        ])
-      );
-      heartLoop.start();
-
-      return () => {
-        swayLoop.stop();
-        antLoop.stop();
-        heartLoop.stop();
-      };
-    }
-  }, [action, currentAction, duration, scheduleBlink, scheduleGlance, scheduleTilt]);
+  }, [action, currentAction]);
 
   const leftRot = leftArmRot.interpolate({
     inputRange: [-10, 10],
@@ -1216,63 +599,28 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
   });
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
-      {/* action selector */}
-      <View style={styles.panel}>
-        <Text style={[styles.panelLabel, { color: colors.mutedForeground }]}>
-          Action
-        </Text>
-        <View style={styles.chips}>
-          {ACTIONS.map((item) => (
-            <Pressable
-              key={item}
-              onPress={() => setCurrentAction(item)}
-              style={[
-                styles.chip,
-                {
-                  backgroundColor:
-                    currentAction === item ? "#E03030" : "transparent",
-                  borderColor: "#111111",
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  {
-                    color:
-                      currentAction === item ? "#FFFFFF" : colors.foreground,
-                  },
-                ]}
-              >
-                {item}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
-
-      {/* shadow */}
+    <View style={styles.wrapper}>
       <Animated.View
-        style={[styles.shadow, { transform: [{ scaleX: shadowScaleX }] }]}
+        style={[
+          styles.shadow,
+          { transform: [{ scaleX: shadowScaleX }, { scale }] },
+        ]}
       />
-
-      {/* robot (floats + tilts) */}
       <Animated.View
         style={[
           styles.robot,
           {
             transform: [
+              { scale },
               { translateY: float },
               { translateX: bodyJoltX },
-              { translateX: bodyShakeX },
-              { scale: bodyJoltScale },
+              { scaleX: bodyJoltScale },
+              { scaleY: bodyJoltScale },
               { rotate: bodyRot },
             ],
           },
         ]}
       >
-        {/* ZZZ */}
         <Animated.Text
           style={[
             styles.zzz,
@@ -1285,35 +633,16 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
           z z z
         </Animated.Text>
 
-        {/* ANTENNA */}
         <View style={styles.antennaWrap}>
           <Animated.View style={[styles.antennaTip, { opacity: antGlow }]} />
           <View style={styles.antennaStem} />
         </View>
 
-        {/* HEAD */}
         <View style={styles.head}>
-          {/* ear stubs */}
           <View style={styles.earLeft} />
           <View style={styles.earRight} />
 
-          {/* sweat drops */}
-          <Animated.View
-            style={[
-              styles.sweatL,
-              { opacity: sweatOpacity, transform: [{ translateY: sweatY }] },
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.sweatR,
-              { opacity: sweatOpacity, transform: [{ translateY: sweatY }] },
-            ]}
-          />
-
-          {/* eyes */}
           <View style={styles.eyeRow}>
-            {/* left eye */}
             <Animated.View
               style={[styles.eyeOuter, { transform: [{ scaleY: eyeScale }] }]}
             >
@@ -1325,7 +654,6 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
                       transform: [
                         { translateX: pupilX },
                         { translateY: pupilY },
-                        { scale: pupilScale },
                       ],
                     },
                   ]}
@@ -1339,7 +667,6 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
               </View>
             </Animated.View>
 
-            {/* right eye */}
             <Animated.View
               style={[styles.eyeOuter, { transform: [{ scaleY: eyeScale }] }]}
             >
@@ -1351,7 +678,6 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
                       transform: [
                         { translateX: pupilX },
                         { translateY: pupilY },
-                        { scale: pupilScale },
                       ],
                     },
                   ]}
@@ -1366,17 +692,18 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
             </Animated.View>
           </View>
 
-          {/* cheeks */}
           <Animated.View style={[styles.cheekL, { opacity: cheekOpacity }]} />
           <Animated.View style={[styles.cheekR, { opacity: cheekOpacity }]} />
         </View>
 
-        {/* ARMS + CHEST */}
         <View style={styles.bodyRow}>
           <Animated.View
             style={[
               styles.handWrap,
-              { transform: [{ rotate: leftRot }], transformOrigin: "50% 15%" },
+              {
+                transform: [{ rotate: leftRot }],
+                transformOrigin: "50% 15%",
+              },
             ]}
           >
             <View style={styles.hand}>
@@ -1388,7 +715,6 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
             </View>
           </Animated.View>
 
-          {/* chest */}
           <View style={styles.chest}>
             <View style={styles.lightRow}>
               <Animated.View
@@ -1413,7 +739,10 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
           <Animated.View
             style={[
               styles.handWrap,
-              { transform: [{ rotate: rightRot }], transformOrigin: "50% 15%" },
+              {
+                transform: [{ rotate: rightRot }],
+                transformOrigin: "50% 15%",
+              },
             ]}
           >
             <View style={styles.hand}>
@@ -1430,47 +759,16 @@ function GamificationSpriteScreen({ action, duration = 2600 }: SpriteProps) {
   );
 }
 
-export default function SpriteScreen() {
-  return <GamificationSpriteScreen action="idle" />;
-}
-
-// ─── styles ────────────────────
 const B = 2.5;
-
 const EYE_OUTER = 44;
 const EYE_WHITE = 36;
 const PUPIL_R = 22;
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
+  wrapper: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 24,
-    paddingBottom: 48,
   },
-
-  panel: { alignItems: "center", gap: 10 },
-  panelLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 2.5,
-    textTransform: "uppercase",
-  },
-  chips: {
-    flexDirection: "row",
-    gap: 8,
-    flexWrap: "wrap",
-    justifyContent: "center",
-  },
-  chip: {
-    borderWidth: B,
-    borderRadius: 999,
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-  },
-  chipText: { fontSize: 12, fontWeight: "700", textTransform: "uppercase" },
-
   shadow: {
     position: "absolute",
     bottom: 30,
@@ -1480,9 +778,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#333333",
     opacity: 0.18,
   },
-
-  robot: { alignItems: "center", position: "relative" },
-
+  robot: { alignItems: "center" },
   zzz: {
     position: "absolute",
     top: -22,
@@ -1492,7 +788,6 @@ const styles = StyleSheet.create({
     letterSpacing: 5,
     color: C.zzz,
   },
-
   antennaWrap: { alignItems: "center", marginBottom: -2, zIndex: 3 },
   antennaTip: {
     width: 14,
@@ -1510,7 +805,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     borderColor: C.faceBorder,
   },
-
   head: {
     width: 124,
     height: 100,
@@ -1520,7 +814,6 @@ const styles = StyleSheet.create({
     backgroundColor: C.face,
     alignItems: "center",
     justifyContent: "center",
-    gap: 0,
     paddingTop: 2,
     position: "relative",
     overflow: "visible",
@@ -1547,28 +840,7 @@ const styles = StyleSheet.create({
     borderColor: C.faceBorder,
     backgroundColor: C.face,
   },
-
-  sweatL: {
-    position: "absolute",
-    left: 14,
-    top: 20,
-    width: 5,
-    height: 8,
-    borderRadius: 3,
-    backgroundColor: "#FFFFFF",
-  },
-  sweatR: {
-    position: "absolute",
-    right: 14,
-    top: 24,
-    width: 5,
-    height: 8,
-    borderRadius: 3,
-    backgroundColor: "#FFFFFF",
-  },
-
   eyeRow: { flexDirection: "row", gap: 12, marginBottom: 4 },
-
   eyeOuter: {
     width: EYE_OUTER,
     height: EYE_OUTER,
@@ -1623,7 +895,6 @@ const styles = StyleSheet.create({
     backgroundColor: C.face,
     transformOrigin: "50% 0%",
   },
-
   cheekL: {
     position: "absolute",
     left: 8,
@@ -1642,9 +913,12 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: C.cheek,
   },
-
-  bodyRow: { flexDirection: "row", alignItems: "center", marginTop: 7, gap: 5 },
-
+  bodyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 7,
+    gap: 5,
+  },
   handWrap: { alignItems: "center" },
   hand: {
     width: 34,
@@ -1658,8 +932,12 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
   },
   knuckles: { flexDirection: "row", gap: 3 },
-  knuckle: { width: 5, height: 5, borderRadius: 3, backgroundColor: C.knuckle },
-
+  knuckle: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: C.knuckle,
+  },
   chest: {
     width: 56,
     height: 44,

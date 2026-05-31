@@ -4,6 +4,7 @@ import { adminRouter } from "./admin";
 import { bookingRouter } from "./booking";
 import { doctorRouter } from "./doctor";
 import { doctorFilesRouter } from "./doctor-files";
+import { gamificationRouter } from "./gamification";
 import { liveKitRouter } from "./livekit";
 import { patientRouter } from "./patient";
 import { publicRouter } from "./public";
@@ -18,6 +19,7 @@ export const appRouter = {
   ...liveKitRouter,
   ...patientRouter,
   ...sessionAttendanceRouter,
+  ...gamificationRouter,
 };
 
 export type AppRouter = typeof appRouter;

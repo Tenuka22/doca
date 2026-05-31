@@ -144,6 +144,25 @@ CREATE TABLE `guardian_profiles` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `guardian_email_unique` ON `guardian_profiles` (`email`);--> statement-breakpoint
+CREATE TABLE `moonlight_credit_transactions` (
+	`id` text PRIMARY KEY NOT NULL,
+	`user_id` text NOT NULL,
+	`amount` integer NOT NULL,
+	`type` text NOT NULL,
+	`reason` text NOT NULL,
+	`wellness_action_id` text,
+	`created_at` text DEFAULT 'CURRENT_TIMESTAMP' NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE `moonlight_credits` (
+	`user_id` text PRIMARY KEY NOT NULL,
+	`balance` integer DEFAULT 0 NOT NULL,
+	`total_earned` integer DEFAULT 0 NOT NULL,
+	`consistency_score` integer DEFAULT 0 NOT NULL,
+	`created_at` text DEFAULT 'CURRENT_TIMESTAMP' NOT NULL,
+	`updated_at` text DEFAULT 'CURRENT_TIMESTAMP' NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `patient_profiles` (
 	`user_id` text PRIMARY KEY NOT NULL,
 	`alias` text NOT NULL,
@@ -193,6 +212,16 @@ CREATE TABLE `session_task_assignments` (
 	`updated_at` text DEFAULT 'CURRENT_TIMESTAMP' NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE `sprite_states` (
+	`user_id` text PRIMARY KEY NOT NULL,
+	`health` integer DEFAULT 100 NOT NULL,
+	`mood` text DEFAULT 'idle' NOT NULL,
+	`streak_days` integer DEFAULT 0 NOT NULL,
+	`last_interaction_at` text,
+	`created_at` text DEFAULT 'CURRENT_TIMESTAMP' NOT NULL,
+	`updated_at` text DEFAULT 'CURRENT_TIMESTAMP' NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `user_credits` (
 	`user_id` text PRIMARY KEY NOT NULL,
 	`balance` integer DEFAULT 0 NOT NULL,
@@ -211,4 +240,14 @@ CREATE TABLE `user_subscriptions` (
 	`cancel_at_period_end` integer DEFAULT false NOT NULL,
 	`created_at` text DEFAULT 'CURRENT_TIMESTAMP' NOT NULL,
 	`updated_at` text DEFAULT 'CURRENT_TIMESTAMP' NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE `wellness_actions` (
+	`id` text PRIMARY KEY NOT NULL,
+	`user_id` text NOT NULL,
+	`action_type` text NOT NULL,
+	`completed_at` text NOT NULL,
+	`duration_seconds` integer,
+	`credits_earned` integer DEFAULT 0 NOT NULL,
+	`created_at` text DEFAULT 'CURRENT_TIMESTAMP' NOT NULL
 );
