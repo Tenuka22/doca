@@ -17,7 +17,7 @@ export function useErrorHandler({ onHardError }: UseErrorHandlerOptions = {}) {
       const actions: Action[] | undefined = context?.retry
         ? [
             { label: "Try again", onPress: context.retry, variant: "primary" },
-            { label: "Dismiss", onPress: () => {}, variant: "secondary" },
+            { label: "Dismiss", onPress: () => undefined, variant: "secondary" },
           ]
         : undefined;
 

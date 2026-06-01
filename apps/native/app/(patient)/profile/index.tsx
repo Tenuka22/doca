@@ -113,26 +113,33 @@ export default function ProfileScreen() {
   );
 
   const handleSave = async () => {
-    let secret = await getStoredSecret();
-    if (!secret) {
-      secret = generateUserSecret();
-      await storeSecret(secret);
-    }
+    try {
+      let secret = await getStoredSecret();
+      if (!secret) {
+        secret = generateUserSecret();
+        await storeSecret(secret);
+      }
 
-    const _securedData = await encryptData(
-      { email, phone, fullName, address },
-      secret
-    );
+      const _securedData = await encryptData(
+        { email, phone, fullName, address },
+        secret
+      );
 
-    if (profileQuery.data?.guardianUserId) {
-      updateMutation.mutate({ alias, _securedData });
-    } else {
-      updateMutation.mutate({
-        alias,
-        _securedData,
-        guardianEmail: guardianEmail || undefined,
-        guardianPhone: guardianPhone || undefined,
-      });
+      if (profileQuery.data?.guardianUserId) {
+        updateMutation.mutate({
+          alias: alias || undefined,
+          _securedData,
+        });
+      } else {
+        updateMutation.mutate({
+          alias: alias || undefined,
+          _securedData,
+          guardianEmail: guardianEmail || undefined,
+          guardianPhone: guardianPhone || undefined,
+        });
+      }
+    } catch (err) {
+      handleError(err);
     }
   };
 
