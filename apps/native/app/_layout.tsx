@@ -2,18 +2,16 @@ import "../global.css";
 
 import { ClerkProvider, useAuth } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { env } from "@zen-doc/env/native";
 import { useFonts } from "expo-font";
-import { Stack, useRouter } from "expo-router";
-import { useQuery } from "@tanstack/react-query";
-import { orpc } from "@/utils/orpc";
+import { Stack, usePathname, useRouter } from "expo-router";
 import { hideAsync, preventAutoHideAsync } from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
-import { queryClient } from "@/utils/orpc";
+import { orpc, queryClient } from "@/utils/orpc";
 import { StripePaymentProvider } from "@/utils/stripe";
 import { useThemeColor } from "@/utils/theme";
 
@@ -38,6 +36,7 @@ function ClerkApiAuthBridge() {
 }
 function OnboardingCheck() {
   const router = useRouter();
+  const pathname = usePathname();
   const { isLoaded, isSignedIn } = useAuth();
 
   const patientProfileQuery = useQuery(
@@ -49,17 +48,51 @@ function OnboardingCheck() {
   );
 
   useEffect(() => {
-    if (isLoaded && isSignedIn && patientProfileQuery.isFetched && !patientProfileQuery.data) {
-      router.replace("/(onboarding)/onboarding");
+    console.log("OnboardingCheck deps:", {
+      isLoaded,
+      isSignedIn,
+      isFetched: patientProfileQuery.isFetched,
+      data: patientProfileQuery.data,
+      pathname,
+    });
+    if (isLoaded && isSignedIn && patientProfileQuery.isFetched) {
+      const needsSetup = !(
+        patientProfileQuery.data?.secured &&
+        patientProfileQuery.data?._securedData
+      );
+      console.log("OnboardingCheck needsSetup:", {
+        needsSetup,
+        secured: patientProfileQuery.data?.secured,
+        _securedData: patientProfileQuery.data?._securedData,
+        pathname,
+        shouldRedirect:
+          needsSetup &&
+          pathname !== "/profile" &&
+          !pathname.startsWith("/onboarding"),
+      });
+      if (
+        needsSetup &&
+        pathname !== "/profile" &&
+        !pathname.startsWith("/onboarding")
+      ) {
+        console.log("OnboardingCheck redirecting to /profile");
+        router.replace("/profile");
+      }
     }
-  }, [isLoaded, isSignedIn, patientProfileQuery.isFetched, patientProfileQuery.data, router]);
+  }, [
+    isLoaded,
+    isSignedIn,
+    patientProfileQuery.isFetched,
+    patientProfileQuery.data,
+    router,
+    pathname,
+  ]);
 
   return null;
 }
 
 export default function RootLayout() {
-// ... (rest of RootLayout)
-
+  const { background, foreground } = useThemeColor();
   const [fontsLoaded, fontError] = useFonts(satoshiFonts);
 
   useEffect(() => {
@@ -79,43 +112,34 @@ export default function RootLayout() {
     >
       <ClerkApiAuthBridge />
       <QueryClientProvider client={queryClient}>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <StripePaymentProvider>
-              <Stack
-                screenOptions={{
-                  headerStyle: {
-                    backgroundColor: background,
-                  },
-                  headerTitleStyle: {
-                    fontFamily: "Satoshi",
-                    fontWeight: "500",
-                    color: foreground,
-                  },
-                  headerTintColor: foreground,
-                  headerShadowVisible: false,
-                }}
-              >
-                <Stack.Screen
-                  name="(auth)"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="(onboarding)"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="(patient)"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="test"
-                  options={{ headerShown: false }}
-                />
-              </Stack>
-              <OnboardingCheck />
-              <StatusBar style="auto" />
-            </StripePaymentProvider>
-          </GestureHandlerRootView>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <StripePaymentProvider>
+            <Stack
+              screenOptions={{
+                headerStyle: {
+                  backgroundColor: background,
+                },
+                headerTitleStyle: {
+                  fontFamily: "Satoshi",
+                  fontWeight: "500",
+                  color: foreground,
+                },
+                headerTintColor: foreground,
+                headerShadowVisible: false,
+              }}
+            >
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="(onboarding)"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen name="(patient)" options={{ headerShown: false }} />
+              <Stack.Screen name="test" options={{ headerShown: false }} />
+            </Stack>
+            <OnboardingCheck />
+            <StatusBar style="auto" />
+          </StripePaymentProvider>
+        </GestureHandlerRootView>
       </QueryClientProvider>
     </ClerkProvider>
   );

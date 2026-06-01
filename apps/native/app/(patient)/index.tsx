@@ -1,4 +1,4 @@
-import { Redirect, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import { Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";

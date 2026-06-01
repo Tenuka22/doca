@@ -158,9 +158,7 @@ export default function OnboardingScreen() {
 
         <Button
           className="w-full"
-          disabled={
-            completeOnboarding.isPending || !patientForm.watch("alias")
-          }
+          disabled={completeOnboarding.isPending || !patientForm.watch("alias")}
           onPress={patientForm.handleSubmit(onPatientSubmit)}
         >
           {completeOnboarding.isPending ? "Setting up..." : "Complete Setup"}

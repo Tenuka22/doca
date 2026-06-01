@@ -24,10 +24,10 @@ export const RootBottomBar = () => {
   const isSmall = width < SMALL_BREAKPOINT;
 
   return (
-    <View className="-mx-page flex-row h-12 border-border border-t-[3px] bg-card">
+    <View className="-mx-page h-12 flex-row border-border border-t-[3px] bg-card">
       {patientTabs.map(({ href, icon: Icon, label }) => (
         <Button
-          className="flex-1 h-full rounded-none"
+          className="h-full flex-1 rounded-none"
           href={href}
           key={href}
           variant="secondary"
@@ -35,7 +35,7 @@ export const RootBottomBar = () => {
           <View className="flex-row items-center justify-center gap-1.5 py-4">
             <Icon color="#ffffff" size={18} />
             {!isSmall && (
-              <Text className="font-bold font-sans text-white text-[10px] uppercase">
+              <Text className="font-bold font-sans text-[10px] text-white uppercase">
                 {label}
               </Text>
             )}

@@ -23,7 +23,7 @@ export default function StressHubScreen() {
             <Text className="text-center font-black font-sans text-3xl text-foreground tracking-tight">
               Stress Hub
             </Text>
-            <Text className="max-w-[300px] text-center font-normal font-sans text-muted-foreground text-base leading-6">
+            <Text className="max-w-[300px] text-center font-normal font-sans text-base text-muted-foreground leading-6">
               Monitor and manage your stress levels. Coming soon.
             </Text>
           </View>

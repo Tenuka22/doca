@@ -348,8 +348,7 @@ export type DoctorWeeklyAvailability =
   typeof doctorWeeklyAvailability.$inferSelect;
 export type DoctorCredit = typeof doctorCredits.$inferSelect;
 export type DoctorCashoutRequest = typeof doctorCashoutRequests.$inferSelect;
-export type SessionTaskAssignment =
-  typeof sessionTaskAssignments.$inferSelect;
+export type SessionTaskAssignment = typeof sessionTaskAssignments.$inferSelect;
 export type SessionAttendanceEvent =
   typeof sessionAttendanceEvents.$inferSelect;
 export type SessionSnapshot = typeof sessionSnapshots.$inferSelect;

@@ -2,17 +2,15 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   CREDIT_PRICE_CENTS,
   MONTHLY_PLAN_AMOUNT_CENTS,
-  MONTHLY_PLAN_CREDITS,
   MONTHLY_PLAN_TYPE,
   TAX_RATE,
 } from "@zen-doc/pricing";
 import { useState } from "react";
 import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
-
-import { Button } from "./button";
-import { Card } from "./card";
 import { orpc } from "@/utils/orpc";
 import { usePaymentSheet } from "@/utils/stripe";
+import { Button } from "./button";
+import { Card } from "./card";
 
 const CREDIT_OPTIONS = [1, 5, 10, 20] as const;
 
@@ -183,12 +181,11 @@ export function CreditPurchase({ forPatientUserId }: CreditPurchaseProps) {
               >
                 <Text className="font-bold text-foreground text-sm">X</Text>
               </Pressable>
-              </View>
+            </View>
 
-              <Text className="font-normal font-sans text-muted-foreground text-sm">
+            <Text className="font-normal font-sans text-muted-foreground text-sm">
               Choose a one-time credit pack or a monthly subscription.
-              </Text>
-
+            </Text>
 
             {subscriptionQuery.data?.status === "active" ? null : (
               <View className="flex-row gap-2 rounded-card border-2 border-border bg-muted/20 p-1">
@@ -201,7 +198,7 @@ export function CreditPurchase({ forPatientUserId }: CreditPurchaseProps) {
                   onPress={() => setSelectedOffer("credits")}
                 >
                   <Text
-                    className={`text-center font-semibold font-sans text-sm ${
+                    className={`text-center font-sans font-semibold text-sm ${
                       selectedOffer === "credits"
                         ? "text-primary-foreground"
                         : "text-foreground"
@@ -219,7 +216,7 @@ export function CreditPurchase({ forPatientUserId }: CreditPurchaseProps) {
                   onPress={() => setSelectedOffer("subscription")}
                 >
                   <Text
-                    className={`text-center font-semibold font-sans text-sm ${
+                    className={`text-center font-sans font-semibold text-sm ${
                       selectedOffer === "subscription"
                         ? "text-primary-foreground"
                         : "text-foreground"
@@ -346,7 +343,7 @@ export function CreditPurchase({ forPatientUserId }: CreditPurchaseProps) {
                     <Text className="font-bold font-sans text-foreground text-sm">
                       Total
                     </Text>
-                    <Text className="font-bold font-sans text-foreground text-base">
+                    <Text className="font-bold font-sans text-base text-foreground">
                       {formatPrice(
                         selectedCredits * CREDIT_PRICE_CENTS +
                           Math.round(
@@ -375,7 +372,7 @@ export function CreditPurchase({ forPatientUserId }: CreditPurchaseProps) {
               }
             >
               {isPending ? (
-                <ActivityIndicator size="small" color="#ffffff" />
+                <ActivityIndicator color="#ffffff" size="small" />
               ) : (
                 getButtonText()
               )}

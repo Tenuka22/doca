@@ -22,27 +22,33 @@ export const updatePatientProfileRoute = protectedProcedure
       updateData.secured = true;
     }
 
-    if (input.guardianEmail !== undefined || input.guardianPhone !== undefined) {
+    if (
+      input.guardianEmail !== undefined ||
+      input.guardianPhone !== undefined
+    ) {
       const guardianEmail = input.guardianEmail ?? null;
       const guardianPhone = input.guardianPhone ?? null;
 
       updateData.guardianEmail = guardianEmail;
       updateData.guardianPhone = guardianPhone;
-      updateData.guardianRequestStatus = "pending";
 
-      const existingGuardian = await context.db.query.guardianProfiles.findFirst({
-        where: guardianEmail
-          ? eq(guardianProfiles.email, guardianEmail)
-          : eq(guardianProfiles.phone, guardianPhone ?? ""),
-      });
+      if (guardianEmail === null && guardianPhone === null) {
+        updateData.guardianUserId = null;
+        updateData.guardianRequestStatus = null;
+      } else {
+        updateData.guardianRequestStatus = "pending";
 
-      if (!existingGuardian) {
-        throw new Error("Guardian profile not found");
+        const existingGuardian =
+          await context.db.query.guardianProfiles.findFirst({
+            where: guardianEmail
+              ? eq(guardianProfiles.email, guardianEmail)
+              : eq(guardianProfiles.phone, guardianPhone ?? ""),
+          });
+
+        if (!existingGuardian) {
+          throw new Error("Guardian profile not found");
+        }
       }
-    }
-
-    if (input.guardianPhone !== undefined && input.guardianEmail === undefined) {
-      updateData.guardianPhone = input.guardianPhone;
     }
 
     await context.db

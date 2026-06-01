@@ -31,7 +31,9 @@ export function generateUserSecret(): string {
   return uint8ArrayToBase64(key);
 }
 
-async function getEncryptionKey(secretBase64: string): Promise<AESEncryptionKey> {
+async function getEncryptionKey(
+  secretBase64: string
+): Promise<AESEncryptionKey> {
   const keyBytes = base64ToUint8Array(secretBase64);
   return AESEncryptionKey.import(keyBytes);
 }

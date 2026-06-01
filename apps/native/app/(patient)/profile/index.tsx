@@ -66,7 +66,7 @@ export default function ProfileScreen() {
     if (data._securedData) {
       getStoredSecret().then(async (secret) => {
         if (!secret) {
-          router.replace("/onboarding");
+          setCorruptedData(true);
           return;
         }
 
@@ -113,11 +113,22 @@ export default function ProfileScreen() {
       secret
     );
 
+    if (profileQuery.data?.guardianUserId) {
+      updateMutation.mutate({ alias, _securedData });
+    } else {
+      updateMutation.mutate({
+        alias,
+        _securedData,
+        guardianEmail: guardianEmail || undefined,
+        guardianPhone: guardianPhone || undefined,
+      });
+    }
+  };
+
+  const handleRemoveGuardian = () => {
     updateMutation.mutate({
-      alias,
-      _securedData,
-      guardianEmail: guardianEmail || undefined,
-      guardianPhone: guardianPhone || undefined,
+      guardianEmail: null,
+      guardianPhone: null,
     });
   };
 
@@ -193,10 +204,7 @@ export default function ProfileScreen() {
                   This can happen if your device secret was lost or changed.
                   Please re-enter your information below to create a new secret.
                 </Text>
-                <Button
-                  onPress={handleRecreateSecret}
-                  variant="secondary"
-                >
+                <Button onPress={handleRecreateSecret} variant="secondary">
                   Generate new secret & re-enter data
                 </Button>
               </View>
@@ -262,7 +270,7 @@ export default function ProfileScreen() {
         <View className="overflow-hidden rounded-card border-2 border-border bg-card">
           <View className="items-center gap-2 border-border border-b-2 px-card py-4">
             <Shield color={colors.primary} size={22} />
-            <Text className="font-black font-sans text-lg text-foreground tracking-tight">
+            <Text className="font-black font-sans text-foreground text-lg tracking-tight">
               Guardian
             </Text>
           </View>
@@ -276,6 +284,14 @@ export default function ProfileScreen() {
                 <Text className="font-normal font-sans text-muted-foreground text-xs">
                   {profileQuery.data.guardianEmail}
                 </Text>
+                <Button
+                  className="mt-2"
+                  disabled={updateMutation.isPending}
+                  onPress={handleRemoveGuardian}
+                  variant="secondary"
+                >
+                  Remove guardian
+                </Button>
               </View>
             ) : (
               <>
@@ -312,7 +328,7 @@ export default function ProfileScreen() {
 
         <View className="overflow-hidden rounded-card border-2 border-border bg-card">
           <View className="border-border border-b-2 px-card py-4">
-            <Text className="font-black font-sans text-lg text-foreground tracking-tight">
+            <Text className="font-black font-sans text-foreground text-lg tracking-tight">
               Credits
             </Text>
           </View>

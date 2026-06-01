@@ -1,8 +1,7 @@
 import { patientProfiles } from "@zen-doc/db";
+import { z } from "zod";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
-import { z } from "zod";
-
 
 // Create a simplified schema for patient onboarding
 const simpleOnboardingSchema = z.object({
@@ -26,7 +25,7 @@ export const completeOnboardingRoute = protectedProcedure
       isOnboardingComplete: true,
       guardianEmail: guardianEmail || null,
       guardianPhone: guardianPhone || null,
-      guardianRequestStatus: (guardianEmail || guardianPhone) ? "pending" : null,
+      guardianRequestStatus: guardianEmail || guardianPhone ? "pending" : null,
     };
 
     await context.db
