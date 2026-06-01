@@ -125,22 +125,20 @@ export default function ProfileScreen() {
         secret
       );
 
-      if (profileQuery.data?.guardianUserId) {
-        updateMutation.mutate({
-          alias: alias || undefined,
-          _securedData,
-        });
-      } else {
-        updateMutation.mutate({
-          alias: alias || undefined,
-          _securedData,
-          guardianEmail: guardianEmail || undefined,
-          guardianPhone: guardianPhone || undefined,
-        });
-      }
+      updateMutation.mutate({
+        alias: alias || undefined,
+        _securedData,
+      });
     } catch (err) {
       handleError(err);
     }
+  };
+
+  const handleFindGuardian = () => {
+    updateMutation.mutate({
+      guardianEmail: guardianEmail || undefined,
+      guardianPhone: guardianPhone || undefined,
+    });
   };
 
   const handleRemoveGuardian = () => {
@@ -331,10 +329,11 @@ export default function ProfileScreen() {
                   value={guardianPhone}
                 />
                 <Button
-                  disabled={updateMutation.isPending}
-                  onPress={async () => {
-                    await handleSave();
-                  }}
+                  disabled={
+                    updateMutation.isPending ||
+                    !(guardianEmail || guardianPhone)
+                  }
+                  onPress={handleFindGuardian}
                   variant="secondary"
                 >
                   Find guardian
