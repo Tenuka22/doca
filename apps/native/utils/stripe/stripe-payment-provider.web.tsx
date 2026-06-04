@@ -15,7 +15,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from "react-native";
 
 const stripePromise = loadStripe(env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -92,55 +92,57 @@ function PaymentSheetModal({
 
   if (elementError) {
     return (
-      <View
+      <ScrollView
         style={{
           backgroundColor: "white",
           borderRadius: 16,
           padding: 24,
           width: "100%",
           maxWidth: 420,
-          gap: 20,
+        maxHeight: 500,
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 18,
+          fontWeight: "bold",
+          textAlign: "center",
+          color: "#dc2626",
         }}
       >
-        <Text
-          style={{
-            fontSize: 18,
-            fontWeight: "bold",
-            textAlign: "center",
-            color: "#dc2626",
-          }}
-        >
-          Payment Error
-        </Text>
-        <Text
-          style={{
-            fontSize: 14,
-            textAlign: "center",
-            color: "#64748b",
-          }}
-        >
-          {elementError}
-        </Text>
-        <Pressable
-          onPress={onDismiss}
-          style={{ padding: 10, alignItems: "center" }}
-        >
-          <Text style={{ color: "#3b82f6", fontSize: 14 }}>Try Again</Text>
-        </Pressable>
-      </View>
+        Payment Error
+      </Text>
+      <Text
+        style={{
+          fontSize: 14,
+          textAlign: "center",
+          color: "#64748b",
+          marginTop: 12,
+        }}
+      >
+        {elementError}
+      </Text>
+      <Pressable
+        onPress={onDismiss}
+        style={{ padding: 10, alignItems: "center", marginTop: 12 }}
+      >
+        <Text style={{ color: "#3b82f6", fontSize: 14 }}>Try Again</Text>
+      </Pressable>
+    </ScrollView>
     );
   }
 
   return (
-    <View
+    <ScrollView
       style={{
         backgroundColor: "white",
         borderRadius: 16,
         padding: 24,
         width: "100%",
         maxWidth: 420,
-        gap: 20,
+        maxHeight: 500,
       }}
+      contentContainerStyle={{ gap: 20 }}
     >
       <Text
         style={{
@@ -187,7 +189,7 @@ function PaymentSheetModal({
           </Pressable>
         )}
       </View>
-    </View>
+    </ScrollView>
   );
 }
 

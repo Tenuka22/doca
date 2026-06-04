@@ -279,7 +279,7 @@ function PendingRequests({
   );
 }
 
-export const Route = createFileRoute("/doctor/sessions")({
+export const Route = createFileRoute("/doctor/sessions/")({
   loaderDeps: () => ({}),
   loader: async ({ context }) => {
     try {
@@ -533,6 +533,126 @@ function DoctorSessionsRoute() {
       </div>
 
       <div className="grid gap-6">
+        <Card className="rounded-3xl border-border/60">
+          <CardHeader>
+            <SectionHeader
+              description="Approved sessions ready for you to join"
+              title="Upcoming sessions"
+            />
+          </CardHeader>
+
+          <Separator />
+
+          <CardContent>
+            {(() => {
+              const upcoming = sessions.filter((session) => {
+                const start = new Date(session.startAt);
+                const end = new Date(session.endAt);
+                const isValidStart = !Number.isNaN(start.getTime());
+                const isValidEnd = !Number.isNaN(end.getTime());
+
+                return (
+                  session.status === "approved" &&
+                  isValidStart &&
+                  isValidEnd &&
+                  isWithinInterval(new Date(), {
+                    start: subMinutes(start, 30),
+                    end: addMinutes(end, 30),
+                  })
+                );
+              });
+
+              if (upcoming.length === 0) {
+                return (
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon">
+                        <VideoIcon />
+                      </EmptyMedia>
+                      <EmptyTitle>No upcoming sessions</EmptyTitle>
+                      <EmptyDescription>
+                        Approved sessions that are ready to join will appear
+                        here.
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
+                );
+              }
+
+              return (
+                <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                  {upcoming.map((session) => {
+                    const start = new Date(session.startAt);
+                    const end = new Date(session.endAt);
+
+                    return (
+                      <Card
+                        className="rounded-2xl border-border/60 transition-all hover:shadow-md"
+                        key={session.id}
+                      >
+                        <CardContent className="flex flex-col gap-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className="rounded-xl border bg-muted/40 p-2 text-muted-foreground">
+                                <VideoIcon className="size-4" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm leading-tight">
+                                  {session.patientId.slice(0, 12)}...
+                                </p>
+                                <p className="text-[10px] text-muted-foreground">
+                                  ID: {session.id.slice(0, 8)}...
+                                </p>
+                              </div>
+                            </div>
+                            <SessionStatusBadge status={session.status} />
+                          </div>
+
+                          <Separator />
+
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                            <div>
+                              <span className="text-muted-foreground">
+                                Date
+                              </span>
+                              <p className="font-medium">
+                                {format(start, "MMM d, yyyy")}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">
+                                Time
+                              </span>
+                              <p className="font-medium">
+                                {format(start, "h:mm a")} -{" "}
+                                {format(end, "h:mm a")}
+                              </p>
+                            </div>
+                          </div>
+
+                          <Button
+                            className="mt-2 w-full gap-2"
+                            onClick={() => {
+                              navigate({
+                                to: `/doctor/sessions/${session.id}`,
+                              });
+                            }}
+                            size="sm"
+                            variant="default"
+                          >
+                            <VideoIcon className="size-4" />
+                            Join Conference
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+
         <Card className="rounded-3xl border-border/60">
           <CardHeader>
             <SectionHeader

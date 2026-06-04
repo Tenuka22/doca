@@ -94,6 +94,7 @@ export default function ProfileScreen() {
           setInitialPhone(decryptedPhone);
           setInitialFullName(decryptedFullName);
           setInitialAddress(decryptedAddress);
+          setCorruptedData(false);
         } else {
           setCorruptedData(true);
         }
@@ -158,9 +159,11 @@ export default function ProfileScreen() {
   };
 
   const handleRemoveGuardian = () => {
-    updateMutation.mutate({
-      guardianEmail: null,
-      guardianPhone: null,
+    toast({
+      type: "info",
+      title: "Cannot remove here",
+      message:
+        "To remove your guardian, please ask them to unlink you from their Guardian dashboard.",
     });
   };
 

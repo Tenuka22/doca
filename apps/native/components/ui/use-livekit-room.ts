@@ -1,10 +1,19 @@
 import { type Room, RoomEvent, Track } from "livekit-client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { MediaStream } from "react-native-webrtc";
+import { MediaStream, MediaStreamTrack as RNMediaStreamTrack } from "react-native-webrtc";
+
+function formatParticipantIdentity(identity: string): string {
+  if (identity.startsWith("doctor_")) return "Doctor";
+  if (identity.startsWith("patient_")) return "Patient";
+  if (identity.startsWith("admin_")) return "Admin";
+  return identity;
+}
 
 interface RemoteParticipantInfo {
   identity: string;
   streamURL: string;
+  isAnonymous: boolean;
+  displayName: string;
 }
 
 interface UseLiveKitRoomOptions {
@@ -63,13 +72,13 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
           setIsConnecting(false);
           options.onConnected?.();
 
-          for (const pub of room.localParticipant.trackPublications) {
+          for (const [, publication] of room.localParticipant.trackPublications) {
             if (
-              pub.track?.kind === Track.Kind.Video &&
-              pub.track.mediaStreamTrack
+              publication.track?.kind === Track.Kind.Video &&
+              publication.track.mediaStreamTrack
             ) {
               try {
-                const stream = new MediaStream([pub.track.mediaStreamTrack]);
+                const stream = new MediaStream([publication.track.mediaStreamTrack] as unknown as RNMediaStreamTrack[]);
                 const url = stream.toURL();
                 if (url) {
                   setLocalStreamURL(url);
@@ -103,17 +112,18 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
             }
             map.set(p.identity, entry);
             const combined = [...entry.audioTracks, ...entry.videoTracks];
+            const displayName = formatParticipantIdentity(p.identity);
             if (combined.length > 0) {
               try {
-                const stream = new MediaStream(combined);
+                const stream = new MediaStream(combined as unknown as RNMediaStreamTrack[]);
                 const streamURL = stream.toURL() ?? "";
                 entry.streamURL = streamURL;
-                initial.push({ identity: p.identity, streamURL });
+                initial.push({ identity: p.identity, streamURL, isAnonymous: false, displayName });
               } catch {
-                initial.push({ identity: p.identity, streamURL: "" });
+                initial.push({ identity: p.identity, streamURL: "", isAnonymous: false, displayName });
               }
             } else {
-              initial.push({ identity: p.identity, streamURL: "" });
+              initial.push({ identity: p.identity, streamURL: "", isAnonymous: false, displayName });
             }
           }
           if (initial.length > 0) {
@@ -141,7 +151,8 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
             if (prev.some((p) => p.identity === participant.identity)) {
               return prev;
             }
-            return [...prev, { identity: participant.identity, streamURL: "" }];
+            const displayName = formatParticipantIdentity(participant.identity);
+            return [...prev, { identity: participant.identity, streamURL: "", isAnonymous: false, displayName }];
           });
         });
 
@@ -181,7 +192,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
           let streamURL = "";
           if (allTracks.length > 0) {
             try {
-              const stream = new MediaStream(allTracks);
+              const stream = new MediaStream(allTracks as unknown as RNMediaStreamTrack[]);
               streamURL = stream.toURL() ?? "";
               entry.streamURL = streamURL;
             } catch {
@@ -198,7 +209,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
                   : p
               );
             }
-            return [...prev, { identity, streamURL }];
+            return [...prev, { identity, streamURL, isAnonymous: false, displayName: formatParticipantIdentity(identity) }];
           });
         });
 
@@ -214,7 +225,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
             try {
               const stream = new MediaStream([
                 publication.track.mediaStreamTrack,
-              ]);
+              ] as unknown as RNMediaStreamTrack[]);
               const url = stream.toURL();
               if (url) {
                 setLocalStreamURL(url);

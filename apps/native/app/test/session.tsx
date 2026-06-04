@@ -16,6 +16,7 @@ export default function TestSessionScreen() {
   const [sessionId, setSessionId] = useState("");
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [alias, setAlias] = useState<string | undefined>(undefined);
+  const [selectedRole, setSelectedRole] = useState<"patient" | "doctor" | "admin">("patient");
 
   useEffect(() => {
     orpc.getPatientProfile
@@ -44,9 +45,10 @@ export default function TestSessionScreen() {
             alias={alias}
             endAt={new Date(Date.now() + 3_600_000).toISOString()}
             onClose={() => setActiveSessionId(null)}
-            onFetchToken={(sid) =>
+            onFetchToken={(sid: string) =>
               orpc.getTestLiveKitToken.call({ sessionId: sid })
             }
+            role={selectedRole}
             sessionId={activeSessionId}
             startAt={new Date().toISOString()}
           />
@@ -88,13 +90,32 @@ export default function TestSessionScreen() {
               value={sessionId}
             />
 
+            <View className="gap-2">
+              <Text className="font-bold font-sans text-foreground text-xs uppercase tracking-wider">
+                Join as
+              </Text>
+              <View className="flex-row gap-2">
+                {(["patient", "doctor", "admin"] as const).map((role) => (
+                  <Button
+                    className="flex-1"
+                    key={role}
+                    onPress={() => setSelectedRole(role)}
+                    size="sm"
+                    variant={selectedRole === role ? "primary" : "secondary"}
+                  >
+                    {role.charAt(0).toUpperCase() + role.slice(1)}
+                  </Button>
+                ))}
+              </View>
+            </View>
+
             <Button
               className="w-full"
               disabled={!sessionId.trim()}
               icon={<Video color={colors.primaryForeground} size={16} />}
               onPress={handleJoin}
             >
-              Join as Patient
+              Join as {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}
             </Button>
           </View>
         </Card>

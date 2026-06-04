@@ -1,4 +1,3 @@
-import { useClerk, useUser } from "@clerk/tanstack-react-start";
 import {
   createFileRoute,
   Link,
@@ -87,15 +86,6 @@ function Breadcrumbs() {
 }
 
 function DoctorLayoutRoute() {
-  const user = useUser();
-  const { signOut } = useClerk();
-  const name = user.user?.fullName ?? user.user?.username ?? "Doctor";
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
 
   return (
     <SidebarProvider>

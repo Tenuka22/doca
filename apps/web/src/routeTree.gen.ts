@@ -16,12 +16,12 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DoctorIndexRouteImport } from './routes/doctor/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as DoctorSessionsRouteImport } from './routes/doctor/sessions'
 import { Route as DoctorProfileRouteImport } from './routes/doctor/profile'
 import { Route as DoctorPlansRouteImport } from './routes/doctor/plans'
 import { Route as DoctorCreditsRouteImport } from './routes/doctor/credits'
 import { Route as DoctorAvailabilityRouteImport } from './routes/doctor/availability'
 import { Route as AdminSessionRouteImport } from './routes/admin/session'
+import { Route as DoctorSessionsIndexRouteImport } from './routes/doctor/sessions/index'
 import { Route as AdminSessionsIndexRouteImport } from './routes/admin/sessions/index'
 import { Route as AdminPlansIndexRouteImport } from './routes/admin/plans/index'
 import { Route as AdminPatientsIndexRouteImport } from './routes/admin/patients/index'
@@ -67,11 +67,6 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const DoctorSessionsRoute = DoctorSessionsRouteImport.update({
-  id: '/sessions',
-  path: '/sessions',
-  getParentRoute: () => DoctorRoute,
-} as any)
 const DoctorProfileRoute = DoctorProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -96,6 +91,11 @@ const AdminSessionRoute = AdminSessionRouteImport.update({
   id: '/session',
   path: '/session',
   getParentRoute: () => AdminRoute,
+} as any)
+const DoctorSessionsIndexRoute = DoctorSessionsIndexRouteImport.update({
+  id: '/sessions/',
+  path: '/sessions/',
+  getParentRoute: () => DoctorRoute,
 } as any)
 const AdminSessionsIndexRoute = AdminSessionsIndexRouteImport.update({
   id: '/sessions/',
@@ -133,9 +133,9 @@ const AdminCreditsIndexRoute = AdminCreditsIndexRouteImport.update({
   getParentRoute: () => AdminRoute,
 } as any)
 const DoctorSessionsSessionIdRoute = DoctorSessionsSessionIdRouteImport.update({
-  id: '/$sessionId',
-  path: '/$sessionId',
-  getParentRoute: () => DoctorSessionsRoute,
+  id: '/sessions/$sessionId',
+  path: '/sessions/$sessionId',
+  getParentRoute: () => DoctorRoute,
 } as any)
 const AdminDoctorsDoctorIdRoute = AdminDoctorsDoctorIdRouteImport.update({
   id: '/doctors/$doctorId',
@@ -154,7 +154,6 @@ export interface FileRoutesByFullPath {
   '/doctor/credits': typeof DoctorCreditsRoute
   '/doctor/plans': typeof DoctorPlansRoute
   '/doctor/profile': typeof DoctorProfileRoute
-  '/doctor/sessions': typeof DoctorSessionsRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/doctor/': typeof DoctorIndexRoute
   '/admin/doctors/$doctorId': typeof AdminDoctorsDoctorIdRoute
@@ -166,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/admin/patients/': typeof AdminPatientsIndexRoute
   '/admin/plans/': typeof AdminPlansIndexRoute
   '/admin/sessions/': typeof AdminSessionsIndexRoute
+  '/doctor/sessions/': typeof DoctorSessionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -176,7 +176,6 @@ export interface FileRoutesByTo {
   '/doctor/credits': typeof DoctorCreditsRoute
   '/doctor/plans': typeof DoctorPlansRoute
   '/doctor/profile': typeof DoctorProfileRoute
-  '/doctor/sessions': typeof DoctorSessionsRouteWithChildren
   '/admin': typeof AdminIndexRoute
   '/doctor': typeof DoctorIndexRoute
   '/admin/doctors/$doctorId': typeof AdminDoctorsDoctorIdRoute
@@ -188,6 +187,7 @@ export interface FileRoutesByTo {
   '/admin/patients': typeof AdminPatientsIndexRoute
   '/admin/plans': typeof AdminPlansIndexRoute
   '/admin/sessions': typeof AdminSessionsIndexRoute
+  '/doctor/sessions': typeof DoctorSessionsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -201,7 +201,6 @@ export interface FileRoutesById {
   '/doctor/credits': typeof DoctorCreditsRoute
   '/doctor/plans': typeof DoctorPlansRoute
   '/doctor/profile': typeof DoctorProfileRoute
-  '/doctor/sessions': typeof DoctorSessionsRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/doctor/': typeof DoctorIndexRoute
   '/admin/doctors/$doctorId': typeof AdminDoctorsDoctorIdRoute
@@ -213,6 +212,7 @@ export interface FileRoutesById {
   '/admin/patients/': typeof AdminPatientsIndexRoute
   '/admin/plans/': typeof AdminPlansIndexRoute
   '/admin/sessions/': typeof AdminSessionsIndexRoute
+  '/doctor/sessions/': typeof DoctorSessionsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -227,7 +227,6 @@ export interface FileRouteTypes {
     | '/doctor/credits'
     | '/doctor/plans'
     | '/doctor/profile'
-    | '/doctor/sessions'
     | '/admin/'
     | '/doctor/'
     | '/admin/doctors/$doctorId'
@@ -239,6 +238,7 @@ export interface FileRouteTypes {
     | '/admin/patients/'
     | '/admin/plans/'
     | '/admin/sessions/'
+    | '/doctor/sessions/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -249,7 +249,6 @@ export interface FileRouteTypes {
     | '/doctor/credits'
     | '/doctor/plans'
     | '/doctor/profile'
-    | '/doctor/sessions'
     | '/admin'
     | '/doctor'
     | '/admin/doctors/$doctorId'
@@ -261,6 +260,7 @@ export interface FileRouteTypes {
     | '/admin/patients'
     | '/admin/plans'
     | '/admin/sessions'
+    | '/doctor/sessions'
   id:
     | '__root__'
     | '/'
@@ -273,7 +273,6 @@ export interface FileRouteTypes {
     | '/doctor/credits'
     | '/doctor/plans'
     | '/doctor/profile'
-    | '/doctor/sessions'
     | '/admin/'
     | '/doctor/'
     | '/admin/doctors/$doctorId'
@@ -285,6 +284,7 @@ export interface FileRouteTypes {
     | '/admin/patients/'
     | '/admin/plans/'
     | '/admin/sessions/'
+    | '/doctor/sessions/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -346,13 +346,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/doctor/sessions': {
-      id: '/doctor/sessions'
-      path: '/sessions'
-      fullPath: '/doctor/sessions'
-      preLoaderRoute: typeof DoctorSessionsRouteImport
-      parentRoute: typeof DoctorRoute
-    }
     '/doctor/profile': {
       id: '/doctor/profile'
       path: '/profile'
@@ -387,6 +380,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/session'
       preLoaderRoute: typeof AdminSessionRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/doctor/sessions/': {
+      id: '/doctor/sessions/'
+      path: '/sessions'
+      fullPath: '/doctor/sessions/'
+      preLoaderRoute: typeof DoctorSessionsIndexRouteImport
+      parentRoute: typeof DoctorRoute
     }
     '/admin/sessions/': {
       id: '/admin/sessions/'
@@ -439,10 +439,10 @@ declare module '@tanstack/react-router' {
     }
     '/doctor/sessions/$sessionId': {
       id: '/doctor/sessions/$sessionId'
-      path: '/$sessionId'
+      path: '/sessions/$sessionId'
       fullPath: '/doctor/sessions/$sessionId'
       preLoaderRoute: typeof DoctorSessionsSessionIdRouteImport
-      parentRoute: typeof DoctorSessionsRoute
+      parentRoute: typeof DoctorRoute
     }
     '/admin/doctors/$doctorId': {
       id: '/admin/doctors/$doctorId'
@@ -482,25 +482,14 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
-interface DoctorSessionsRouteChildren {
-  DoctorSessionsSessionIdRoute: typeof DoctorSessionsSessionIdRoute
-}
-
-const DoctorSessionsRouteChildren: DoctorSessionsRouteChildren = {
-  DoctorSessionsSessionIdRoute: DoctorSessionsSessionIdRoute,
-}
-
-const DoctorSessionsRouteWithChildren = DoctorSessionsRoute._addFileChildren(
-  DoctorSessionsRouteChildren,
-)
-
 interface DoctorRouteChildren {
   DoctorAvailabilityRoute: typeof DoctorAvailabilityRoute
   DoctorCreditsRoute: typeof DoctorCreditsRoute
   DoctorPlansRoute: typeof DoctorPlansRoute
   DoctorProfileRoute: typeof DoctorProfileRoute
-  DoctorSessionsRoute: typeof DoctorSessionsRouteWithChildren
   DoctorIndexRoute: typeof DoctorIndexRoute
+  DoctorSessionsSessionIdRoute: typeof DoctorSessionsSessionIdRoute
+  DoctorSessionsIndexRoute: typeof DoctorSessionsIndexRoute
 }
 
 const DoctorRouteChildren: DoctorRouteChildren = {
@@ -508,8 +497,9 @@ const DoctorRouteChildren: DoctorRouteChildren = {
   DoctorCreditsRoute: DoctorCreditsRoute,
   DoctorPlansRoute: DoctorPlansRoute,
   DoctorProfileRoute: DoctorProfileRoute,
-  DoctorSessionsRoute: DoctorSessionsRouteWithChildren,
   DoctorIndexRoute: DoctorIndexRoute,
+  DoctorSessionsSessionIdRoute: DoctorSessionsSessionIdRoute,
+  DoctorSessionsIndexRoute: DoctorSessionsIndexRoute,
 }
 
 const DoctorRouteWithChildren =

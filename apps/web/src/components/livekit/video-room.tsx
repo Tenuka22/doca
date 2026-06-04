@@ -23,6 +23,19 @@ interface VideoRoomProps {
   asDialog?: boolean;
   endAt: string;
   onClose: () => void;
+  onFetchToken?: (sessionId: string) => Promise<{
+    token: string;
+    serverUrl: string;
+    roomName: string;
+    session: {
+      id: string;
+      startAt: string;
+      endAt: string;
+      status: string;
+      doctorId: string;
+      patientId: string;
+    };
+  }>;
   open?: boolean;
   role: "doctor" | "patient" | "admin";
   sessionId: string;
@@ -121,16 +134,14 @@ function formatParticipantLabel(identity: string): string {
 
 function AudioVisualizer({
   levels,
-  identity,
 }: {
   levels: number[];
-  identity: string;
 }) {
   return (
-    <div className="flex h-12 items-end gap-[2px] rounded bg-black/40 p-2 backdrop-blur-md">
+    <div className="flex h-8 items-end gap-[2px] w-fit">
       {levels.map((level, i) => (
         <div
-          className="w-[3px] bg-emerald-500 transition-all duration-75"
+          className="w-[3px] rounded-t bg-emerald-500 transition-all duration-75"
           key={i}
           style={{
             height: `${Math.max(10, level * 100)}%`,
@@ -138,9 +149,6 @@ function AudioVisualizer({
           }}
         />
       ))}
-      <span className="ml-2 font-mono text-[10px] text-emerald-400">
-        {formatParticipantLabel(identity)}
-      </span>
     </div>
   );
 }
@@ -252,192 +260,255 @@ function VideoRoomContent({
   }
 
   if (timing.canJoin) {
-    const remoteParticipant = liveKit.room?.remoteParticipants
-      ?.values()
-      ?.next()?.value;
-    const remoteLabel = formatParticipantLabel(
-      remoteParticipant?.identity ?? ""
-    );
-    const hasRemote = liveKit.isConnected && !!remoteParticipant;
+    const remoteParticipantsArray = liveKit.isConnected
+      ? Array.from(liveKit.room?.remoteParticipants?.values() ?? [])
+      : [];
+    const allParticipants = [
+      ...(liveKit.isConnected && liveKit.room?.localParticipant
+        ? [liveKit.room.localParticipant]
+        : []),
+      ...remoteParticipantsArray,
+    ];
+    const hasRemote = liveKit.isConnected && remoteParticipantsArray.length > 0;
 
     return (
-      <div className="relative flex flex-1 flex-col overflow-hidden rounded-xl bg-neutral-950 shadow-2xl">
-        
-        <div className="relative flex-1 overflow-hidden">
-          {liveKit.isConnected ? (
-            <>
-              {hasRemote ? (
-                <>
-                  
-                  <video
-                    autoPlay
-                    className="h-full w-full object-contain"
-                    playsInline
-                    ref={liveKit.videoRef}
-                  />
-                  <audio autoPlay playsInline ref={liveKit.audioRef} />
+      <div className="flex-1 grid grid-cols-[1fr_auto] gap-4 min-h-0">
 
-                  
-                  <div className="absolute top-4 left-4 z-10 flex items-center gap-2 rounded-lg bg-black/40 px-3 py-1.5 backdrop-blur-md">
-                    <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-                    <span className="font-semibold text-white text-xs uppercase tracking-wide">
-                      {remoteLabel || "Participant"}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <div className="flex h-full flex-col items-center justify-center gap-4 bg-neutral-900">
-                  <UserX className="h-12 w-12 text-neutral-600" />
-                  <p className="font-medium text-neutral-400 text-sm">
-                    {role === "admin"
-                      ? "No user connected"
-                      : "Waiting for participant to join..."}
-                  </p>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-4 bg-neutral-900">
-              <div className="relative">
-                <div className="h-16 w-16 animate-ping rounded-full bg-primary/20" />
-                <User className="absolute top-1/2 left-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 text-primary" />
-              </div>
-              <p className="animate-pulse font-medium text-neutral-400 text-sm">
-                Establishing connection...
-              </p>
-            </div>
-          )}
+        <div className="relative flex flex-1 flex-col overflow-hidden rounded-xl bg-neutral-950 shadow-2xl">
+          <div className="relative flex-1 overflow-hidden">
+            
+            <video
+              autoPlay
+              className={`h-full w-full object-contain ${
+                liveKit.isConnected && hasRemote ? "" : "hidden"
+              }`}
+              playsInline
+              ref={liveKit.videoRef}
+            />
+            <audio autoPlay playsInline ref={liveKit.audioRef} />
 
-          
-          {role === "admin" && liveKit.isConnected && (
-            <div className="absolute top-4 left-1/2 z-20 flex -translate-x-1/2 flex-col gap-2">
-              {Object.entries(liveKit.audioLevelHistory).map(([id, levels]) => (
-                <AudioVisualizer identity={id} key={id} levels={levels} />
-              ))}
-            </div>
-          )}
-
-          
-          {liveKit.isConnected && (
-            <div className="absolute top-4 right-4 aspect-video w-[240px] overflow-hidden rounded-lg border border-white/10 bg-neutral-900 shadow-xl lg:w-[320px]">
-              <video
-                autoPlay
-                className="h-full w-full scale-x-[-1] object-cover"
-                muted
-                playsInline
-                ref={liveKit.localVideoRef}
-              />
-              <div className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-0.5 backdrop-blur-sm">
-                <span className="font-bold text-[10px] text-white uppercase tracking-tighter">
-                  You
+            
+            {liveKit.isConnected && hasRemote && (
+              <div className="absolute top-4 left-4 z-10 flex items-center gap-2 rounded-lg bg-black/40 px-3 py-1.5 backdrop-blur-md">
+                <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                <span className="font-semibold text-white text-xs uppercase tracking-wide">
+                  {formatParticipantLabel(
+                    remoteParticipantsArray[0]?.identity ?? ""
+                  ) || "Participant"}
                 </span>
               </div>
-              {!isCameraOn && (
-                <div className="absolute inset-0 flex items-center justify-center bg-neutral-900">
-                  <CameraOff className="h-8 w-8 text-neutral-600" />
-                </div>
-              )}
-            </div>
-          )}
+            )}
 
-          
-          {muteSeconds > 30 && role === "doctor" && (
-            <div className="absolute top-20 left-1/2 z-20 w-full max-w-md -translate-x-1/2 px-4">
-              <div className="flex items-center gap-3 rounded-lg border border-amber-500/50 bg-amber-500/20 p-3 text-amber-200 backdrop-blur-lg">
-                <MicOff className="h-5 w-5 shrink-0" />
-                <div className="flex-1">
-                  <p className="font-bold text-xs uppercase italic">
-                    Microphone Requirement
-                  </p>
-                  <p className="text-xs opacity-90">
-                    Please unmute. Automatic unmute in {remainingMuteTime}s
-                  </p>
+            
+            {liveKit.isConnected && !hasRemote && (
+              <div className="absolute inset-0 flex items-center justify-center bg-neutral-900">
+                <UserX className="h-12 w-12 text-neutral-600" />
+                <p className="font-medium text-neutral-400 text-sm">
+                  {role === "admin"
+                    ? "No user connected"
+                    : "Waiting for participant to join..."}
+                </p>
+              </div>
+            )}
+
+            
+            {!liveKit.isConnected && (
+              <div className="absolute inset-0 flex items-center justify-center bg-neutral-900">
+                <div className="relative">
+                  <div className="h-16 w-16 animate-ping rounded-full bg-primary/20" />
+                  <User className="absolute top-1/2 left-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 text-primary" />
+                </div>
+                <p className="animate-pulse font-medium text-neutral-400 text-sm">
+                  Establishing connection...
+                </p>
+              </div>
+            )}
+
+
+            {liveKit.isConnected && (
+              <div className="absolute top-4 right-4 aspect-video w-[200px] overflow-hidden rounded-lg border border-white/10 bg-neutral-900 shadow-xl lg:w-[240px]">
+                <video
+                  autoPlay
+                  className="h-full w-full scale-x-[-1] object-cover"
+                  muted
+                  playsInline
+                  ref={liveKit.localVideoRef}
+                />
+                <div className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-0.5 backdrop-blur-sm">
+                  <span className="font-bold text-[10px] text-white uppercase tracking-tighter">
+                    You
+                  </span>
+                </div>
+                {!isCameraOn && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-neutral-900">
+                    <CameraOff className="h-8 w-8 text-neutral-600" />
+                  </div>
+                )}
+              </div>
+            )}
+
+
+            {muteSeconds > 30 && role === "doctor" && (
+              <div className="absolute top-20 left-1/2 z-20 w-full max-w-md -translate-x-1/2 px-4">
+                <div className="flex items-center gap-3 rounded-lg border border-amber-500/50 bg-amber-500/20 p-3 text-amber-200 backdrop-blur-lg">
+                  <MicOff className="h-5 w-5 shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-bold text-xs uppercase italic">
+                      Microphone Requirement
+                    </p>
+                    <p className="text-xs opacity-90">
+                      Please unmute. Automatic unmute in {remainingMuteTime}s
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-
-        
-        <div className="absolute bottom-6 left-1/2 z-30 flex -translate-x-1/2 items-center gap-4 rounded-2xl border border-white/10 bg-black/60 p-4 backdrop-blur-xl transition-all hover:bg-black/80">
-          <button
-            className={`group relative flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300 ${
-              isMicOn
-                ? "bg-neutral-800 text-white hover:bg-neutral-700"
-                : "bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:bg-red-500"
-            }`}
-            onClick={handleToggleMic}
-            type="button"
-          >
-            {isMicOn ? (
-              <Mic className="h-5 w-5" />
-            ) : (
-              <MicOff className="h-5 w-5" />
             )}
-            {!isMicOn && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white font-bold text-[10px] text-red-600">
-                !
-              </span>
-            )}
-          </button>
+          </div>
 
-          {role !== "doctor" && (
+
+          <div className="absolute bottom-6 left-1/2 z-30 flex -translate-x-1/2 items-center gap-4 rounded-2xl border border-white/10 bg-black/60 p-4 backdrop-blur-xl transition-all hover:bg-black/80">
             <button
-              className={`flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300 ${
-                isCameraOn
+              className={`group relative flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300 ${
+                isMicOn
                   ? "bg-neutral-800 text-white hover:bg-neutral-700"
                   : "bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:bg-red-500"
               }`}
-              onClick={handleToggleCamera}
+              onClick={handleToggleMic}
               type="button"
             >
-              {isCameraOn ? (
-                <Camera className="h-5 w-5" />
+              {isMicOn ? (
+                <Mic className="h-5 w-5" />
               ) : (
-                <CameraOff className="h-5 w-5" />
+                <MicOff className="h-5 w-5" />
+              )}
+              {!isMicOn && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white font-bold text-[10px] text-red-600">
+                  !
+                </span>
               )}
             </button>
+
+            {role !== "doctor" && (
+              <button
+                className={`flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300 ${
+                  isCameraOn
+                    ? "bg-neutral-800 text-white hover:bg-neutral-700"
+                    : "bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:bg-red-500"
+                }`}
+                onClick={handleToggleCamera}
+                type="button"
+              >
+                {isCameraOn ? (
+                  <Camera className="h-5 w-5" />
+                ) : (
+                  <CameraOff className="h-5 w-5" />
+                )}
+              </button>
+            )}
+
+            <div className="h-8 w-[1px] bg-white/10" />
+
+            <button
+              className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-600 text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-red-500"
+              onClick={() => setShowEndConfirm(true)}
+              type="button"
+            >
+              <PhoneOff className="h-5 w-5" />
+            </button>
+          </div>
+
+
+          {showEndConfirm && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+              <Card className="mx-4 w-full max-w-sm border-white/10 bg-neutral-900 text-white">
+                <CardContent className="flex flex-col gap-6 p-8">
+                  <div className="text-center">
+                    <h3 className="mb-2 font-bold text-lg">End Session?</h3>
+                    <p className="text-neutral-400 text-sm">
+                      This will disconnect all participants from the call.
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      className="flex-1 bg-white/5 text-white hover:bg-white/10"
+                      onClick={() => setShowEndConfirm(false)}
+                      variant="ghost"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      className="flex-1 bg-red-600 text-white hover:bg-red-500"
+                      onClick={handleEndSession}
+                    >
+                      End Call
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
-
-          <div className="h-8 w-[1px] bg-white/10" />
-
-          <button
-            className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-600 text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-red-500"
-            onClick={() => setShowEndConfirm(true)}
-            type="button"
-          >
-            <PhoneOff className="h-5 w-5" />
-          </button>
         </div>
 
-        
-        {showEndConfirm && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <Card className="mx-4 w-full max-w-sm border-white/10 bg-neutral-900 text-white">
-              <CardContent className="flex flex-col gap-6 p-8">
-                <div className="text-center">
-                  <h3 className="mb-2 font-bold text-lg">End Session?</h3>
-                  <p className="text-neutral-400 text-sm">
-                    This will disconnect all participants from the call.
-                  </p>
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    className="flex-1 bg-white/5 text-white hover:bg-white/10"
-                    onClick={() => setShowEndConfirm(false)}
-                    variant="ghost"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    className="flex-1 bg-red-600 text-white hover:bg-red-500"
-                    onClick={handleEndSession}
-                  >
-                    End Call
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+
+        {liveKit.isConnected && (
+          <div className="flex w-auto flex-col gap-3 overflow-y-auto">
+            <p className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
+              Participants ({allParticipants.length})
+            </p>
+            {allParticipants.map((p) => {
+              const isLocal = p.identity === liveKit.room?.localParticipant?.identity;
+              const levels = liveKit.audioLevelHistory[p.identity] ?? [];
+              const label = isLocal
+                ? `You (${formatParticipantLabel(p.identity)})`
+                : formatParticipantLabel(p.identity);
+              const isSpeaking = liveKit.activeSpeakers?.some(
+                (s) => s.identity === p.identity
+              );
+
+              return (
+                <Card
+                  className={`border ${
+                    isSpeaking
+                      ? "border-emerald-500/50"
+                      : "border-border"
+                  }`}
+                  key={p.identity}
+                >
+                  <CardContent className="flex flex-col gap-2 p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`flex h-6 w-6 items-center justify-center rounded-full ${
+                            isLocal ? "bg-primary/20" : "bg-muted"
+                          }`}
+                        >
+                          <User className="h-3 w-3" />
+                        </div>
+                        <span className="font-medium text-xs">{label}</span>
+                      </div>
+                      {isSpeaking && (
+                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                      )}
+                    </div>
+                    <AudioVisualizer levels={levels} />
+                    <div className="flex gap-3 text-[10px] text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        {isLocal
+                          ? isCameraOn ? <Camera className="h-3 w-3" /> : <CameraOff className="h-3 w-3" />
+                          : <Camera className="h-3 w-3" />}
+                        {isLocal ? (isCameraOn ? "On" : "Off") : "On"}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        {isLocal
+                          ? isMicOn ? <Mic className="h-3 w-3" /> : <MicOff className="h-3 w-3" />
+                          : <Mic className="h-3 w-3" />}
+                        {isLocal ? (isMicOn ? "On" : "Off") : "On"}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
@@ -460,6 +531,7 @@ function VideoRoomContent({
 
 export function VideoRoomWeb({
   onClose,
+  onFetchToken,
   open = true,
   sessionId,
   startAt,
@@ -491,7 +563,10 @@ export function VideoRoomWeb({
     setIsFetchingToken(true);
     setTokenError(null);
     try {
-      const result = await orpc.getLiveKitToken.call({ sessionId });
+      const fetcher =
+        onFetchToken ??
+        ((sid: string) => orpc.getLiveKitToken.call({ sessionId: sid }));
+      const result = await fetcher(sessionId);
       setTokenData(result);
     } catch (err) {
       setTokenError(
@@ -500,7 +575,7 @@ export function VideoRoomWeb({
     } finally {
       setIsFetchingToken(false);
     }
-  }, [sessionId, tokenData, isFetchingToken]);
+  }, [sessionId, tokenData, isFetchingToken, onFetchToken]);
 
   useEffect(() => {
     if (open && timing.canJoin && !tokenData && !isFetchingToken) {

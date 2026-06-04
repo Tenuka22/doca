@@ -2,7 +2,7 @@ import { type Href, Link } from "expo-router";
 import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 
-type ButtonVariant = "primary" | "secondary";
+type ButtonVariant = "primary" | "secondary" | "destructive" | "outline" | "ghost";
 type ButtonSize = "sm" | "default";
 
 interface ButtonProps {
@@ -28,8 +28,13 @@ export const Button = ({
 }: ButtonProps) => {
   const isString = typeof children === "string";
   const paddingClass = size === "sm" ? "px-4 py-1.5" : "px-card py-control";
-  const textColor =
-    variant === "primary" ? "text-primary-foreground" : "text-foreground";
+  const isPrimary = variant === "primary";
+  const isDestructive = variant === "destructive";
+  const textColor = isPrimary
+    ? "text-primary-foreground"
+    : isDestructive
+      ? "text-destructive-foreground"
+      : "text-foreground";
 
   const content = (
     <View className="flex-row items-center justify-center gap-2">
@@ -71,7 +76,11 @@ export const Button = ({
 
           <View
             className={`w-full flex-row items-center justify-center rounded-control border-1 border-border ${paddingClass} ${
-              variant === "primary" ? "bg-primary" : "bg-card"
+              isPrimary
+                ? "bg-primary"
+                : isDestructive
+                  ? "bg-destructive"
+                  : "bg-card"
             }`}
             style={{
               transform:

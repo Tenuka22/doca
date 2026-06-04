@@ -44,7 +44,7 @@ export const getLiveKitTokenRoute = protectedProcedure
 
     const roomName = `session_${session.id}`;
     const identity = isAdmin
-      ? `admin_${userId}`
+      ? `admin_${userId}_${Math.random().toString(36).slice(2, 8)}`
       : isDoctor
         ? `doctor_${userId}`
         : `patient_${userId}`;

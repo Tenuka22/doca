@@ -88,6 +88,7 @@ export function VideoRoom({
   const timing = useSessionTiming(startAt, endAt, role);
   const videoRef = useRef<HTMLVideoElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const roomRef = useRef<Room | null>(null);
   const hasFetchedRef = useRef(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -97,6 +98,14 @@ export function VideoRoom({
   const [tokenError, setTokenError] = useState<string | null>(null);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [remoteLabel, setRemoteLabel] = useState("");
+  const [showPrivacyPrompt, setShowPrivacyPrompt] = useState(
+    role === "patient"
+  );
+  const [isAnonymous, setIsAnonymous] = useState(false);
+  const [showConfirmToggle, setShowConfirmToggle] = useState(false);
+  const [privacyChoiceMade, setPrivacyChoiceMade] = useState(
+    role !== "patient"
+  );
 
   const connectToRoom = useCallback(
     async (serverUrl: string, token: string) => {
@@ -118,9 +127,9 @@ export function VideoRoom({
           setRemoteLabel(formatParticipantLabel(firstRemote.identity));
         }
 
-        for (const pub of room.localParticipant.trackPublications) {
-          if (pub.track?.kind === Track.Kind.Video && localVideoRef.current) {
-            pub.track.attach(localVideoRef.current);
+        for (const [, publication] of room.localParticipant.trackPublications) {
+          if (publication.track?.kind === Track.Kind.Video && localVideoRef.current) {
+            publication.track.attach(localVideoRef.current);
           }
         }
       });
@@ -129,11 +138,35 @@ export function VideoRoom({
         setIsConnected(false);
         setIsConnecting(false);
         roomRef.current = null;
+        if (audioRef.current) {
+          audioRef.current.remove();
+          audioRef.current = null;
+        }
       });
 
       room.on(RoomEvent.TrackSubscribed, (track) => {
         if (track.kind === Track.Kind.Video && videoRef.current) {
           track.attach(videoRef.current);
+        }
+        if (track.kind === Track.Kind.Audio) {
+          let audioEl = audioRef.current;
+          if (!audioEl) {
+            audioEl = document.createElement("audio");
+            audioEl.autoplay = true;
+            audioEl.setAttribute("playsinline", "");
+            audioEl.hidden = true;
+            document.body.appendChild(audioEl);
+            audioRef.current = audioEl;
+          }
+          track.attach(audioEl);
+        }
+      });
+
+      room.on(RoomEvent.TrackUnsubscribed, (track) => {
+        if (track.kind === Track.Kind.Audio && audioRef.current) {
+          track.detach();
+          audioRef.current.remove();
+          audioRef.current = null;
         }
       });
 
@@ -151,12 +184,17 @@ export function VideoRoom({
       });
 
       await room.connect(serverUrl, token);
-      await room.localParticipant.setCameraEnabled(true);
       await room.localParticipant.setMicrophoneEnabled(true);
+      if (!isAnonymous) {
+        await room.localParticipant.setCameraEnabled(true);
+      } else {
+        await room.localParticipant.setCameraEnabled(false);
+        setIsCameraOn(false);
+      }
 
       roomRef.current = room;
     },
-    []
+    [isAnonymous]
   );
 
   const startSession = useCallback(async () => {
@@ -187,10 +225,10 @@ export function VideoRoom({
   }, [sessionId, onFetchToken, connectToRoom]);
 
   useEffect(() => {
-    if (timing.canJoin && !hasFetchedRef.current) {
+    if (timing.canJoin && privacyChoiceMade && !hasFetchedRef.current) {
       startSession();
     }
-  }, [timing.canJoin, startSession]);
+  }, [timing.canJoin, startSession, privacyChoiceMade]);
 
   const disconnect = useCallback(async () => {
     if (roomRef.current) {
@@ -239,6 +277,99 @@ export function VideoRoom({
     },
     []
   );
+
+  const handlePrivacyChoice = useCallback(
+    (anonymous: boolean) => {
+      setIsAnonymous(anonymous);
+      setPrivacyChoiceMade(true);
+      setShowPrivacyPrompt(false);
+    },
+    []
+  );
+
+  const handleTogglePrivacy = useCallback(() => {
+    if (isAnonymous) {
+      roomRef.current?.localParticipant.setCameraEnabled(true);
+      setIsCameraOn(true);
+    } else {
+      roomRef.current?.localParticipant.setCameraEnabled(false);
+      setIsCameraOn(false);
+    }
+    setIsAnonymous((prev) => !prev);
+    setShowConfirmToggle(false);
+  }, [isAnonymous]);
+
+  if (showConfirmToggle) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+        <div className="mx-4 w-full max-w-sm rounded-lg border bg-card p-6 shadow-lg">
+          <div className="mb-4 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <SvgIcon d={iconPaths.videoOff} size={24} />
+            </div>
+            <p className="font-medium text-sm">
+              {isAnonymous ? "Show your identity?" : "Stay anonymous?"}
+            </p>
+            <p className="mt-1 text-muted-foreground text-xs">
+              {isAnonymous
+                ? `Your alias "${alias}" will no longer be used. Your real role will be visible.`
+                : `You will appear as "${alias}" and your camera will be turned off.`}
+            </p>
+          </div>
+          <div className="flex justify-center gap-3">
+            <button
+              className="inline-flex items-center justify-center rounded-md border bg-background px-4 py-2 font-medium text-sm transition-colors hover:bg-accent"
+              onClick={() => setShowConfirmToggle(false)}
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground text-sm transition-colors hover:bg-primary/90"
+              onClick={handleTogglePrivacy}
+              type="button"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (showPrivacyPrompt) {
+    return (
+      <div className="flex flex-col items-center gap-6 py-12">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+          <SvgIcon d={iconPaths.video} size={32} />
+        </div>
+        <div className="text-center">
+          <p className="font-semibold text-lg">Join Anonymously?</p>
+          <p className="mt-1 max-w-sm text-muted-foreground text-sm">
+            {alias
+              ? `You will appear as "${alias}" with your camera off. The doctor will not see your real name.`
+              : "Your camera will be turned off and you will appear as a patient."}
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            className="inline-flex items-center justify-center rounded-md border bg-background px-5 py-2.5 font-medium text-sm transition-colors hover:bg-accent"
+            onClick={() => handlePrivacyChoice(true)}
+            type="button"
+          >
+            Stay Hidden
+          </button>
+          <button
+            className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 font-medium text-primary-foreground text-sm transition-colors hover:bg-primary/90"
+            onClick={() => handlePrivacyChoice(false)}
+            type="button"
+          >
+            Join Normally
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (tokenError) {
     return (
@@ -314,7 +445,7 @@ export function VideoRoom({
         )}
 
         
-        {isConnected && (
+        {isConnected && !isAnonymous && (
           <div className="absolute right-4 bottom-4 aspect-[3/4] w-[180px] overflow-hidden rounded-lg border-2 border-white/30 bg-black shadow-2xl">
             <video
               autoPlay
@@ -337,6 +468,18 @@ export function VideoRoom({
         )}
 
         
+        {isConnected && isAnonymous && (
+          <div className="absolute right-4 bottom-4 aspect-[3/4] w-[180px] items-center justify-center overflow-hidden rounded-lg border-2 border-purple-500/50 bg-gray-900 shadow-2xl">
+            <div className="flex flex-col items-center gap-1">
+              <SvgIcon d={iconPaths.videoOff} size={24} />
+              <span className="font-bold text-[9px] text-purple-300 uppercase">
+                Hidden
+              </span>
+            </div>
+          </div>
+        )}
+
+        
         {isConnected && (
           <div className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5">
             <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
@@ -354,10 +497,15 @@ export function VideoRoom({
             </div>
             <div>
               <p className="font-medium text-sm">
-                {alias && role === "patient" ? alias : `You (${role})`}
+                {isAnonymous && alias
+                  ? alias
+                  : `You (${role})`}
               </p>
               <p className="text-muted-foreground text-xs">
                 {(() => {
+                  if (isAnonymous) {
+                    return "Anonymous";
+                  }
                   if (isCameraOn && isMicOn) {
                     return "Connected";
                   }
@@ -422,6 +570,20 @@ export function VideoRoom({
           >
             <SvgIcon d={isCameraOn ? iconPaths.camera : iconPaths.cameraOff} />
           </button>
+          {role === "patient" && (
+            <button
+              className={`flex h-12 w-12 items-center justify-center rounded-full transition-colors ${
+                isAnonymous
+                  ? "bg-secondary hover:bg-secondary/80"
+                  : "bg-destructive hover:bg-destructive/80"
+              }`}
+              onClick={() => setShowConfirmToggle(true)}
+              title={isAnonymous ? "Show identity" : "Hide identity"}
+              type="button"
+            >
+              <SvgIcon d={isAnonymous ? iconPaths.video : iconPaths.videoOff} />
+            </button>
+          )}
         </div>
       )}
 

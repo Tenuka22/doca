@@ -510,7 +510,7 @@ function DoctorPlansRoute() {
                       <ChartTooltipContent
                         formatter={(
                           value: unknown,
-                          name: unknown,
+                          _name: unknown,
                           payload: unknown
                         ) => {
                           const item = payload as {

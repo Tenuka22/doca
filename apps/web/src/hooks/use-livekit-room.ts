@@ -55,15 +55,20 @@ export function useLiveKitRoomWeb(options: UseLiveKitRoomWebOptions = {}) {
         room.on(RoomEvent.Connected satisfies RoomEventType, () => {
           setIsConnected(true);
           setIsConnecting(false);
+          setRoom(room);
+          roomRef.current = room;
           options.onConnected?.();
 
-          const localParticipant = room.localParticipant;
-          if (localParticipant) {
-            const videoTrack = Array.from(
-              localParticipant.videoTrackPublications.values()
-            )[0]?.videoTrack;
-            if (videoTrack && localVideoRef.current) {
-              videoTrack.attach(localVideoRef.current);
+          for (const participant of room.remoteParticipants.values()) {
+            for (const publication of participant.videoTrackPublications.values()) {
+              if (publication.track && publication.track.kind === "video" && videoRef.current) {
+                publication.track.attach(videoRef.current);
+              }
+            }
+            for (const publication of participant.audioTrackPublications.values()) {
+              if (publication.track && publication.track.kind === "audio" && audioRef.current) {
+                publication.track.attach(audioRef.current);
+              }
             }
           }
         });
@@ -141,9 +146,6 @@ export function useLiveKitRoomWeb(options: UseLiveKitRoomWebOptions = {}) {
 
         await room.localParticipant.setCameraEnabled(true);
         await room.localParticipant.setMicrophoneEnabled(true);
-
-        roomRef.current = room;
-        setRoom(room);
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to connect";

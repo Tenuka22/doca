@@ -206,10 +206,10 @@ export default function AppointmentsScreen() {
             </View>
             <View className="flex-1">
               <Text className="font-bold font-sans text-sm text-success-foreground">
-                Booking confirmed
+                Request sent
               </Text>
               <Text className="font-sans text-success-foreground/80 text-xs">
-                Your session has been booked successfully.
+                Your booking request has been sent. The doctor will review it.
               </Text>
             </View>
             <View className="flex-row items-center justify-center self-center">

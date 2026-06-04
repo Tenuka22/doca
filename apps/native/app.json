@@ -43,7 +43,8 @@
         "@stripe/stripe-react-native",
         {}
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "./plugins/with-ios-audio-speaker"
     ],
     "experiments": {
       "typedRoutes": true,
