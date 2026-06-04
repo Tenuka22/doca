@@ -30,7 +30,6 @@
     "@zen-doc/pricing": "workspace:*",
     "babel-preset-expo": "~55.0.18",
     "dotenv": "catalog:",
-    "@expo/metro-config": "~55.0.23",
     "expo": "^55.0.17",
     "expo-auth-session": "~55.0.16",
     "expo-constants": "~55.0.15",
