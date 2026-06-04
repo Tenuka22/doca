@@ -3,136 +3,59 @@
 @import "tailwindcss/utilities.css";
 @import "nativewind/theme";
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --font-sans: var(--font-family-sans);
-  --font-weight-light: var(--font-weight-light-value);
-  --font-weight-normal: var(--font-weight-normal-value);
-  --font-weight-medium: var(--font-weight-medium-value);
-  --font-weight-semibold: var(--font-weight-semibold-value);
-  --radius: var(--radius-md-value);
-  --radius-sm: var(--radius-sm-value);
-  --radius-md: var(--radius-md-value);
-  --radius-lg: var(--radius-lg-value);
-  --radius-xl: var(--radius-xl-value);
-  --radius-card: var(--radius-card-value);
-  --radius-control: var(--radius-control-value);
-  --radius-chip: var(--radius-chip-value);
-  --radius-2xl: var(--radius-card-value);
-  --radius-3xl: var(--radius-card-value);
-  --radius-4xl: var(--radius-card-value);
-  --spacing-page: var(--spacing-page-value);
-  --spacing-section: var(--spacing-section-value);
-  --spacing-card: var(--spacing-card-value);
-  --spacing-control: var(--spacing-control-value);
-  --spacing-chip: var(--spacing-chip-value);
-  --shadow-2xs: var(--shadow-none-value);
-  --shadow-xs: var(--shadow-none-value);
-  --shadow-sm: var(--shadow-none-value);
-  --shadow: var(--shadow-none-value);
-  --shadow-md: var(--shadow-none-value);
-  --shadow-lg: var(--shadow-none-value);
-  --shadow-xl: var(--shadow-none-value);
-  --shadow-2xl: var(--shadow-none-value);
-}
-
-:root {
-  --background: #f4f4f5; /* Zinc 100 - stark light gray page background */
-  --foreground: #000000; /* Pure black text */
-  --card: #ffffff; /* Pure white card background */
-  --card-foreground: #000000;
-  --popover: #ffffff;
-  --popover-foreground: #000000;
-  --primary: #a22a2a; /* Gorgeous brick/rust red primary */
-  --primary-foreground: #ffffff;
-  --secondary: #e4e4e7; /* Zinc 200 secondary bg */
-  --secondary-foreground: #000000;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #a22a2a;
-  --accent-foreground: #ffffff;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --success: #059669;
-  --success-foreground: #ffffff;
-  --warning: #d97706;
-  --warning-foreground: #ffffff;
-  --border: rgba(
-    0,
-    0,
-    0,
-    0.7
-  ); /* Softened black borders for cohesive Neo-brutalism */
-  --input: #ffffff;
-  --ring: #a22a2a;
-  --font-family-sans: "Satoshi";
-  --font-weight-light-value: 300;
-  --font-weight-normal-value: 400;
-  --font-weight-medium-value: 500;
-  --font-weight-semibold-value: 600;
-  --radius-sm-value: 2px;
-  --radius-md-value: 3px;
-  --radius-lg-value: 4px;
-  --radius-xl-value: 6px;
-  --radius-card-value: 3px;
-  --radius-control-value: 3px;
-  --radius-chip-value: 9999px;
-  --spacing-page-value: 1.25rem;
-  --spacing-section-value: 1rem;
-  --spacing-card-value: 1.25rem;
-  --spacing-control-value: 0.75rem;
-  --spacing-chip-value: 0.5rem;
-  --shadow-none-value: 0 0 #0000;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #18181b; /* Zinc 900 */
-    --foreground: #ffffff;
-    --card: #27272a; /* Zinc 800 */
-    --card-foreground: #ffffff;
-    --popover: #27272a;
-    --popover-foreground: #ffffff;
-    --primary: #ef4444; /* Bright red primary for dark mode contrast */
-    --primary-foreground: #ffffff;
-    --secondary: #3f3f46; /* Zinc 700 */
-    --secondary-foreground: #ffffff;
-    --muted: #27272a;
-    --muted-foreground: #a1a1aa;
-    --accent: #ef4444;
-    --accent-foreground: #ffffff;
-    --destructive: #ef4444;
-    --destructive-foreground: #ffffff;
-    --success: #10b981;
-    --success-foreground: #ffffff;
-    --warning: #f59e0b;
-    --warning-foreground: #ffffff;
-    --border: #09090b; /* Deep dark charcoal for clean, high-contrast recessed boundaries in dark mode */
-    --input: #27272a;
-    --ring: #ef4444;
-  }
+@theme {
+  --color-background: #f4f4f5;
+  --color-foreground: #000000;
+  --color-card: #ffffff;
+  --color-card-foreground: #000000;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #000000;
+  --color-primary: #a22a2a;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #e4e4e7;
+  --color-secondary-foreground: #000000;
+  --color-muted: #f4f4f5;
+  --color-muted-foreground: #71717a;
+  --color-accent: #a22a2a;
+  --color-accent-foreground: #ffffff;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+  --color-success: #059669;
+  --color-success-foreground: #ffffff;
+  --color-warning: #d97706;
+  --color-warning-foreground: #ffffff;
+  --color-border: rgba(0, 0, 0, 0.7);
+  --color-input: #ffffff;
+  --color-ring: #a22a2a;
+  --font-sans: "Satoshi";
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --radius: 3px;
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+  --radius-card: 3px;
+  --radius-control: 3px;
+  --radius-chip: 9999px;
+  --radius-2xl: 3px;
+  --radius-3xl: 3px;
+  --radius-4xl: 3px;
+  --spacing-page: 1.25rem;
+  --spacing-section: 1rem;
+  --spacing-card: 1.25rem;
+  --spacing-control: 0.75rem;
+  --spacing-chip: 0.5rem;
+  --shadow-2xs: 0 0 #0000;
+  --shadow-xs: 0 0 #0000;
+  --shadow-sm: 0 0 #0000;
+  --shadow: 0 0 #0000;
+  --shadow-md: 0 0 #0000;
+  --shadow-lg: 0 0 #0000;
+  --shadow-xl: 0 0 #0000;
+  --shadow-2xl: 0 0 #0000;
 }
 
 @layer base {
@@ -146,5 +69,33 @@
 
   body {
     @apply bg-background font-sans text-foreground;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #18181b;
+    --color-foreground: #ffffff;
+    --color-card: #27272a;
+    --color-card-foreground: #ffffff;
+    --color-popover: #27272a;
+    --color-popover-foreground: #ffffff;
+    --color-primary: #ef4444;
+    --color-primary-foreground: #ffffff;
+    --color-secondary: #3f3f46;
+    --color-secondary-foreground: #ffffff;
+    --color-muted: #27272a;
+    --color-muted-foreground: #a1a1aa;
+    --color-accent: #ef4444;
+    --color-accent-foreground: #ffffff;
+    --color-destructive: #ef4444;
+    --color-destructive-foreground: #ffffff;
+    --color-success: #10b981;
+    --color-success-foreground: #ffffff;
+    --color-warning: #f59e0b;
+    --color-warning-foreground: #ffffff;
+    --color-border: #09090b;
+    --color-input: #27272a;
+    --color-ring: #ef4444;
   }
 }
