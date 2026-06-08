@@ -44,8 +44,6 @@ function OnboardingCheck() {
   const pathname = usePathname();
   const { isLoaded, isSignedIn } = useAuth();
 
-  console.log("[OnboardingCheck] render", { isLoaded, isSignedIn, pathname });
-
   const patientProfileQuery = useQuery(
     orpc.getPatientProfile.queryOptions({
       enabled: isLoaded && isSignedIn,
@@ -64,13 +62,6 @@ function OnboardingCheck() {
 
   const isProfileLoaded =
     patientProfileQuery.isFetched && guardianProfileQuery.isFetched;
-
-  console.log("[OnboardingCheck] query state", {
-    isFetched: isProfileLoaded,
-    hasPatient: !!patientProfileQuery.data,
-    hasGuardian: !!guardianProfileQuery.data,
-    isLoading: patientProfileQuery.isLoading || guardianProfileQuery.isLoading,
-  });
 
   if (isLoaded && isSignedIn === false) {
     if (pathname !== "/sign-in" && pathname !== "/sign-up") {
@@ -113,7 +104,6 @@ function OnboardingCheck() {
         pathname !== "/profile" &&
         !pathname.startsWith("/onboarding")
       ) {
-        console.log("[OnboardingCheck] needs repair, redirecting to /profile");
         return <Redirect href="/profile" />;
       }
 
@@ -121,12 +111,9 @@ function OnboardingCheck() {
         !needsRepair &&
         (pathname === "/" || pathname.startsWith("/onboarding"))
       ) {
-        console.log("[OnboardingCheck] valid profile, redirecting to /(patient)");
         return <Redirect href="/(patient)" />;
       }
     }
-
-    console.log("[OnboardingCheck] valid profile, staying on current page");
   }
 
   return null;
