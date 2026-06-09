@@ -18,8 +18,8 @@ export const acceptRequestRoute = protectedProcedure
     const email = clerkUser.emailAddresses[0]?.emailAddress;
     const phone = clerkUser.phoneNumbers[0]?.phoneNumber;
 
-    if (!email && !phone) {
-        throw new Error("Guardian must have an email or phone number in Clerk");
+    if (!(email || phone)) {
+      throw new Error("Guardian must have an email or phone number in Clerk");
     }
 
     await context.db
@@ -32,10 +32,10 @@ export const acceptRequestRoute = protectedProcedure
       .onConflictDoUpdate({
         target: guardianProfiles.clerkUserId,
         set: {
-            email: email ?? null,
-            phone: phone ?? null,
-            updatedAt: new Date().toISOString(),
-        }
+          email: email ?? null,
+          phone: phone ?? null,
+          updatedAt: new Date().toISOString(),
+        },
       });
 
     await context.db

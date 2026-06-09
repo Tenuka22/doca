@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Text, View, ScrollView } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,11 @@ const patientSchema = z.object({
   phone: z.string().optional(),
   fullName: z.string().max(200).optional(),
   address: z.string().max(500).optional(),
-  guardianEmail: z.string().email("Valid email required").optional().or(z.literal("")),
+  guardianEmail: z
+    .string()
+    .email("Valid email required")
+    .optional()
+    .or(z.literal("")),
   guardianPhone: z.string().optional(),
 });
 
@@ -181,7 +185,10 @@ export default function OnboardingScreen() {
               <Text className="text-center font-normal font-sans text-muted-foreground text-sm">
                 No pending requests found for your email or phone number.
               </Text>
-              <Button onPress={() => pendingRequests.refetch()} variant="secondary">
+              <Button
+                onPress={() => pendingRequests.refetch()}
+                variant="secondary"
+              >
                 Refresh
               </Button>
             </View>
@@ -189,7 +196,7 @@ export default function OnboardingScreen() {
             <ScrollView className="flex-1">
               <View className="gap-4">
                 {pendingRequests.data?.map((request) => (
-                  <Card key={request.userId} className="p-4 gap-4">
+                  <Card className="gap-4 p-4" key={request.userId}>
                     <View>
                       <Text className="font-bold font-sans text-foreground text-lg">
                         {request.alias}
@@ -200,9 +207,13 @@ export default function OnboardingScreen() {
                     </View>
                     <Button
                       disabled={acceptRequest.isPending}
-                      onPress={() => acceptRequest.mutate({ patientUserId: request.userId })}
+                      onPress={() =>
+                        acceptRequest.mutate({ patientUserId: request.userId })
+                      }
                     >
-                      {acceptRequest.isPending ? "Accepting..." : "Accept Request"}
+                      {acceptRequest.isPending
+                        ? "Accepting..."
+                        : "Accept Request"}
                     </Button>
                   </Card>
                 ))}
@@ -355,7 +366,9 @@ export default function OnboardingScreen() {
 
           <Button
             className="mt-8 w-full"
-            disabled={completeOnboarding.isPending || !patientForm.watch("alias")}
+            disabled={
+              completeOnboarding.isPending || !patientForm.watch("alias")
+            }
             onPress={patientForm.handleSubmit(onPatientSubmit)}
           >
             {completeOnboarding.isPending ? "Setting up..." : "Complete Setup"}

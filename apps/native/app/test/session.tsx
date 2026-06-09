@@ -16,7 +16,9 @@ export default function TestSessionScreen() {
   const [sessionId, setSessionId] = useState("");
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [alias, setAlias] = useState<string | undefined>(undefined);
-  const [selectedRole, setSelectedRole] = useState<"patient" | "doctor" | "admin">("patient");
+  const [selectedRole, setSelectedRole] = useState<
+    "patient" | "doctor" | "admin"
+  >("patient");
 
   useEffect(() => {
     orpc.getPatientProfile
@@ -115,7 +117,8 @@ export default function TestSessionScreen() {
               icon={<Video color={colors.primaryForeground} size={16} />}
               onPress={handleJoin}
             >
-              Join as {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}
+              Join as{" "}
+              {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}
             </Button>
           </View>
         </Card>

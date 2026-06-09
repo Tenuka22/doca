@@ -15,7 +15,14 @@ import {
   useRef,
   useState,
 } from "react";
-import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 
 const stripePromise = loadStripe(env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -99,41 +106,42 @@ function PaymentSheetModal({
           padding: 24,
           width: "100%",
           maxWidth: 420,
-        maxHeight: 500,
-      }}
-    >
-      <Text
-        style={{
-          fontSize: 18,
-          fontWeight: "bold",
-          textAlign: "center",
-          color: "#dc2626",
+          maxHeight: 500,
         }}
       >
-        Payment Error
-      </Text>
-      <Text
-        style={{
-          fontSize: 14,
-          textAlign: "center",
-          color: "#64748b",
-          marginTop: 12,
-        }}
-      >
-        {elementError}
-      </Text>
-      <Pressable
-        onPress={onDismiss}
-        style={{ padding: 10, alignItems: "center", marginTop: 12 }}
-      >
-        <Text style={{ color: "#3b82f6", fontSize: 14 }}>Try Again</Text>
-      </Pressable>
-    </ScrollView>
+        <Text
+          style={{
+            fontSize: 18,
+            fontWeight: "bold",
+            textAlign: "center",
+            color: "#dc2626",
+          }}
+        >
+          Payment Error
+        </Text>
+        <Text
+          style={{
+            fontSize: 14,
+            textAlign: "center",
+            color: "#64748b",
+            marginTop: 12,
+          }}
+        >
+          {elementError}
+        </Text>
+        <Pressable
+          onPress={onDismiss}
+          style={{ padding: 10, alignItems: "center", marginTop: 12 }}
+        >
+          <Text style={{ color: "#3b82f6", fontSize: 14 }}>Try Again</Text>
+        </Pressable>
+      </ScrollView>
     );
   }
 
   return (
     <ScrollView
+      contentContainerStyle={{ gap: 20 }}
       style={{
         backgroundColor: "white",
         borderRadius: 16,
@@ -142,7 +150,6 @@ function PaymentSheetModal({
         maxWidth: 420,
         maxHeight: 500,
       }}
-      contentContainerStyle={{ gap: 20 }}
     >
       <Text
         style={{

@@ -258,7 +258,6 @@ export default function BreathingActionScreen() {
           </View>
 
           <View className="gap-4 px-card py-card">
-            
             <View className="rounded-card border-2 border-border bg-background px-card py-card">
               <View className="mb-2 flex-row items-center justify-between">
                 <Text className="font-bold font-sans text-muted-foreground text-xs uppercase tracking-[0.18em]">
@@ -281,7 +280,6 @@ export default function BreathingActionScreen() {
               </Text>
             </View>
 
-            
             <View className="items-center gap-4 rounded-card border-2 border-border bg-background px-card py-card">
               <View className="items-center gap-1">
                 <Text className="text-center font-bold font-sans text-muted-foreground text-xs uppercase tracking-[0.2em]">

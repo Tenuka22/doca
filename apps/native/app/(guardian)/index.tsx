@@ -1,8 +1,8 @@
 import { useUser } from "@clerk/expo";
 import { useQuery } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
-import { Users, Heart, ArrowRight, UserCheck } from "lucide-react-native";
-import { ScrollView, Text, View, ActivityIndicator } from "react-native";
+import { ArrowRight, Heart, UserCheck, Users } from "lucide-react-native";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { RootBottomBar } from "@/components/ui/root-bottom-bar";
@@ -37,14 +37,13 @@ export default function GuardianDashboard() {
           </Text>
         </View>
 
-        {(managedPatients.isLoading || pendingRequests.isLoading) ? (
+        {managedPatients.isLoading || pendingRequests.isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator color={colors.primary} size="large" />
           </View>
         ) : (
           <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
             <View className="gap-section pb-24">
-              
               {hasPending && (
                 <View className="gap-4">
                   <View className="flex-row items-center gap-2">
@@ -54,10 +53,10 @@ export default function GuardianDashboard() {
                     </Text>
                   </View>
                   <View className="gap-3">
-                    <Button 
-                      variant="secondary" 
+                    <Button
                       className="justify-between"
                       onPress={() => router.push("/(onboarding)/onboarding")}
+                      variant="secondary"
                     >
                       <Text>Review pending invitations</Text>
                       <ArrowRight color={colors.foreground} size={16} />
@@ -66,7 +65,6 @@ export default function GuardianDashboard() {
                 </View>
               )}
 
-              
               <View className="gap-4">
                 <View className="flex-row items-center gap-2">
                   <Users color={colors.primary} size={20} />
@@ -75,50 +73,45 @@ export default function GuardianDashboard() {
                   </Text>
                 </View>
 
-                {!hasManaged ? (
-                  <Card className="items-center gap-3 py-8">
-                    <Heart color={colors.mutedForeground} size={32} />
-                    <Text className="font-bold font-sans text-foreground text-center">
-                      No patients linked yet
-                    </Text>
-                    <Text className="text-center font-normal font-sans text-muted-foreground text-sm">
-                      When a patient invites you using your email or phone, their request will appear here.
-                    </Text>
-                  </Card>
-                ) : (
+                {hasManaged ? (
                   <View className="gap-4">
                     {managedPatients.data?.map((patient) => (
-                      <Card key={patient.userId} className="p-4 gap-3">
+                      <Card className="gap-3 p-4" key={patient.userId}>
                         <View className="flex-row items-center justify-between">
                           <View>
                             <Text className="font-black font-sans text-foreground text-lg uppercase tracking-tight">
                               {patient.alias}
                             </Text>
                             <Text className="font-normal font-sans text-muted-foreground text-xs">
-                              Linked since {new Date(patient.createdAt).toLocaleDateString()}
+                              Linked since{" "}
+                              {new Date(patient.createdAt).toLocaleDateString()}
                             </Text>
                           </View>
                           <View className="h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                             <Heart color={colors.primary} size={20} />
                           </View>
                         </View>
-                        
-                        <View className="flex-row gap-2 mt-2">
-                          <Button 
-                            className="flex-1" 
-                            variant="secondary"
+
+                        <View className="mt-2 flex-row gap-2">
+                          <Button
+                            className="flex-1"
                             onPress={() => {
-                                router.push(`/(guardian)/patient/${patient.userId}/activities`);
+                              router.push(
+                                `/(guardian)/patient/${patient.userId}/activities`
+                              );
                             }}
+                            variant="secondary"
                           >
                             View Activities
                           </Button>
-                          <Button 
-                            className="flex-1" 
-                            variant="secondary"
+                          <Button
+                            className="flex-1"
                             onPress={() => {
-                                router.push(`/(guardian)/patient/${patient.userId}/stress-management`);
+                              router.push(
+                                `/(guardian)/patient/${patient.userId}/stress-management`
+                              );
                             }}
+                            variant="secondary"
                           >
                             View Stress
                           </Button>
@@ -126,38 +119,54 @@ export default function GuardianDashboard() {
                       </Card>
                     ))}
                   </View>
+                ) : (
+                  <Card className="items-center gap-3 py-8">
+                    <Heart color={colors.mutedForeground} size={32} />
+                    <Text className="text-center font-bold font-sans text-foreground">
+                      No patients linked yet
+                    </Text>
+                    <Text className="text-center font-normal font-sans text-muted-foreground text-sm">
+                      When a patient invites you using your email or phone,
+                      their request will appear here.
+                    </Text>
+                  </Card>
                 )}
               </View>
 
-              
-              <View className="gap-4 mt-4">
+              <View className="mt-4 gap-4">
                 <Text className="font-black font-sans text-foreground text-sm uppercase tracking-[0.2em]">
                   Guardian Tools
                 </Text>
-                <Button 
-                  variant="secondary" 
+                <Button
                   className="justify-start"
                   onPress={() => router.push("/(guardian)/activities")}
+                  variant="secondary"
                 >
-                  <Text className="text-foreground font-bold">View Patient Activities</Text>
+                  <Text className="font-bold text-foreground">
+                    View Patient Activities
+                  </Text>
                 </Button>
-                <Button 
-                  variant="secondary" 
+                <Button
                   className="justify-start"
                   onPress={() => router.push("/(guardian)/track-management")}
+                  variant="secondary"
                 >
-                  <Text className="text-foreground font-bold">Track Management</Text>
+                  <Text className="font-bold text-foreground">
+                    Track Management
+                  </Text>
                 </Button>
 
-                <Text className="font-black font-sans text-foreground text-sm uppercase tracking-[0.2em] mt-4">
+                <Text className="mt-4 font-black font-sans text-foreground text-sm uppercase tracking-[0.2em]">
                   Account
                 </Text>
-                <Button 
-                  variant="secondary" 
+                <Button
                   className="justify-start px-0"
                   onPress={() => router.push("/(guardian)/profile")}
+                  variant="secondary"
                 >
-                  <Text className="text-foreground font-bold">Edit Guardian Profile</Text>
+                  <Text className="font-bold text-foreground">
+                    Edit Guardian Profile
+                  </Text>
                 </Button>
               </View>
             </View>

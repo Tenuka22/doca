@@ -1,6 +1,6 @@
 import { Stack, useRouter } from "expo-router";
 import { ArrowLeft, BarChart3 } from "lucide-react-native";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { Screen } from "@/components/ui/screen";
 import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
@@ -24,11 +24,12 @@ export default function GuardianTrackManagementScreen() {
         </View>
 
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-            
-            <View className="items-center justify-center py-20 rounded-card border-2 border-dashed border-border">
-                <BarChart3 color={colors.mutedForeground} size={48} />
-                <Text className="mt-4 font-bold text-muted-foreground">Metrics tracking coming soon</Text>
-            </View>
+          <View className="items-center justify-center rounded-card border-2 border-border border-dashed py-20">
+            <BarChart3 color={colors.mutedForeground} size={48} />
+            <Text className="mt-4 font-bold text-muted-foreground">
+              Metrics tracking coming soon
+            </Text>
+          </View>
         </ScrollView>
       </Screen>
       <ScreenBottomBar>

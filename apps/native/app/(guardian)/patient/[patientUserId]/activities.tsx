@@ -1,11 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { ArrowLeft, Activity, Calendar } from "lucide-react-native";
-import { ScrollView, Text, View, ActivityIndicator, Pressable } from "react-native";
-
+import { Activity, ArrowLeft, Calendar } from "lucide-react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+import { Card } from "@/components/ui/card";
 import { Screen } from "@/components/ui/screen";
 import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
-import { Card } from "@/components/ui/card";
 import { orpc } from "@/utils/orpc";
 import { useThemeColor } from "@/utils/theme";
 
@@ -14,7 +19,11 @@ export default function GuardianPatientActivitiesScreen() {
   const colors = useThemeColor();
   const router = useRouter();
 
-  const wellnessQuery = useQuery(orpc.getManagedPatientWellness.queryOptions({ input: { patientUserId: patientUserId ?? "" } }));
+  const wellnessQuery = useQuery(
+    orpc.getManagedPatientWellness.queryOptions({
+      input: { patientUserId: patientUserId ?? "" },
+    })
+  );
 
   return (
     <>
@@ -32,37 +41,37 @@ export default function GuardianPatientActivitiesScreen() {
         {wellnessQuery.isLoading ? (
           <ActivityIndicator color={colors.primary} size="large" />
         ) : (
-            <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-                <View className="gap-4 pb-4">
-                    {wellnessQuery.data?.map((action) => (
-                        <Card key={action.id} className="gap-3">
-                            <View className="flex-row items-center justify-between">
-                                <View className="flex-row items-center gap-2">
-                                    <Activity color={colors.foreground} size={16} />
-                                    <Text className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">
-                                        {action.actionType.replace('_', ' ')}
-                                    </Text>
-                                </View>
-                            </View>
+          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+            <View className="gap-4 pb-4">
+              {wellnessQuery.data?.map((action) => (
+                <Card className="gap-3" key={action.id}>
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-2">
+                      <Activity color={colors.foreground} size={16} />
+                      <Text className="font-bold font-sans text-foreground text-sm uppercase tracking-wide">
+                        {action.actionType.replace("_", " ")}
+                      </Text>
+                    </View>
+                  </View>
 
-                            <View className="gap-2 rounded-xl border border-border/50 bg-muted/5 p-3">
-                                <View className="flex-row items-center gap-2">
-                                    <Calendar color={colors.foreground} size={14} />
-                                    <Text className="font-medium font-sans text-foreground text-sm">
-                                        {new Date(action.completedAt).toLocaleDateString()}
-                                    </Text>
-                                </View>
-                                <Text className="font-medium font-sans text-foreground text-sm">
-                                    Duration: {action.durationSeconds} seconds
-                                </Text>
-                                <Text className="font-medium font-sans text-primary text-sm">
-                                    Credits Earned: {action.creditsEarned}
-                                </Text>
-                            </View>
-                        </Card>
-                    ))}
-                </View>
-            </ScrollView>
+                  <View className="gap-2 rounded-xl border border-border/50 bg-muted/5 p-3">
+                    <View className="flex-row items-center gap-2">
+                      <Calendar color={colors.foreground} size={14} />
+                      <Text className="font-medium font-sans text-foreground text-sm">
+                        {new Date(action.completedAt).toLocaleDateString()}
+                      </Text>
+                    </View>
+                    <Text className="font-medium font-sans text-foreground text-sm">
+                      Duration: {action.durationSeconds} seconds
+                    </Text>
+                    <Text className="font-medium font-sans text-primary text-sm">
+                      Credits Earned: {action.creditsEarned}
+                    </Text>
+                  </View>
+                </Card>
+              ))}
+            </View>
+          </ScrollView>
         )}
       </Screen>
       <ScreenBottomBar>

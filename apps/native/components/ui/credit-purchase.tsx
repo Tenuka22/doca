@@ -77,10 +77,14 @@ export function CreditPurchase({ forPatientUserId }: CreditPurchaseProps) {
         setPurchaseError(
           error instanceof Error ? error.message : "Unable to buy credits"
         );
-        showError("Payment Failed", error instanceof Error ? error.message : "Unable to buy credits", [
-          { label: "Try Again", onPress: handleBuyCredits },
-          { label: "Cancel", variant: "secondary", onPress: () => {} },
-        ]);
+        showError(
+          "Payment Failed",
+          error instanceof Error ? error.message : "Unable to buy credits",
+          [
+            { label: "Try Again", onPress: handleBuyCredits },
+            { label: "Cancel", variant: "secondary", onPress: () => {} },
+          ]
+        );
       },
     })
   );
@@ -120,10 +124,16 @@ export function CreditPurchase({ forPatientUserId }: CreditPurchaseProps) {
             ? error.message
             : "Unable to create subscription"
         );
-        showError("Payment Failed", error instanceof Error ? error.message : "Unable to create subscription", [
-          { label: "Try Again", onPress: handleSubscribe },
-          { label: "Cancel", variant: "secondary", onPress: () => {} },
-        ]);
+        showError(
+          "Payment Failed",
+          error instanceof Error
+            ? error.message
+            : "Unable to create subscription",
+          [
+            { label: "Try Again", onPress: handleSubscribe },
+            { label: "Cancel", variant: "secondary", onPress: () => {} },
+          ]
+        );
       },
     })
   );

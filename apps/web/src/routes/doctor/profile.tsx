@@ -118,8 +118,7 @@ export const Route = createFileRoute("/doctor/profile")({
         queryKey: orpc.profileStats.queryKey(),
         queryFn: () => orpc.profileStats.call(),
       });
-    } catch {
-    }
+    } catch {}
   },
   component: DoctorProfileRoute,
 });

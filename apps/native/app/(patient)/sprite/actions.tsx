@@ -92,7 +92,6 @@ export default function SpriteActionsScreen() {
           className="flex-1"
           contentContainerClassName="gap-section py-page pb-24"
         >
-          
           <View className="items-center gap-2">
             <TreePine color={colors.foreground} size={40} />
             <Text className="font-bold font-sans text-primary text-xs uppercase tracking-[0.25em]">
@@ -112,7 +111,6 @@ export default function SpriteActionsScreen() {
             </Text>
           </View>
 
-          
           {tasks.length > 0 ? (
             <View className="gap-3">
               {tasks.map((task) => {
@@ -132,7 +130,6 @@ export default function SpriteActionsScreen() {
                       router.push(route as Href);
                     }}
                   >
-                    
                     <View
                       className={`rounded-full p-3 ${
                         task.timeSlot === "morning"
@@ -153,7 +150,6 @@ export default function SpriteActionsScreen() {
                       )}
                     </View>
 
-                    
                     <View className="flex-1 gap-1">
                       <View className="flex-row items-center gap-2">
                         <Text
@@ -184,7 +180,6 @@ export default function SpriteActionsScreen() {
                       </Text>
                     </View>
 
-                    
                     <View className="h-10 w-10 items-center justify-center">
                       {completed ? (
                         <Check color="#166534" size={18} />

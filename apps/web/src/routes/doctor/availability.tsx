@@ -170,8 +170,7 @@ export const Route = createFileRoute("/doctor/availability")({
         queryKey: orpc.availabilityStats.queryKey(),
         queryFn: () => orpc.availabilityStats.call(),
       });
-    } catch {
-    }
+    } catch {}
   },
   component: DoctorAvailabilityRoute,
 });

@@ -1,5 +1,5 @@
 import { patientProfiles } from "@zen-doc/db";
-import { or, eq, and } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
 
@@ -17,10 +17,14 @@ export const getPendingRequestsRoute = protectedProcedure.handler(
 
     const conditions = [];
     if (emails.length > 0) {
-      conditions.push(...emails.map((email) => eq(patientProfiles.guardianEmail, email)));
+      conditions.push(
+        ...emails.map((email) => eq(patientProfiles.guardianEmail, email))
+      );
     }
     if (phones.length > 0) {
-      conditions.push(...phones.map((phone) => eq(patientProfiles.guardianPhone, phone)));
+      conditions.push(
+        ...phones.map((phone) => eq(patientProfiles.guardianPhone, phone))
+      );
     }
 
     const pendingRequests = await context.db.query.patientProfiles.findMany({

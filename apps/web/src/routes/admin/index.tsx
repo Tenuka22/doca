@@ -132,8 +132,7 @@ export const Route = createFileRoute("/admin/")({
         queryKey: orpc.stats.queryKey(),
         queryFn: () => orpc.stats.call(),
       });
-    } catch {
-    }
+    } catch {}
   },
   component: AdminDashboardRoute,
 });

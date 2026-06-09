@@ -49,7 +49,6 @@ export const updatePatientProfileRoute = protectedProcedure
         updateData.guardianEmail = guardianEmail;
         updateData.guardianPhone = guardianPhone;
         updateData.guardianRequestStatus = "pending";
-
       }
     }
 

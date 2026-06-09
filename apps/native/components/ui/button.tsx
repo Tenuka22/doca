@@ -1,8 +1,14 @@
+import * as Haptics from "expo-haptics";
 import { type Href, Link } from "expo-router";
 import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 
-type ButtonVariant = "primary" | "secondary" | "destructive" | "outline" | "ghost";
+type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "destructive"
+  | "outline"
+  | "ghost";
 type ButtonSize = "sm" | "default";
 
 interface ButtonProps {
@@ -36,6 +42,14 @@ export const Button = ({
       ? "text-destructive-foreground"
       : "text-foreground";
 
+  const handlePress = () => {
+    if (disabled) {
+      return;
+    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress?.();
+  };
+
   const content = (
     <View className="flex-row items-center justify-center gap-2">
       {icon && <View className={isString ? "" : ""}>{icon}</View>}
@@ -62,7 +76,7 @@ export const Button = ({
       accessibilityRole="button"
       className={`relative ${disabled ? "opacity-60" : ""} ${className ?? ""}`.trim()}
       disabled={disabled}
-      onPress={() => onPress?.()}
+      onPress={handlePress}
       style={{ position: "relative", overflow: "visible" }}
     >
       {({ pressed }) => (

@@ -61,12 +61,20 @@ export function useLiveKitRoomWeb(options: UseLiveKitRoomWebOptions = {}) {
 
           for (const participant of room.remoteParticipants.values()) {
             for (const publication of participant.videoTrackPublications.values()) {
-              if (publication.track && publication.track.kind === "video" && videoRef.current) {
+              if (
+                publication.track &&
+                publication.track.kind === "video" &&
+                videoRef.current
+              ) {
                 publication.track.attach(videoRef.current);
               }
             }
             for (const publication of participant.audioTrackPublications.values()) {
-              if (publication.track && publication.track.kind === "audio" && audioRef.current) {
+              if (
+                publication.track &&
+                publication.track.kind === "audio" &&
+                audioRef.current
+              ) {
                 publication.track.attach(audioRef.current);
               }
             }

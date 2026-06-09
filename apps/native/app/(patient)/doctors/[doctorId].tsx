@@ -46,7 +46,6 @@ import { orpc } from "@/utils/orpc";
 import { useIsDoctorSaved } from "@/utils/saved-doctors";
 import { useThemeColor } from "@/utils/theme";
 
-
 function Tag({
   label,
   variant = "muted",
@@ -81,7 +80,6 @@ function Tag({
   );
 }
 
-
 function SectionHeader({
   icon,
   title,
@@ -98,7 +96,6 @@ function SectionHeader({
     </View>
   );
 }
-
 
 function InfoChip({
   icon,
@@ -123,7 +120,6 @@ function InfoChip({
     </View>
   );
 }
-
 
 function PlanCard({
   plan,
@@ -167,7 +163,6 @@ function PlanCard({
   );
 }
 
-
 function LoadingState() {
   const colors = useThemeColor();
 
@@ -185,7 +180,6 @@ function LoadingState() {
     </>
   );
 }
-
 
 function NotFoundState() {
   return (
@@ -209,7 +203,6 @@ function NotFoundState() {
   );
 }
 
-
 function BackButton() {
   const colors = useThemeColor();
 
@@ -228,7 +221,6 @@ function BackButton() {
     </View>
   );
 }
-
 
 function ProfileHeader({
   profile,
@@ -312,7 +304,6 @@ function ProfileHeader({
   );
 }
 
-
 function BioSection({ bio }: { bio?: string | null }) {
   const colors = useThemeColor();
 
@@ -344,7 +335,6 @@ function BioSection({ bio }: { bio?: string | null }) {
     </Card>
   );
 }
-
 
 function MediaViewerModal({
   file,
@@ -425,7 +415,6 @@ function MediaViewerModal({
     </Modal>
   );
 }
-
 
 function MediaPreviewCard({
   caption,
@@ -552,7 +541,6 @@ function MediaShowcase({
   );
 }
 
-
 function DetailsSection({
   profile,
 }: {
@@ -629,7 +617,6 @@ function DetailsSection({
     </Card>
   );
 }
-
 
 function TagsOverviewSection({
   profile,
@@ -721,7 +708,6 @@ function TagsOverviewSection({
   );
 }
 
-
 function ApproachStepsSection({
   steps,
 }: {
@@ -771,7 +757,6 @@ function ApproachStepsSection({
     </Card>
   );
 }
-
 
 function EducationSection({
   education,
@@ -826,7 +811,6 @@ function EducationSection({
   );
 }
 
-
 function PlansSection({ doctorId }: { doctorId: string }) {
   const colors = useThemeColor();
 
@@ -858,7 +842,6 @@ function PlansSection({ doctorId }: { doctorId: string }) {
   );
 }
 
-
 function SaveButton({ doctorId }: { doctorId: string }) {
   const colors = useThemeColor();
   const { isSaved, toggleSave } = useIsDoctorSaved(doctorId);
@@ -881,7 +864,6 @@ function SaveButton({ doctorId }: { doctorId: string }) {
   );
 }
 
-
 function BackIconButton() {
   const colors = useThemeColor();
   const router = useRouter();
@@ -901,7 +883,6 @@ function BackIconButton() {
     </Pressable>
   );
 }
-
 
 export default function DoctorProfileScreen() {
   const { doctorId } = useLocalSearchParams<{ doctorId?: string }>();

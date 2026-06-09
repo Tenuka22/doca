@@ -8,9 +8,9 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { env } from "@zen-doc/env/web";
 import { Toaster } from "@zen-doc/ui/components/sonner";
 import { TooltipProvider } from "@zen-doc/ui/components/tooltip";
-import { env } from "@zen-doc/env/web";
 import { useEffect } from "react";
 
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";

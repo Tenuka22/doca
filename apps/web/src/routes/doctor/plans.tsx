@@ -290,8 +290,7 @@ export const Route = createFileRoute("/doctor/plans")({
         queryKey: orpc.listDoctorPlans.queryKey(),
         queryFn: () => orpc.listDoctorPlans.call(),
       });
-    } catch {
-    }
+    } catch {}
   },
   component: DoctorPlansRoute,
 });

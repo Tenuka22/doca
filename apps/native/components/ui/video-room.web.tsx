@@ -128,7 +128,10 @@ export function VideoRoom({
         }
 
         for (const [, publication] of room.localParticipant.trackPublications) {
-          if (publication.track?.kind === Track.Kind.Video && localVideoRef.current) {
+          if (
+            publication.track?.kind === Track.Kind.Video &&
+            localVideoRef.current
+          ) {
             publication.track.attach(localVideoRef.current);
           }
         }
@@ -185,11 +188,11 @@ export function VideoRoom({
 
       await room.connect(serverUrl, token);
       await room.localParticipant.setMicrophoneEnabled(true);
-      if (!isAnonymous) {
-        await room.localParticipant.setCameraEnabled(true);
-      } else {
+      if (isAnonymous) {
         await room.localParticipant.setCameraEnabled(false);
         setIsCameraOn(false);
+      } else {
+        await room.localParticipant.setCameraEnabled(true);
       }
 
       roomRef.current = room;
@@ -278,14 +281,11 @@ export function VideoRoom({
     []
   );
 
-  const handlePrivacyChoice = useCallback(
-    (anonymous: boolean) => {
-      setIsAnonymous(anonymous);
-      setPrivacyChoiceMade(true);
-      setShowPrivacyPrompt(false);
-    },
-    []
-  );
+  const handlePrivacyChoice = useCallback((anonymous: boolean) => {
+    setIsAnonymous(anonymous);
+    setPrivacyChoiceMade(true);
+    setShowPrivacyPrompt(false);
+  }, []);
 
   const handleTogglePrivacy = useCallback(() => {
     if (isAnonymous) {
@@ -414,19 +414,16 @@ export function VideoRoom({
 
   return (
     <div className="space-y-4">
-      
       <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black">
-        
         {isConnected ? (
           <>
-            
             <video
               autoPlay
               className="h-full w-full object-cover"
               playsInline
               ref={videoRef}
             />
-            
+
             <div className="absolute top-3 left-3 rounded-full bg-black/60 px-3 py-1">
               <span className="font-medium text-white text-xs">
                 {remoteLabel || "Remote"}
@@ -444,7 +441,6 @@ export function VideoRoom({
           </div>
         )}
 
-        
         {isConnected && !isAnonymous && (
           <div className="absolute right-4 bottom-4 aspect-[3/4] w-[180px] overflow-hidden rounded-lg border-2 border-white/30 bg-black shadow-2xl">
             <video
@@ -467,7 +463,6 @@ export function VideoRoom({
           </div>
         )}
 
-        
         {isConnected && isAnonymous && (
           <div className="absolute right-4 bottom-4 aspect-[3/4] w-[180px] items-center justify-center overflow-hidden rounded-lg border-2 border-purple-500/50 bg-gray-900 shadow-2xl">
             <div className="flex flex-col items-center gap-1">
@@ -479,7 +474,6 @@ export function VideoRoom({
           </div>
         )}
 
-        
         {isConnected && (
           <div className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5">
             <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
@@ -488,7 +482,6 @@ export function VideoRoom({
         )}
       </div>
 
-      
       {isConnected && (
         <div className="flex items-center gap-4 rounded-lg border bg-card p-3">
           <div className="flex items-center gap-2">
@@ -497,9 +490,7 @@ export function VideoRoom({
             </div>
             <div>
               <p className="font-medium text-sm">
-                {isAnonymous && alias
-                  ? alias
-                  : `You (${role})`}
+                {isAnonymous && alias ? alias : `You (${role})`}
               </p>
               <p className="text-muted-foreground text-xs">
                 {(() => {
@@ -535,7 +526,6 @@ export function VideoRoom({
         </div>
       )}
 
-      
       {isConnected && (
         <div className="flex items-center justify-center gap-4">
           <button
@@ -587,7 +577,6 @@ export function VideoRoom({
         </div>
       )}
 
-      
       {showEndConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="mx-4 w-full max-w-sm rounded-lg border bg-card p-6 shadow-lg">

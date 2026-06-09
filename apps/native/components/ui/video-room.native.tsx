@@ -494,11 +494,9 @@ export function VideoRoom({
 
   return (
     <View className="flex-1 gap-3">
-      
       <View className="relative aspect-video w-full overflow-hidden rounded-card bg-black">
         {remoteContent}
 
-        
         {remoteParticipant && (
           <View className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5">
             <Text className="font-bold font-sans text-[10px] text-white drop-shadow-sm">
@@ -514,7 +512,6 @@ export function VideoRoom({
           </View>
         )}
 
-        
         <View className="absolute top-2 left-2">
           <View
             className={`flex-row items-center gap-1 rounded-full px-2 py-0.5 ${
@@ -532,7 +529,6 @@ export function VideoRoom({
         {anonymousPlaceholder}
       </View>
 
-      
       <View className="flex-row items-center justify-center gap-4 py-2">
         <Button
           className="h-12 w-12 rounded-full"
@@ -584,7 +580,6 @@ export function VideoRoom({
         )}
       </View>
 
-      
       {liveKit.isConnected && (
         <Card className="gap-2">
           <View className="flex-row items-center gap-2">
@@ -634,7 +629,6 @@ export function VideoRoom({
         </Card>
       )}
 
-      
       {timing.mustLeave && (
         <Card className="border-2 border-destructive bg-destructive/10">
           <View className="px-3 py-2">

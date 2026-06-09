@@ -1,5 +1,4 @@
 import { useOAuth } from "@clerk/expo";
-import * as AuthSession from "expo-auth-session";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import React from "react";
@@ -52,11 +51,11 @@ export function OAuthButtons({ disabled }: { disabled?: boolean }) {
     <>
       {OAUTH_STRATEGIES.map((provider) => (
         <OAuthButton
-          key={provider.strategy}
-          strategy={provider.strategy}
-          label={provider.label}
-          icon={provider.icon}
           disabled={disabled}
+          icon={provider.icon}
+          key={provider.strategy}
+          label={provider.label}
+          strategy={provider.strategy}
         />
       ))}
     </>

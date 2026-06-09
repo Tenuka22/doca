@@ -13,10 +13,7 @@ export default function Root({ children }: PropsWithChildren) {
         />
         <meta content="light dark" name="color-scheme" />
 
-        
         <ScrollViewStyleReset />
-
-        
       </head>
       <body>{children}</body>
     </html>

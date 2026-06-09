@@ -1,3 +1,5 @@
+import { useAuth } from "@clerk/expo";
+import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   Calendar,
@@ -7,10 +9,9 @@ import {
   Users,
 } from "lucide-react-native";
 import { Text, useWindowDimensions, View } from "react-native";
-import { useAuth, useUser } from "@clerk/expo";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { orpc } from "@/utils/orpc";
+import { useThemeColor } from "@/utils/theme";
 
 const SMALL_BREAKPOINT = 400;
 
@@ -31,7 +32,8 @@ export const RootBottomBar = () => {
   const { width } = useWindowDimensions();
   const isSmall = width < SMALL_BREAKPOINT;
   const { isLoaded, isSignedIn } = useAuth();
-  
+  const colors = useThemeColor();
+
   const patientProfileQuery = useQuery(
     orpc.getPatientProfile.queryOptions({
       enabled: isLoaded && isSignedIn,
@@ -45,15 +47,15 @@ export const RootBottomBar = () => {
     <View className="-mx-page h-12 flex-row border-border border-t-[3px] bg-card">
       {tabs.map(({ href, icon: Icon, label }) => (
         <Button
-          className="h-full flex-1 rounded-none"
+          className="h-full flex-1 rounded-none border-0"
           href={href}
           key={href}
           variant="secondary"
         >
           <View className="flex-row items-center justify-center gap-1.5 py-4">
-            <Icon color="#ffffff" size={18} />
+            <Icon color={colors.foreground} size={18} />
             {!isSmall && (
-              <Text className="font-bold font-sans text-[10px] text-white uppercase">
+              <Text className="font-bold font-sans text-[10px] text-foreground uppercase">
                 {label}
               </Text>
             )}

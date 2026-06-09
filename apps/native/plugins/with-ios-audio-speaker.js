@@ -1,7 +1,4 @@
-const {
-  withAppDelegate,
-  withXcodeProject,
-} = require("expo/config-plugins");
+const { withAppDelegate, withXcodeProject } = require("expo/config-plugins");
 const fs = require("fs");
 const path = require("path");
 
@@ -26,9 +23,7 @@ function addAudioConfigToAppDelegate(contents) {
 
   const applicationDidFinishLaunching =
     "application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions:";
-  if (
-    contents.includes(applicationDidFinishLaunching)
-  ) {
+  if (contents.includes(applicationDidFinishLaunching)) {
     const lines = contents.split("\n");
     const result = [];
     let found = false;

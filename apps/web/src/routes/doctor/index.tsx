@@ -259,8 +259,7 @@ export const Route = createFileRoute("/doctor/")({
         queryKey: orpc.listDoctorSessions.queryKey(),
         queryFn: () => orpc.listDoctorSessions.call(),
       });
-    } catch {
-    }
+    } catch {}
   },
   component: DoctorDashboardRoute,
 });

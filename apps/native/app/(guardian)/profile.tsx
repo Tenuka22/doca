@@ -1,8 +1,8 @@
 import { useClerk, useUser } from "@clerk/expo";
 import { useQuery } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
-import { ArrowLeft, User, Shield } from "lucide-react-native";
-import { Pressable, Text, View, ActivityIndicator } from "react-native";
+import { ArrowLeft, Shield, User } from "lucide-react-native";
+import { Pressable, Text, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { ErrorDialog, useErrorDialog } from "@/components/ui/error-dialog";
 import { Screen } from "@/components/ui/screen";
@@ -56,7 +56,9 @@ export default function GuardianProfileScreen() {
                 Email
               </Text>
               <Text className="font-medium font-sans text-foreground">
-                {profileQuery.data?.email || user?.primaryEmailAddress?.emailAddress || "Not set"}
+                {profileQuery.data?.email ||
+                  user?.primaryEmailAddress?.emailAddress ||
+                  "Not set"}
               </Text>
             </View>
 
@@ -70,12 +72,12 @@ export default function GuardianProfileScreen() {
                 </Text>
               </View>
             )}
-            
+
             <View className="mt-2 flex-row items-center gap-2 rounded-lg bg-primary/5 p-3">
-                <Shield color={colors.primary} size={16} />
-                <Text className="font-medium font-sans text-primary text-xs">
-                    Verified Guardian Account
-                </Text>
+              <Shield color={colors.primary} size={16} />
+              <Text className="font-medium font-sans text-primary text-xs">
+                Verified Guardian Account
+              </Text>
             </View>
           </View>
         </View>

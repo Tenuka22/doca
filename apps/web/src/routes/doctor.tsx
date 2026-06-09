@@ -86,7 +86,6 @@ function Breadcrumbs() {
 }
 
 function DoctorLayoutRoute() {
-
   return (
     <SidebarProvider>
       <DoctorSidebar />

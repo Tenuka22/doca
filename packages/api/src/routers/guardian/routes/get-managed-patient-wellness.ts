@@ -1,4 +1,4 @@
-import { wellnessActions, patientProfiles } from "@zen-doc/db";
+import { patientProfiles, wellnessActions } from "@zen-doc/db";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";

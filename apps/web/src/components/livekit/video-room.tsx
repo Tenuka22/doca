@@ -132,13 +132,9 @@ function formatParticipantLabel(identity: string): string {
   return "Participant";
 }
 
-function AudioVisualizer({
-  levels,
-}: {
-  levels: number[];
-}) {
+function AudioVisualizer({ levels }: { levels: number[] }) {
   return (
-    <div className="flex h-8 items-end gap-[2px] w-fit">
+    <div className="flex h-8 w-fit items-end gap-[2px]">
       {levels.map((level, i) => (
         <div
           className="w-[3px] rounded-t bg-emerald-500 transition-all duration-75"
@@ -272,11 +268,9 @@ function VideoRoomContent({
     const hasRemote = liveKit.isConnected && remoteParticipantsArray.length > 0;
 
     return (
-      <div className="flex-1 grid grid-cols-[1fr_auto] gap-4 min-h-0">
-
+      <div className="grid min-h-0 flex-1 grid-cols-[1fr_auto] gap-4">
         <div className="relative flex flex-1 flex-col overflow-hidden rounded-xl bg-neutral-950 shadow-2xl">
           <div className="relative flex-1 overflow-hidden">
-            
             <video
               autoPlay
               className={`h-full w-full object-contain ${
@@ -287,7 +281,6 @@ function VideoRoomContent({
             />
             <audio autoPlay playsInline ref={liveKit.audioRef} />
 
-            
             {liveKit.isConnected && hasRemote && (
               <div className="absolute top-4 left-4 z-10 flex items-center gap-2 rounded-lg bg-black/40 px-3 py-1.5 backdrop-blur-md">
                 <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
@@ -299,7 +292,6 @@ function VideoRoomContent({
               </div>
             )}
 
-            
             {liveKit.isConnected && !hasRemote && (
               <div className="absolute inset-0 flex items-center justify-center bg-neutral-900">
                 <UserX className="h-12 w-12 text-neutral-600" />
@@ -311,7 +303,6 @@ function VideoRoomContent({
               </div>
             )}
 
-            
             {!liveKit.isConnected && (
               <div className="absolute inset-0 flex items-center justify-center bg-neutral-900">
                 <div className="relative">
@@ -323,7 +314,6 @@ function VideoRoomContent({
                 </p>
               </div>
             )}
-
 
             {liveKit.isConnected && (
               <div className="absolute top-4 right-4 aspect-video w-[200px] overflow-hidden rounded-lg border border-white/10 bg-neutral-900 shadow-xl lg:w-[240px]">
@@ -347,7 +337,6 @@ function VideoRoomContent({
               </div>
             )}
 
-
             {muteSeconds > 30 && role === "doctor" && (
               <div className="absolute top-20 left-1/2 z-20 w-full max-w-md -translate-x-1/2 px-4">
                 <div className="flex items-center gap-3 rounded-lg border border-amber-500/50 bg-amber-500/20 p-3 text-amber-200 backdrop-blur-lg">
@@ -364,7 +353,6 @@ function VideoRoomContent({
               </div>
             )}
           </div>
-
 
           <div className="absolute bottom-6 left-1/2 z-30 flex -translate-x-1/2 items-center gap-4 rounded-2xl border border-white/10 bg-black/60 p-4 backdrop-blur-xl transition-all hover:bg-black/80">
             <button
@@ -417,7 +405,6 @@ function VideoRoomContent({
             </button>
           </div>
 
-
           {showEndConfirm && (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
               <Card className="mx-4 w-full max-w-sm border-white/10 bg-neutral-900 text-white">
@@ -449,14 +436,14 @@ function VideoRoomContent({
           )}
         </div>
 
-
         {liveKit.isConnected && (
           <div className="flex w-auto flex-col gap-3 overflow-y-auto">
-            <p className="font-bold text-xs uppercase tracking-wider text-muted-foreground">
+            <p className="font-bold text-muted-foreground text-xs uppercase tracking-wider">
               Participants ({allParticipants.length})
             </p>
             {allParticipants.map((p) => {
-              const isLocal = p.identity === liveKit.room?.localParticipant?.identity;
+              const isLocal =
+                p.identity === liveKit.room?.localParticipant?.identity;
               const levels = liveKit.audioLevelHistory[p.identity] ?? [];
               const label = isLocal
                 ? `You (${formatParticipantLabel(p.identity)})`
@@ -468,9 +455,7 @@ function VideoRoomContent({
               return (
                 <Card
                   className={`border ${
-                    isSpeaking
-                      ? "border-emerald-500/50"
-                      : "border-border"
+                    isSpeaking ? "border-emerald-500/50" : "border-border"
                   }`}
                   key={p.identity}
                 >
@@ -493,15 +478,27 @@ function VideoRoomContent({
                     <AudioVisualizer levels={levels} />
                     <div className="flex gap-3 text-[10px] text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        {isLocal
-                          ? isCameraOn ? <Camera className="h-3 w-3" /> : <CameraOff className="h-3 w-3" />
-                          : <Camera className="h-3 w-3" />}
+                        {isLocal ? (
+                          isCameraOn ? (
+                            <Camera className="h-3 w-3" />
+                          ) : (
+                            <CameraOff className="h-3 w-3" />
+                          )
+                        ) : (
+                          <Camera className="h-3 w-3" />
+                        )}
                         {isLocal ? (isCameraOn ? "On" : "Off") : "On"}
                       </span>
                       <span className="flex items-center gap-1">
-                        {isLocal
-                          ? isMicOn ? <Mic className="h-3 w-3" /> : <MicOff className="h-3 w-3" />
-                          : <Mic className="h-3 w-3" />}
+                        {isLocal ? (
+                          isMicOn ? (
+                            <Mic className="h-3 w-3" />
+                          ) : (
+                            <MicOff className="h-3 w-3" />
+                          )
+                        ) : (
+                          <Mic className="h-3 w-3" />
+                        )}
                         {isLocal ? (isMicOn ? "On" : "Off") : "On"}
                       </span>
                     </div>

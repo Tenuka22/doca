@@ -1,8 +1,6 @@
 import "../global.css";
 
 import { ClerkProvider, useAuth } from "@clerk/expo";
-import * as AuthSession from "expo-auth-session";
-import * as WebBrowser from "expo-web-browser";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { env } from "@zen-doc/env/native";
@@ -10,6 +8,7 @@ import { useFonts } from "expo-font";
 import { Redirect, Stack, usePathname } from "expo-router";
 import { hideAsync, preventAutoHideAsync } from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -63,17 +62,21 @@ function OnboardingCheck() {
   const isProfileLoaded =
     patientProfileQuery.isFetched && guardianProfileQuery.isFetched;
 
-  if (isLoaded && isSignedIn === false) {
-    if (pathname !== "/sign-in" && pathname !== "/sign-up") {
-      return <Redirect href="/(auth)/sign-in" />;
-    }
+  if (
+    isLoaded &&
+    isSignedIn === false &&
+    pathname !== "/landing" &&
+    pathname !== "/sign-in" &&
+    pathname !== "/sign-up"
+  ) {
+    return <Redirect href="/landing" />;
   }
 
   if (isLoaded && isSignedIn && isProfileLoaded) {
     const patientData = patientProfileQuery.data;
     const guardianData = guardianProfileQuery.data;
 
-    if (!patientData && !guardianData) {
+    if (!(patientData || guardianData)) {
       console.log("[OnboardingCheck] no profile, redirecting to /onboarding");
       if (
         pathname !== "/onboarding" &&

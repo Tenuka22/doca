@@ -1,9 +1,9 @@
 import { patientProfiles } from "@zen-doc/db";
+import { env } from "@zen-doc/env/server";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
-import { env } from "@zen-doc/env/server";
 
 export const getManagedPatientStressMetricsRoute = protectedProcedure
   .input(z.object({ patientUserId: z.string().min(1) }))
@@ -26,7 +26,9 @@ export const getManagedPatientStressMetricsRoute = protectedProcedure
     }
 
     const kvKey = `model-features:${input.patientUserId}`;
-    const records = await context.modelFeaturesKv.get<Array<{ sample: number[], timestamp: number }>>(kvKey, "json");
+    const records = await context.modelFeaturesKv.get<
+      Array<{ sample: number[]; timestamp: number }>
+    >(kvKey, "json");
 
     if (!records || records.length === 0) {
       return [];
@@ -37,11 +39,13 @@ export const getManagedPatientStressMetricsRoute = protectedProcedure
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ window_samples: records.slice(-120).flatMap(r => r.sample) }), // Using last 120 samples
+      body: JSON.stringify({
+        window_samples: records.slice(-120).flatMap((r) => r.sample),
+      }), // Using last 120 samples
     });
 
     if (!response.ok) {
-        return [];
+      return [];
     }
 
     const responseData = (await response.json()) as { results: number[] };
