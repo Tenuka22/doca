@@ -1,13 +1,21 @@
 import { useClerk, useUser } from "@clerk/expo";
 import { useQuery } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
-import { ArrowLeft, Shield, User } from "lucide-react-native";
+import { ArrowLeft, Key, Shield, User } from "lucide-react-native";
+import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
+
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { ErrorDialog, useErrorDialog } from "@/components/ui/error-dialog";
 import { Screen } from "@/components/ui/screen";
 import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
 import { orpc } from "@/utils/orpc";
+import {
+  generateUserSecret,
+  getStoredSecret,
+  storeSecret,
+} from "@/utils/privacy";
 import { useThemeColor } from "@/utils/theme";
 
 export default function GuardianProfileScreen() {
@@ -16,8 +24,21 @@ export default function GuardianProfileScreen() {
   const { user } = useUser();
   const { signOut } = useClerk();
   const { showError, dialogProps } = useErrorDialog();
+  const [hasKey, setHasKey] = useState<boolean | null>(null);
 
   const profileQuery = useQuery(orpc.getGuardianProfile.queryOptions());
+
+  useEffect(() => {
+    getStoredSecret().then((secret) => {
+      setHasKey(secret !== null);
+    });
+  }, []);
+
+  const handleGenerateKey = async () => {
+    const secret = generateUserSecret();
+    await storeSecret(secret);
+    setHasKey(true);
+  };
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -81,6 +102,37 @@ export default function GuardianProfileScreen() {
             </View>
           </View>
         </View>
+
+        {hasKey === false && (
+          <Card className="gap-4 border-primary/30">
+            <View className="flex-row items-center gap-3">
+              <View className="rounded-full border-2 border-border bg-muted p-2">
+                <Key color={colors.primary} size={20} />
+              </View>
+              <View className="flex-1 gap-1">
+                <Text className="font-bold font-sans text-foreground text-sm">
+                  Encryption Key Required
+                </Text>
+                <Text className="font-medium font-sans text-muted-foreground text-xs leading-5">
+                  Generate a local encryption key to secure your profile data
+                  and access patient stress information.
+                </Text>
+              </View>
+            </View>
+            <Button onPress={handleGenerateKey} variant="primary">
+              Generate Encryption Key
+            </Button>
+          </Card>
+        )}
+
+        {hasKey === true && (
+          <View className="flex-row items-center gap-2 rounded-lg bg-success/10 px-4 py-3">
+            <Key color="#22c55e" size={14} />
+            <Text className="font-medium font-sans text-success text-xs">
+              Encryption key configured
+            </Text>
+          </View>
+        )}
 
         <View className="overflow-hidden rounded-card border-2 border-destructive/30 bg-card">
           <View className="px-card py-card">

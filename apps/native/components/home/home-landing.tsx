@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import * as Haptics from "expo-haptics";
 import { type Href, useRouter } from "expo-router";
 import {
   Activity,
@@ -22,7 +23,6 @@ import {
 } from "lucide-react-native";
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
-import * as Haptics from "expo-haptics";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
 import { Button } from "@/components/ui/button";
@@ -156,7 +156,7 @@ function HeroSection({
           </Text>
 
           {/* CTAs */}
-          <View className="flex-col sm:flex-row gap-3">
+          <View className="flex-col gap-3 sm:flex-row">
             <Button
               className="h-12 flex-1"
               href={primaryHref}
@@ -174,7 +174,7 @@ function HeroSection({
           </View>
 
           {/* Trust Badges */}
-          <View className="mt-2 flex-row items-center justify-center gap-8 border-border/10 border-t pt-4 flex-wrap">
+          <View className="mt-2 flex-row flex-wrap items-center justify-center gap-8 border-border/10 border-t pt-4">
             {trustBadges.map(({ label, icon: Icon }) => (
               <View className="flex-row items-center gap-1.5" key={label}>
                 <Icon color={primaryColor} size={14} />

@@ -2,6 +2,7 @@ import { useAuth } from "@clerk/expo";
 import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
+  BarChart3,
   Calendar,
   Sparkles,
   Stethoscope,
@@ -24,7 +25,9 @@ const patientTabs = [
 ] as const;
 
 const guardianTabs = [
-  { href: "/(guardian)", icon: Users, label: "Managed" },
+  { href: "/(guardian)", icon: Users, label: "Home" },
+  { href: "/(guardian)/activities", icon: Activity, label: "Activities" },
+  { href: "/(guardian)/track-management", icon: BarChart3, label: "Tracking" },
   { href: "/(guardian)/profile", icon: User, label: "Profile" },
 ] as const;
 

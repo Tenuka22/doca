@@ -69,8 +69,9 @@ function OnboardingCheck() {
       const patientData = patientProfileQuery.data;
       const guardianData = guardianProfileQuery.data;
 
-      const needsRepair = patientData && !(patientData.secured && patientData._securedData);
-      
+      const needsRepair =
+        patientData && !(patientData.secured && patientData._securedData);
+
       // If profile is fully set up, prefetch the dashboard data
       if ((patientData && !needsRepair) || guardianData) {
         queryClient.prefetchQuery(orpc.getSpriteState.queryOptions());

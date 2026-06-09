@@ -1,8 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Pressable, Text, View } from "react-native";
 
-type SpriteAction = "idle" | "happy" | "thinking" | "alert";
-const ACTIONS: SpriteAction[] = ["idle", "happy", "thinking", "alert"];
+type SpriteAction =
+  | "idle"
+  | "happy"
+  | "thinking"
+  | "alert"
+  | "sleepy"
+  | "excited";
+const ACTIONS: SpriteAction[] = [
+  "idle",
+  "happy",
+  "thinking",
+  "alert",
+  "sleepy",
+  "excited",
+];
 
 const C = {
   skin: "#62B6CB",
@@ -20,6 +33,8 @@ const springOut = Easing.out(Easing.back(1.6));
 interface AnimRefs {
   eyeScaleX: Animated.Value;
   eyeScaleY: Animated.Value;
+  indicator: Animated.Value;
+  indicatorY: Animated.Value;
   jolt: Animated.Value;
   pupilX: Animated.Value;
   pupilY: Animated.Value;
@@ -36,6 +51,31 @@ const resetAnims = (refs: AnimRefs) => {
   refs.pupilY.setValue(0);
   refs.tilt.setValue(0);
   refs.jolt.setValue(0);
+  refs.indicator.setValue(0);
+  refs.indicatorY.setValue(0);
+};
+
+const fidgetSequence = (
+  refs: AnimRefs,
+  fidget: () => Animated.CompositeAnimation,
+  minDelay: number,
+  maxDelay: number,
+  chance = 0.5
+) => {
+  let timeout: ReturnType<typeof setTimeout>;
+
+  const schedule = () => {
+    const delay = minDelay + Math.random() * (maxDelay - minDelay);
+    timeout = setTimeout(() => {
+      if (Math.random() < chance) {
+        fidget().start();
+      }
+      schedule();
+    }, delay);
+  };
+
+  schedule();
+  return () => clearTimeout(timeout);
 };
 
 const animateIdle = (refs: AnimRefs) => {
@@ -54,13 +94,38 @@ const animateIdle = (refs: AnimRefs) => {
     ]).start();
   };
 
-  const timer = setInterval(() => {
+  const blinkTimer = setInterval(() => {
     if (Math.random() > 0.4) {
       blink();
     }
   }, 3000);
 
-  return () => clearInterval(timer);
+  const fidgetCleanup = fidgetSequence(
+    refs,
+    () =>
+      Animated.sequence([
+        Animated.timing(refs.pupilX, {
+          toValue: Math.random() > 0.5 ? 6 : -6,
+          duration: 200,
+          easing: sineIO,
+          useNativeDriver: true,
+        }),
+        Animated.timing(refs.pupilX, {
+          toValue: 0,
+          duration: 200,
+          easing: sineIO,
+          useNativeDriver: true,
+        }),
+      ]),
+    3500,
+    7000,
+    0.6
+  );
+
+  return () => {
+    clearInterval(blinkTimer);
+    fidgetCleanup();
+  };
 };
 
 const animateHappy = (refs: AnimRefs) => {
@@ -93,7 +158,49 @@ const animateHappy = (refs: AnimRefs) => {
     ]),
   ]).start();
 
-  return;
+  const fidgetCleanup = fidgetSequence(
+    refs,
+    () =>
+      Animated.sequence([
+        Animated.timing(refs.tilt, {
+          toValue: -5,
+          duration: 50,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(refs.tilt, {
+          toValue: 5,
+          duration: 50,
+          useNativeDriver: true,
+        }),
+        Animated.timing(refs.tilt, {
+          toValue: -5,
+          duration: 50,
+          useNativeDriver: true,
+        }),
+        Animated.timing(refs.tilt, {
+          toValue: 5,
+          duration: 50,
+          useNativeDriver: true,
+        }),
+        Animated.timing(refs.tilt, {
+          toValue: -5,
+          duration: 50,
+          useNativeDriver: true,
+        }),
+        Animated.timing(refs.tilt, {
+          toValue: 0,
+          duration: 80,
+          easing: Easing.bounce,
+          useNativeDriver: true,
+        }),
+      ]),
+    3500,
+    8000,
+    0.55
+  );
+
+  return fidgetCleanup;
 };
 
 const animateThinking = (refs: AnimRefs) => {
@@ -123,7 +230,61 @@ const animateThinking = (refs: AnimRefs) => {
     }),
   ]).start();
 
-  return;
+  const fidgetCleanup = fidgetSequence(
+    refs,
+    () =>
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(refs.pupilX, {
+            toValue: -4,
+            duration: 120,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(refs.pupilY, {
+            toValue: 4,
+            duration: 120,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(refs.indicator, {
+            toValue: 1,
+            duration: 100,
+            useNativeDriver: true,
+          }),
+          Animated.timing(refs.indicatorY, {
+            toValue: -15,
+            duration: 100,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(refs.pupilX, {
+            toValue: 8,
+            duration: 120,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(refs.pupilY, {
+            toValue: -6,
+            duration: 120,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(refs.indicator, {
+            toValue: 0,
+            duration: 300,
+            easing: sineIO,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]),
+    3000,
+    6000,
+    0.65
+  );
+
+  return fidgetCleanup;
 };
 
 const animateAlert = (refs: AnimRefs) => {
@@ -154,7 +315,238 @@ const animateAlert = (refs: AnimRefs) => {
     ]),
   ]).start();
 
-  return;
+  const fidgetCleanup = fidgetSequence(
+    refs,
+    () =>
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(refs.pupilX, {
+            toValue: Math.random() > 0.5 ? 10 : -10,
+            duration: 80,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(refs.indicator, {
+            toValue: 1,
+            duration: 60,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(refs.pupilX, {
+            toValue: 0,
+            duration: 400,
+            easing: sineIO,
+            useNativeDriver: true,
+          }),
+          Animated.timing(refs.indicator, {
+            toValue: 0,
+            duration: 250,
+            easing: sineIO,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]),
+    2000,
+    4500,
+    0.7
+  );
+
+  return fidgetCleanup;
+};
+
+const animateSleepy = (refs: AnimRefs) => {
+  Animated.parallel([
+    Animated.timing(refs.eyeScaleY, {
+      toValue: 0.5,
+      duration: 800,
+      easing: sineIO,
+      useNativeDriver: true,
+    }),
+    Animated.timing(refs.eyeScaleX, {
+      toValue: 0.9,
+      duration: 800,
+      easing: sineIO,
+      useNativeDriver: true,
+    }),
+    Animated.timing(refs.tilt, {
+      toValue: 12,
+      duration: 1000,
+      easing: sineIO,
+      useNativeDriver: true,
+    }),
+    Animated.timing(refs.pupilY, {
+      toValue: 4,
+      duration: 800,
+      easing: sineIO,
+      useNativeDriver: true,
+    }),
+  ]).start();
+
+  const fidgetCleanup = fidgetSequence(
+    refs,
+    () =>
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(refs.jolt, {
+            toValue: -8,
+            duration: 100,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(refs.tilt, {
+            toValue: -4,
+            duration: 100,
+            useNativeDriver: true,
+          }),
+          Animated.timing(refs.eyeScaleY, {
+            toValue: 1,
+            duration: 80,
+            useNativeDriver: true,
+          }),
+          Animated.timing(refs.indicator, {
+            toValue: 1,
+            duration: 80,
+            useNativeDriver: true,
+          }),
+          Animated.timing(refs.indicatorY, {
+            toValue: -10,
+            duration: 80,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(refs.jolt, {
+            toValue: 0,
+            duration: 400,
+            easing: sineIO,
+            useNativeDriver: true,
+          }),
+          Animated.timing(refs.tilt, {
+            toValue: 12,
+            duration: 400,
+            easing: sineIO,
+            useNativeDriver: true,
+          }),
+          Animated.timing(refs.eyeScaleY, {
+            toValue: 0.5,
+            duration: 400,
+            easing: sineIO,
+            useNativeDriver: true,
+          }),
+          Animated.timing(refs.indicator, {
+            toValue: 0,
+            duration: 500,
+            easing: sineIO,
+            useNativeDriver: true,
+          }),
+          Animated.timing(refs.indicatorY, {
+            toValue: -20,
+            duration: 500,
+            easing: sineIO,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]),
+    5000,
+    10_000,
+    0.5
+  );
+
+  return fidgetCleanup;
+};
+
+const animateExcited = (refs: AnimRefs) => {
+  Animated.parallel([
+    Animated.timing(refs.eyeScaleY, {
+      toValue: 1.5,
+      duration: 200,
+      easing: springOut,
+      useNativeDriver: true,
+    }),
+    Animated.timing(refs.eyeScaleX, {
+      toValue: 1.3,
+      duration: 200,
+      easing: springOut,
+      useNativeDriver: true,
+    }),
+    Animated.sequence([
+      Animated.timing(refs.jolt, {
+        toValue: -12,
+        duration: 120,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(refs.jolt, {
+        toValue: 0,
+        duration: 200,
+        easing: Easing.bounce,
+        useNativeDriver: true,
+      }),
+    ]),
+    Animated.sequence([
+      Animated.timing(refs.pupilX, {
+        toValue: -3,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(refs.pupilX, {
+        toValue: 3,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(refs.pupilX, {
+        toValue: -3,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(refs.pupilX, {
+        toValue: 0,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]),
+  ]).start();
+
+  const bounceFidget = () =>
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(refs.jolt, {
+          toValue: -10,
+          duration: 100,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(refs.eyeScaleY, {
+          toValue: 1.6,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.parallel([
+        Animated.timing(refs.jolt, {
+          toValue: 0,
+          duration: 200,
+          easing: Easing.bounce,
+          useNativeDriver: true,
+        }),
+        Animated.timing(refs.eyeScaleY, {
+          toValue: 1.5,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]);
+
+  const fidgetCleanup = fidgetSequence(
+    refs,
+    () => bounceFidget(),
+    2500,
+    6000,
+    0.6
+  );
+
+  return fidgetCleanup;
 };
 
 interface SpriteMascotProps {
@@ -217,6 +609,8 @@ export function SpriteMascot({
     pupilY: new Animated.Value(0),
     tilt: new Animated.Value(0),
     jolt: new Animated.Value(0),
+    indicator: new Animated.Value(0),
+    indicatorY: new Animated.Value(0),
   }).current;
   useEffect(() => {
     const loop = Animated.loop(
@@ -283,6 +677,12 @@ export function SpriteMascot({
         break;
       case "alert":
         cleanup = animateAlert(animRefs);
+        break;
+      case "sleepy":
+        cleanup = animateSleepy(animRefs);
+        break;
+      case "excited":
+        cleanup = animateExcited(animRefs);
         break;
     }
 
@@ -367,6 +767,33 @@ export function SpriteMascot({
                 transform: [{ rotate: headRot }],
               }}
             >
+              <Animated.Text
+                aria-label={
+                  currentAction === "sleepy"
+                    ? "sleeping"
+                    : currentAction === "alert"
+                      ? "alert"
+                      : "thinking"
+                }
+                className="absolute -top-12 right-0 font-black text-4xl"
+                role="img"
+                style={{
+                  opacity: animRefs.indicator,
+                  transform: [{ translateY: animRefs.indicatorY }],
+                  color:
+                    currentAction === "alert"
+                      ? "#ef4444"
+                      : currentAction === "thinking"
+                        ? "#f59e0b"
+                        : "#8b5cf6",
+                }}
+              >
+                {currentAction === "sleepy"
+                  ? "Zzz"
+                  : currentAction === "alert"
+                    ? "!"
+                    : "?"}
+              </Animated.Text>
               <View className="absolute top-[26px] right-[30px] h-[22px] w-[22px] items-center justify-center rounded-[4px] bg-[#22c55e]">
                 <View className="absolute h-[18px] w-[5px] rounded-full bg-white" />
                 <View className="absolute h-[5px] w-[18px] rounded-full bg-white" />

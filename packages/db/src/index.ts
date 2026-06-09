@@ -34,10 +34,14 @@ import {
   type SessionSnapshot as SessionSnapshotSchema,
   type SessionTaskAssignment as SessionTaskAssignmentSchema,
   type SpriteState as SpriteStateSchema,
+  type StressDownloadAcknowledgment as StressDownloadAcknowledgmentSchema,
+  type StressPrediction as StressPredictionSchema,
   sessionAttendanceEvents as sessionAttendanceEventsTable,
   sessionSnapshots as sessionSnapshotsTable,
   sessionTaskAssignments as sessionTaskAssignmentsTable,
   spriteStates as spriteStatesTable,
+  stressDownloadAcknowledgments as stressDownloadAcknowledgmentsTable,
+  stressPredictions as stressPredictionsTable,
   type UserCredit as UserCreditSchema,
   userCredits as userCreditsTable,
   userSubscriptions as userSubscriptionsTable,
@@ -77,6 +81,8 @@ export const spriteStates = spriteStatesTable;
 export const wellnessActions = wellnessActionsTable;
 export const moonlightCredits = moonlightCreditsTable;
 export const moonlightCreditTransactions = moonlightCreditTransactionsTable;
+export const stressPredictions = stressPredictionsTable;
+export const stressDownloadAcknowledgments = stressDownloadAcknowledgmentsTable;
 
 export type DoctorProfile = DoctorProfileSchema;
 export type DoctorFile = DoctorFileSchema;
@@ -98,6 +104,8 @@ export type SpriteState = SpriteStateSchema;
 export type WellnessAction = WellnessActionSchema;
 export type MoonlightCredit = MoonlightCreditSchema;
 export type MoonlightCreditTransaction = MoonlightCreditTransactionSchema;
+export type StressPrediction = StressPredictionSchema;
+export type StressDownloadAcknowledgment = StressDownloadAcknowledgmentSchema;
 
 export function createDb() {
   return drizzle(env.DB, {
@@ -122,6 +130,8 @@ export function createDb() {
       wellnessActions,
       moonlightCredits,
       moonlightCreditTransactions,
+      stressPredictions,
+      stressDownloadAcknowledgments,
     },
   });
 }

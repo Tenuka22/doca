@@ -10,6 +10,7 @@ import { liveKitRouter } from "./livekit";
 import { patientRouter } from "./patient";
 import { publicRouter } from "./public";
 import { sessionAttendanceRouter } from "./session-attendance";
+import { stressHubRouter } from "./stress-hub";
 
 export const appRouter = {
   ...publicRouter,
@@ -22,6 +23,7 @@ export const appRouter = {
   ...sessionAttendanceRouter,
   ...gamificationRouter,
   ...guardianRouter,
+  ...stressHubRouter,
 };
 
 export type AppRouter = typeof appRouter;

@@ -358,3 +358,14 @@ export type WellnessAction = typeof wellnessActions.$inferSelect;
 export type MoonlightCredit = typeof moonlightCredits.$inferSelect;
 export type MoonlightCreditTransaction =
   typeof moonlightCreditTransactions.$inferSelect;
+
+export type {
+  NewStressDownloadAcknowledgement,
+  StressDownloadAcknowledgment,
+} from "./stress-acknowledgments";
+export { stressDownloadAcknowledgments } from "./stress-acknowledgments";
+export type {
+  NewStressPrediction,
+  StressPrediction,
+} from "./stress-predictions";
+export { stressPredictions } from "./stress-predictions";

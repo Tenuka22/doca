@@ -6,6 +6,7 @@ import {
   Website,
   Worker,
 } from "alchemy/cloudflare";
+import { UpstashRedis } from "alchemy/upstash";
 import { config } from "dotenv";
 
 config({ path: "./.env" });
@@ -28,6 +29,11 @@ const db = await D1Database("primary-database", {
 const doctorMaterialsKv = await KVNamespace("doctor-materials");
 const modelFeaturesKv = await KVNamespace("model-features");
 
+const redis = await UpstashRedis("zen-doc", {
+  name: "zen-doc",
+  primaryRegion: "sa-east-1",
+});
+
 export const server = await Worker("server", {
   cwd: "../../apps/server",
   entrypoint: "src/index.ts",
@@ -37,6 +43,8 @@ export const server = await Worker("server", {
     DOCTOR_MATERIALS_KV: doctorMaterialsKv,
     MODEL_FEATURES_KV: modelFeaturesKv,
     CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    UPSTASH_REDIS_REST_URL: redis.endpoint,
+    UPSTASH_REDIS_REST_TOKEN: redis.restToken,
     CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
     CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
     STRESS_PREDICTOR_URL: alchemy.env.STRESS_PREDICTOR_URL!,
