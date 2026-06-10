@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@zen-doc/ui/components/card";
+import { Skeleton } from "@zen-doc/ui/components/skeleton";
 import {
   Award,
   Building,
@@ -166,7 +167,12 @@ function AdminDoctorDetailRoute() {
   );
 
   if (!user.isLoaded) {
-    return <div className="p-6">Loading...</div>;
+    return (
+      <div className="flex flex-col gap-6 p-6">
+        <Skeleton className="h-24 rounded-[2rem]" />
+        <Skeleton className="h-96 rounded-3xl" />
+      </div>
+    );
   }
   if (!user.user) {
     return (
@@ -345,7 +351,7 @@ function AdminDoctorDetailRoute() {
                   <div className="grid gap-3 sm:grid-cols-2">
                     {stepsList.map((step, idx) => (
                       <div
-                        className="relative rounded-xl border border-border/50 bg-muted/5 p-3.5 transition-all hover:bg-muted/15"
+                        className="relative rounded-xl border border-border/50 bg-muted/5 p-3.5 transition-all duration-200 hover:bg-muted/15"
                         key={step.id}
                       >
                         <span className="absolute top-2.5 right-3 rounded-full bg-muted/60 px-2 py-0.5 font-bold font-mono text-[10px] text-muted-foreground/40 uppercase tracking-wider">
@@ -369,7 +375,7 @@ function AdminDoctorDetailRoute() {
                   <div className="divide-y divide-border/30 overflow-hidden rounded-xl border border-border/40 bg-muted/5">
                     {parsedEducation.map((edu) => (
                       <div
-                        className="flex items-center justify-between p-3.5 text-sm transition-all hover:bg-muted/10"
+                        className="flex items-center justify-between p-3.5 text-sm transition-all duration-200 hover:bg-muted/10"
                         key={edu.id}
                       >
                         <div className="space-y-0.5">

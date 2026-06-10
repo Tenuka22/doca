@@ -1,16 +1,10 @@
-import {
-  SignInButton as ClerkSignInButton,
-  useUser,
-} from "@clerk/tanstack-react-start";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Badge } from "@zen-doc/ui/components/badge";
 import { Button } from "@zen-doc/ui/components/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@zen-doc/ui/components/card";
@@ -28,7 +22,6 @@ import {
   SelectValue,
 } from "@zen-doc/ui/components/select";
 import { Separator } from "@zen-doc/ui/components/separator";
-import { Skeleton } from "@zen-doc/ui/components/skeleton";
 import { Switch } from "@zen-doc/ui/components/switch";
 import {
   CalendarDaysIcon,
@@ -36,11 +29,9 @@ import {
   ClockIcon,
   InboxIcon,
   Loader2,
-  StethoscopeIcon,
   Trash2,
   TrendingUpIcon,
 } from "lucide-react";
-import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import {
   Bar,
@@ -50,7 +41,18 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { toast } from "sonner";
+
+import {
+  DashboardSkeleton,
+  MetricCard,
+  SectionHeader,
+} from "@/components/dashboard-metrics";
+import {
+  useAvailabilityStats,
+  useDoctorSessions,
+  useWeeklyAvailability,
+} from "@/hooks/queries/doctor";
+import { notify } from "@/lib/notify";
 import { orpc } from "@/utils/orpc";
 
 const DAYS = [
@@ -85,115 +87,25 @@ const timeToMinutes = (time: string) => {
 const getHoursForSlot = (slot: AvailabilitySlot) =>
   (timeToMinutes(slot.endTime) - timeToMinutes(slot.startTime)) / 60;
 
-function DashboardSkeleton() {
-  return (
-    <div className="flex flex-col gap-6">
-      <Skeleton className="h-48 rounded-3xl" />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <Skeleton className="h-36 rounded-2xl" key={index.toString()} />
-        ))}
-      </div>
-      <Skeleton className="h-[400px] rounded-3xl" />
-    </div>
-  );
-}
-
-function MetricCard({
-  description,
-  icon,
-  title,
-  trend,
-  value,
-}: {
-  description: string;
-  icon: ReactNode;
-  title: string;
-  trend?: string;
-  value: string;
-}) {
-  return (
-    <Card className="rounded-3xl border-border/60">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <CardDescription>{title}</CardDescription>
-            <CardTitle className="text-4xl tracking-tight">{value}</CardTitle>
-          </div>
-
-          <div className="rounded-2xl border bg-muted/40 p-3 text-muted-foreground">
-            {icon}
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardFooter className="mt-auto flex items-center justify-between text-muted-foreground text-sm">
-        <span>{description}</span>
-
-        {trend ? (
-          <Badge className="gap-1" variant="secondary">
-            <TrendingUpIcon className="size-3" />
-            {trend}
-          </Badge>
-        ) : null}
-      </CardFooter>
-    </Card>
-  );
-}
-
-function SectionHeader({
-  action,
-  description,
-  title,
-}: {
-  action?: ReactNode;
-  description: string;
-  title: string;
-}) {
-  return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div className="space-y-1">
-        <h2 className="font-semibold text-xl tracking-tight">{title}</h2>
-        <p className="text-muted-foreground text-sm">{description}</p>
-      </div>
-
-      {action}
-    </div>
-  );
-}
-
 export const Route = createFileRoute("/doctor/availability")({
   loaderDeps: () => ({}),
   loader: async ({ context }) => {
     try {
-      await context.queryClient.prefetchQuery({
-        queryKey: orpc.availabilityStats.queryKey(),
-        queryFn: () => orpc.availabilityStats.call(),
-      });
+      await context.queryClient.ensureQueryData(
+        orpc.availabilityStats.queryOptions()
+      );
     } catch {}
   },
   component: DoctorAvailabilityRoute,
 });
 
 function DoctorAvailabilityRoute() {
-  const user = useUser();
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
 
-  const statsQuery = useQuery({
-    queryKey: orpc.availabilityStats.queryKey(),
-    queryFn: () => orpc.availabilityStats.call(),
-  });
-
-  const availabilityQuery = useQuery({
-    queryKey: orpc.getWeeklyAvailability.queryKey(),
-    queryFn: () => orpc.getWeeklyAvailability.call(),
-  });
-
-  const sessionsQuery = useQuery({
-    queryKey: orpc.listDoctorSessions.queryKey(),
-    queryFn: () => orpc.listDoctorSessions.call(),
-  });
+  const statsQuery = useAvailabilityStats();
+  const availabilityQuery = useWeeklyAvailability();
+  const sessionsQuery = useDoctorSessions();
 
   useEffect(() => {
     if (availabilityQuery.data?.slots) {
@@ -217,10 +129,10 @@ function DoctorAvailabilityRoute() {
   const saveMutation = useMutation(
     orpc.saveWeeklyAvailability.mutationOptions({
       onError: (error: Error) => {
-        toast.error(error instanceof Error ? error.message : "Failed to save");
+        notify.error(error instanceof Error ? error.message : "Failed to save");
       },
       onSuccess: () => {
-        toast.success("Availability saved");
+        notify.success("Availability saved");
         setHasChanges(false);
       },
     })
@@ -236,7 +148,7 @@ function DoctorAvailabilityRoute() {
     if (lastSlot) {
       const lastEndMinutes = timeToMinutes(lastSlot.endTime);
       if (lastEndMinutes >= 1410) {
-        toast.error("No more space for slots today");
+        notify.error("No more space for slots today");
         return;
       }
       const nextStartMin = lastEndMinutes;
@@ -311,7 +223,7 @@ function DoctorAvailabilityRoute() {
       });
 
       if (hasOverlap) {
-        toast.error("Slots cannot overlap");
+        notify.error("Slots cannot overlap");
         return currentSlots;
       }
 
@@ -347,31 +259,8 @@ function DoctorAvailabilityRoute() {
     saveMutation.mutate({ slots: slots.filter((slot) => slot.isAvailable) });
   };
 
-  if (!user.isLoaded) {
+  if (statsQuery.isPending && availabilityQuery.isPending) {
     return <DashboardSkeleton />;
-  }
-
-  if (!user.user) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center">
-        <Card className="w-full max-w-md rounded-3xl">
-          <CardHeader className="items-center text-center">
-            <div className="rounded-2xl border bg-muted/40 p-4">
-              <StethoscopeIcon className="size-6" />
-            </div>
-            <div className="space-y-2">
-              <CardTitle>Sign in required</CardTitle>
-              <CardDescription>
-                Manage your availability after signing in.
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <ClerkSignInButton />
-          </CardContent>
-        </Card>
-      </div>
-    );
   }
 
   const availableDays = new Set(
@@ -586,7 +475,7 @@ function DoctorAvailabilityRoute() {
 
                 return (
                   <Card
-                    className="border-border/80 bg-gradient-to-br from-card to-card/50 shadow-sm"
+                    className="border-border/80 bg-gradient-to-br from-card to-card/50 shadow-sm transition-shadow duration-200 hover:shadow-md"
                     key={dayName}
                   >
                     <CardHeader className="pb-3">
@@ -617,6 +506,7 @@ function DoctorAvailabilityRoute() {
                         <div className="flex items-center gap-2">
                           <div className="flex items-center gap-2 rounded-md border border-border/50 bg-muted/30 px-2.5 py-1.5">
                             <Switch
+                              aria-label={`${dayName} availability`}
                               checked={isDayAvailable}
                               className="h-4 w-7"
                               onCheckedChange={(checked) =>
@@ -641,8 +531,9 @@ function DoctorAvailabilityRoute() {
 
                     <CardContent className="space-y-3">
                       {daySlots.length === 0 ? (
-                        <div className="rounded-lg border border-border/70 border-dashed bg-muted/20 px-4 py-6 text-center text-muted-foreground text-sm">
-                          Add a slot for {dayName}.
+                        <div className="rounded-lg border border-border/70 border-dashed bg-muted/20 px-4 py-6 text-center text-muted-foreground text-xs">
+                          No slots yet — tap "Add Slot" to set your available
+                          hours for {dayName}.
                         </div>
                       ) : (
                         <div className="space-y-3">
@@ -669,12 +560,13 @@ function DoctorAvailabilityRoute() {
                                     </span>
                                   </div>
                                   <Button
+                                    aria-label="Remove slot"
                                     className="h-8 w-8"
                                     onClick={() => removeSlot(slotIndex)}
                                     size="icon"
                                     variant="ghost"
                                   >
-                                    <Trash2 className="size-3.5 text-muted-foreground hover:text-destructive" />
+                                    <Trash2 className="size-3.5" />
                                   </Button>
                                 </div>
 
@@ -736,6 +628,7 @@ function DoctorAvailabilityRoute() {
                                     </Label>
                                     <div className="flex h-9 items-center rounded-md border border-border/50 bg-background px-3">
                                       <Switch
+                                        aria-label={`Slot ${slot.startTime}-${slot.endTime} status`}
                                         checked={slot.isAvailable}
                                         className="h-4 w-7"
                                         onCheckedChange={(checked) =>

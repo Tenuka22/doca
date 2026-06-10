@@ -1,8 +1,3 @@
-import {
-  SignInButton as ClerkSignInButton,
-  useUser,
-} from "@clerk/tanstack-react-start";
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Badge } from "@zen-doc/ui/components/badge";
 import { Button } from "@zen-doc/ui/components/button";
@@ -16,36 +11,11 @@ import {
 } from "@zen-doc/ui/components/empty";
 import { Separator } from "@zen-doc/ui/components/separator";
 import { Skeleton } from "@zen-doc/ui/components/skeleton";
-import {
-  ChevronLeft,
-  ChevronRight,
-  FileTextIcon,
-  ShieldIcon,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, FileTextIcon } from "lucide-react";
 import { z } from "zod";
-import { getMetadataRole } from "@/utils/clerk-auth";
+
+import { usePlans } from "@/hooks/queries/admin";
 import { orpc } from "@/utils/orpc";
-
-interface PlanItem {
-  createdAt: string;
-  creditCost: number;
-  description: string | null;
-  doctorId: string;
-  durationMinutes: number;
-  features: string | null;
-  id: string;
-  isActive: boolean;
-  isDefault: boolean;
-  name: string;
-  sortOrder: number;
-}
-
-interface PlansPage {
-  items: PlanItem[];
-  nextPage: number | null;
-  page: number;
-  prevPage: number | null;
-}
 
 const searchSchema = z.object({
   page: z.coerce.number().int().positive().catch(1),
@@ -54,94 +24,31 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/admin/plans/")({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => ({ page: search.page }),
-  loader: async ({ context, deps }): Promise<{ initialData: PlansPage }> => {
+  loader: async ({ context, deps }) => {
     const input = { page: deps.page };
     try {
-      const initialData = await context.queryClient.fetchQuery<PlansPage>({
-        queryKey: orpc.plans.queryKey({ input }),
-        queryFn: () => orpc.plans.call(input),
-      });
-      return { initialData };
-    } catch {
-      return {
-        initialData: { items: [], page: 1, prevPage: null, nextPage: null },
-      };
-    }
+      await context.queryClient.ensureQueryData(
+        orpc.plans.queryOptions({ input })
+      );
+    } catch {}
   },
   component: AdminPlansRoute,
 });
 
 function AdminPlansRoute() {
-  const user = useUser();
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
-  const loaderData = Route.useLoaderData();
   const input = { page: search.page };
 
-  const plansQuery = useQuery({
-    queryKey: orpc.plans.queryKey({ input }),
-    queryFn: () => orpc.plans.call(input),
-    initialData: loaderData.initialData,
-    enabled:
-      user.isLoaded &&
-      !!user.user &&
-      getMetadataRole(user.user.publicMetadata) === "admin",
-  });
+  const plansQuery = usePlans(input);
 
   const rows = plansQuery.data?.items ?? [];
 
-  if (!user.isLoaded) {
+  if (plansQuery.isPending) {
     return (
       <div className="flex flex-col gap-6">
         <Skeleton className="h-48 rounded-3xl" />
         <Skeleton className="h-64 rounded-3xl" />
-      </div>
-    );
-  }
-
-  if (!user.user) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center">
-        <Card className="w-full max-w-md rounded-3xl">
-          <CardHeader className="items-center text-center">
-            <div className="rounded-2xl border bg-muted/40 p-4">
-              <ShieldIcon className="size-6" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="font-semibold text-xl tracking-tight">
-                Sign in required
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                Access the admin panel after signing in.
-              </p>
-            </div>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <ClerkSignInButton />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (getMetadataRole(user.user?.publicMetadata) !== "admin") {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center">
-        <Card className="w-full max-w-md rounded-3xl">
-          <CardHeader className="items-center text-center">
-            <div className="rounded-2xl border bg-muted/40 p-4">
-              <ShieldIcon className="size-6" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="font-semibold text-xl tracking-tight">
-                Unauthorized
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                You do not have admin access.
-              </p>
-            </div>
-          </CardHeader>
-        </Card>
       </div>
     );
   }
@@ -205,7 +112,7 @@ function AdminPlansRoute() {
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {rows.map((plan) => (
                 <Card
-                  className="rounded-2xl border-border/60 transition-colors hover:bg-muted/30"
+                  className="rounded-2xl border-border/60 transition-colors duration-200 hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-primary"
                   key={plan.id}
                 >
                   <CardContent className="flex flex-col gap-3">

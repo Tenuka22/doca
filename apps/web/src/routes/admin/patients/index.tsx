@@ -1,8 +1,3 @@
-import {
-  SignInButton as ClerkSignInButton,
-  useUser,
-} from "@clerk/tanstack-react-start";
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Badge } from "@zen-doc/ui/components/badge";
 import { Button } from "@zen-doc/ui/components/button";
@@ -16,31 +11,11 @@ import {
 } from "@zen-doc/ui/components/empty";
 import { Separator } from "@zen-doc/ui/components/separator";
 import { Skeleton } from "@zen-doc/ui/components/skeleton";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ShieldIcon,
-  UserRoundIcon,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, UserRoundIcon } from "lucide-react";
 import { z } from "zod";
-import { getMetadataRole } from "@/utils/clerk-auth";
+
+import { usePatients } from "@/hooks/queries/admin";
 import { orpc } from "@/utils/orpc";
-
-interface PatientItem {
-  alias: string;
-  createdAt: string;
-  email: string | null;
-  isOnboardingComplete: boolean;
-  phone: string | null;
-  userId: string;
-}
-
-interface PatientsPage {
-  items: PatientItem[];
-  nextPage: number | null;
-  page: number;
-  prevPage: number | null;
-}
 
 const searchSchema = z.object({
   page: z.coerce.number().int().positive().catch(1),
@@ -49,99 +24,31 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/admin/patients/")({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => ({ page: search.page }),
-  loader: async ({ context, deps }): Promise<{ initialData: PatientsPage }> => {
+  loader: async ({ context, deps }) => {
     const input = { page: deps.page };
     try {
-      const initialData = await context.queryClient.fetchQuery<PatientsPage>({
-        queryKey: orpc.patients.queryKey({ input }),
-        queryFn: () => orpc.patients.call(input),
-      });
-      return { initialData };
-    } catch {
-      return {
-        initialData: {
-          items: [],
-          page: 1,
-          prevPage: null,
-          nextPage: null,
-        },
-      };
-    }
+      await context.queryClient.ensureQueryData(
+        orpc.patients.queryOptions({ input })
+      );
+    } catch {}
   },
   component: AdminPatientsRoute,
 });
 
 function AdminPatientsRoute() {
-  const user = useUser();
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
-  const loaderData = Route.useLoaderData();
   const input = { page: search.page };
 
-  const patientsQuery = useQuery({
-    queryKey: orpc.patients.queryKey({ input }),
-    queryFn: () => orpc.patients.call(input),
-    initialData: loaderData.initialData,
-    enabled:
-      user.isLoaded &&
-      !!user.user &&
-      getMetadataRole(user.user.publicMetadata) === "admin",
-  });
+  const patientsQuery = usePatients(input);
 
   const rows = patientsQuery.data?.items ?? [];
 
-  if (!user.isLoaded) {
+  if (patientsQuery.isPending) {
     return (
       <div className="flex flex-col gap-6">
         <Skeleton className="h-48 rounded-3xl" />
         <Skeleton className="h-64 rounded-3xl" />
-      </div>
-    );
-  }
-
-  if (!user.user) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center">
-        <Card className="w-full max-w-md rounded-3xl">
-          <CardHeader className="items-center text-center">
-            <div className="rounded-2xl border bg-muted/40 p-4">
-              <ShieldIcon className="size-6" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="font-semibold text-xl tracking-tight">
-                Sign in required
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                Access the admin panel after signing in.
-              </p>
-            </div>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <ClerkSignInButton />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (getMetadataRole(user.user?.publicMetadata) !== "admin") {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center">
-        <Card className="w-full max-w-md rounded-3xl">
-          <CardHeader className="items-center text-center">
-            <div className="rounded-2xl border bg-muted/40 p-4">
-              <ShieldIcon className="size-6" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="font-semibold text-xl tracking-tight">
-                Unauthorized
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                You do not have admin access.
-              </p>
-            </div>
-          </CardHeader>
-        </Card>
       </div>
     );
   }
@@ -208,7 +115,7 @@ function AdminPatientsRoute() {
             <div className="flex flex-col gap-3">
               {rows.map((patient) => (
                 <Card
-                  className="rounded-2xl border-border/60 transition-colors hover:bg-muted/30"
+                  className="cursor-pointer rounded-2xl border-border/60 transition-colors duration-200 hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-primary"
                   key={patient.userId}
                 >
                   <CardContent className="flex items-center justify-between gap-4">
@@ -220,8 +127,12 @@ function AdminPatientsRoute() {
                       <div className="space-y-1">
                         <p className="font-medium text-sm">{patient.alias}</p>
                         <div className="flex flex-wrap gap-3 text-muted-foreground text-xs">
-                          {patient.email ? <span>{patient.email}</span> : null}
-                          {patient.phone ? <span>{patient.phone}</span> : null}
+                          {patient.guardianEmail ? (
+                            <span>{patient.guardianEmail}</span>
+                          ) : null}
+                          {patient.guardianPhone ? (
+                            <span>{patient.guardianPhone}</span>
+                          ) : null}
                         </div>
                       </div>
                     </div>

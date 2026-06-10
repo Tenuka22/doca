@@ -1,8 +1,3 @@
-import {
-  SignInButton as ClerkSignInButton,
-  useUser,
-} from "@clerk/tanstack-react-start";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Badge } from "@zen-doc/ui/components/badge";
 import { Button } from "@zen-doc/ui/components/button";
@@ -14,6 +9,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@zen-doc/ui/components/empty";
+import { Input } from "@zen-doc/ui/components/input";
 import { Separator } from "@zen-doc/ui/components/separator";
 import { Skeleton } from "@zen-doc/ui/components/skeleton";
 import {
@@ -22,34 +18,12 @@ import {
   Clock3Icon,
   InboxIcon,
   Search,
-  ShieldIcon,
   UserCheckIcon,
 } from "lucide-react";
 import { z } from "zod";
-import { getMetadataRole } from "@/utils/clerk-auth";
+
+import { useApproveDoctor, usePendingDoctors } from "@/hooks/queries/admin";
 import { orpc } from "@/utils/orpc";
-
-interface PendingDoctor {
-  bio: string | null;
-  email: string | null;
-  imageUrl: string | null;
-  licenseNumber: string | null;
-  matchesQuery: boolean;
-  name: string;
-  permanent: boolean;
-  phone: string | null;
-  role: string;
-  userId: string;
-}
-
-interface PendingDoctorsPage {
-  firstUserId: string | null;
-  items: PendingDoctor[];
-  lastUserId: string | null;
-  nextPage: number | null;
-  page: number;
-  prevPage: number | null;
-}
 
 const adminSearchSchema = z.object({
   page: z.coerce.number().int().positive().catch(1),
@@ -62,118 +36,32 @@ export const Route = createFileRoute("/admin/doc-requests/")({
     page: search.page,
     query: search.query,
   }),
-  loader: async ({
-    context,
-    deps,
-  }): Promise<{ initialData: PendingDoctorsPage }> => {
-    const input = {
-      page: deps.page,
-      query: deps.query,
-    };
+  loader: async ({ context, deps }) => {
+    const input = { page: deps.page, query: deps.query };
     try {
-      const initialData =
-        await context.queryClient.fetchQuery<PendingDoctorsPage>({
-          queryKey: orpc.pendingDoctors.queryKey({ input }),
-          queryFn: () => orpc.pendingDoctors.call(input),
-        });
-      return { initialData };
-    } catch {
-      return {
-        initialData: {
-          items: [],
-          page: 1,
-          nextPage: null,
-          prevPage: null,
-          firstUserId: null,
-          lastUserId: null,
-        },
-      };
-    }
+      await context.queryClient.ensureQueryData(
+        orpc.pendingDoctors.queryOptions({ input })
+      );
+    } catch {}
   },
   component: AdminDocRequestsRoute,
 });
 
 function AdminDocRequestsRoute() {
-  const user = useUser();
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
-  const loaderData = Route.useLoaderData();
-  const input = {
-    page: search.page,
-    query: search.query,
-  };
+  const input = { page: search.page, query: search.query };
 
-  const pendingDoctors = useQuery({
-    queryKey: orpc.pendingDoctors.queryKey({ input }),
-    queryFn: () => orpc.pendingDoctors.call(input),
-    initialData: loaderData.initialData,
-    enabled:
-      user.isLoaded &&
-      !!user.user &&
-      getMetadataRole(user.user.publicMetadata) === "admin",
-  });
-  const approveDoctor = useMutation(
-    orpc.approveDoctor.mutationOptions({
-      onSuccess: async () => {
-        await pendingDoctors.refetch();
-      },
-    })
-  );
+  const pendingDoctors = usePendingDoctors(input);
+  const approveDoctor = useApproveDoctor();
 
   const rows = pendingDoctors.data?.items ?? [];
 
-  if (!user.isLoaded) {
+  if (pendingDoctors.isPending) {
     return (
       <div className="flex flex-col gap-6">
         <Skeleton className="h-48 rounded-3xl" />
         <Skeleton className="h-64 rounded-3xl" />
-      </div>
-    );
-  }
-
-  if (!user.user) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center">
-        <Card className="w-full max-w-md rounded-3xl">
-          <CardHeader className="items-center text-center">
-            <div className="rounded-2xl border bg-muted/40 p-4">
-              <ShieldIcon className="size-6" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="font-semibold text-xl tracking-tight">
-                Sign in required
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                Access the admin panel after signing in.
-              </p>
-            </div>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <ClerkSignInButton />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (getMetadataRole(user.user?.publicMetadata) !== "admin") {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center">
-        <Card className="w-full max-w-md rounded-3xl">
-          <CardHeader className="items-center text-center">
-            <div className="rounded-2xl border bg-muted/40 p-4">
-              <ShieldIcon className="size-6" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="font-semibold text-xl tracking-tight">
-                Unauthorized
-              </h2>
-              <p className="text-muted-foreground text-sm">
-                You do not have admin access.
-              </p>
-            </div>
-          </CardHeader>
-        </Card>
       </div>
     );
   }
@@ -216,9 +104,9 @@ function AdminDocRequestsRoute() {
 
             <div className="flex gap-2">
               <div className="relative flex-1 md:flex-initial">
-                <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  className="h-9 w-full rounded-lg border border-border/60 bg-background pr-3 pl-9 text-sm outline-none focus:border-primary md:w-64"
+                <Search className="absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  className="pl-9 md:w-64"
                   onChange={(event) => {
                     navigate({
                       search: {
@@ -279,7 +167,7 @@ function AdminDocRequestsRoute() {
                   permanent: boolean;
                 }) => (
                   <Card
-                    className="rounded-2xl border-border/60 transition-colors hover:bg-muted/30"
+                    className="rounded-2xl border-border/60 transition-colors duration-200 hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-primary"
                     key={doctor.userId}
                   >
                     <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

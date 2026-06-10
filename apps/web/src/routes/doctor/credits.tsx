@@ -1,15 +1,8 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Badge } from "@zen-doc/ui/components/badge";
 import { Button } from "@zen-doc/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@zen-doc/ui/components/card";
+import { Card, CardContent, CardHeader } from "@zen-doc/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +21,6 @@ import { Label } from "@zen-doc/ui/components/label";
 import { Separator } from "@zen-doc/ui/components/separator";
 import { format } from "date-fns";
 import {
-  ArrowDownCircle,
   ArrowUpCircle,
   BanknoteIcon,
   CheckCircle2,
@@ -40,82 +32,48 @@ import {
   Wallet,
   XCircle,
 } from "lucide-react";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@zen-doc/ui/components/empty";
 import { useState } from "react";
-import { toast } from "sonner";
+
+import { MetricCard } from "@/components/dashboard-metrics";
+import {
+  useConnectAccountStatus,
+  useDoctorCredits,
+} from "@/hooks/queries/doctor";
+import { notify } from "@/lib/notify";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/doctor/credits")({
   component: DoctorCreditsRoute,
 });
 
-function MetricCard({
-  description,
-  icon,
-  title,
-  trend,
-  value,
-}: {
-  description: string;
-  icon: React.ReactNode;
-  title: string;
-  trend?: string;
-  value: string;
-}) {
-  return (
-    <Card className="rounded-3xl border-border/60">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <CardDescription>{title}</CardDescription>
-            <CardTitle className="text-4xl tracking-tight">{value}</CardTitle>
-          </div>
-
-          <div className="rounded-2xl border bg-muted/40 p-3 text-muted-foreground">
-            {icon}
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardFooter className="mt-auto flex items-center justify-between text-muted-foreground text-sm">
-        <span>{description}</span>
-        {trend ? (
-          <Badge className="gap-1" variant="secondary">
-            <ArrowDownCircle className="size-3" />
-            {trend}
-          </Badge>
-        ) : null}
-      </CardFooter>
-    </Card>
-  );
-}
-
 function DoctorCreditsRoute() {
   const [showCashout, setShowCashout] = useState(false);
   const [cashoutCents, setCashoutCents] = useState("");
 
-  const creditsQuery = useQuery({
-    queryKey: orpc.getDoctorCredits.queryKey(),
-    queryFn: () => orpc.getDoctorCredits.call(),
-  });
+  const creditsQuery = useDoctorCredits();
 
   const cashoutMutation = useMutation(
     orpc.requestCashout.mutationOptions({
       onSuccess: async () => {
-        toast.success("Cashout initiated successfully");
+        notify.success("Cashout initiated successfully");
         setShowCashout(false);
         setCashoutCents("");
         await creditsQuery.refetch();
       },
       onError: (error: Error) => {
-        toast.error(error instanceof Error ? error.message : "Cashout failed");
+        notify.error(error instanceof Error ? error.message : "Cashout failed");
       },
     })
   );
 
-  const connectStatusQuery = useQuery({
-    queryKey: orpc.getConnectAccountStatus.queryKey(),
-    queryFn: () => orpc.getConnectAccountStatus.call(),
-  });
+  const connectStatusQuery = useConnectAccountStatus();
 
   const stripeConnected = connectStatusQuery.data?.stripeAccountEnabled;
 
@@ -125,7 +83,7 @@ function DoctorCreditsRoute() {
         window.open(data.url, "_blank");
       },
       onError: (error: Error) => {
-        toast.error(
+        notify.error(
           error instanceof Error
             ? error.message
             : "Failed to create Stripe link"
@@ -154,11 +112,11 @@ function DoctorCreditsRoute() {
   function handleCashout() {
     const amount = Math.round(Number.parseFloat(cashoutCents) * 100);
     if (Number.isNaN(amount) || amount <= 0) {
-      toast.error("Enter a valid amount");
+      notify.error("Enter a valid amount");
       return;
     }
     if (amount > balanceCents) {
-      toast.error("Insufficient balance");
+      notify.error("Insufficient balance");
       return;
     }
     cashoutMutation.mutate({ amountCents: amount });
@@ -367,20 +325,22 @@ function DoctorCreditsRoute() {
 
             <CardContent>
               {sortedHistory.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="mb-3 rounded-2xl border bg-muted/40 p-3 text-muted-foreground">
-                    <History className="size-5" />
-                  </div>
-                  <p className="font-medium text-sm">No transactions found</p>
-                  <p className="text-muted-foreground text-sm">
-                    Your payout requests will appear here.
-                  </p>
-                </div>
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <History />
+                    </EmptyMedia>
+                    <EmptyTitle>No transactions found</EmptyTitle>
+                    <EmptyDescription>
+                      Your payout requests will appear here.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               ) : (
                 <div className="flex flex-col gap-3">
                   {sortedHistory.map((req) => (
                     <Card
-                      className="rounded-2xl border-border/60 transition-colors hover:bg-muted/30"
+                      className="rounded-2xl border-border/60 transition-colors duration-200 hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-primary"
                       key={req.id}
                     >
                       <CardContent className="flex items-center justify-between gap-4">

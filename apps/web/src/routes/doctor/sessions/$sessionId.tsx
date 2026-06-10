@@ -1,11 +1,9 @@
-import { useUser } from "@clerk/tanstack-react-start";
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Button } from "@zen-doc/ui/components/button";
 import { ChevronLeft, Loader2 } from "lucide-react";
 import { VideoRoomWeb } from "@/components/livekit/video-room";
-import { getMetadataRole } from "@/utils/clerk-auth";
-import { orpc } from "@/utils/orpc";
+import { useLiveKitToken } from "@/hooks/queries/doctor";
+import { useRole } from "@/hooks/use-role";
 
 export const Route = createFileRoute("/doctor/sessions/$sessionId")({
   component: DoctorSessionDetailRoute,
@@ -14,14 +12,10 @@ export const Route = createFileRoute("/doctor/sessions/$sessionId")({
 function DoctorSessionDetailRoute() {
   const { sessionId } = Route.useParams();
   const navigate = useNavigate();
-  const { user } = useUser();
-  const metadataRole = getMetadataRole(user?.publicMetadata);
-  const userRole = metadataRole === "admin" ? "admin" : "doctor";
+  const role = useRole();
+  const userRole: "admin" | "doctor" = role === "admin" ? "admin" : "doctor";
 
-  const sessionQuery = useQuery({
-    queryKey: orpc.getLiveKitToken.queryKey({ input: { sessionId } }),
-    queryFn: () => orpc.getLiveKitToken.call({ sessionId }),
-  });
+  const sessionQuery = useLiveKitToken({ sessionId });
 
   if (sessionQuery.isPending) {
     return (
@@ -33,8 +27,11 @@ function DoctorSessionDetailRoute() {
 
   if (sessionQuery.isError) {
     return (
-      <div className="flex h-svh flex-col items-center justify-center gap-4">
-        <p className="text-destructive">Failed to load session</p>
+      <div className="flex h-svh flex-col items-center justify-center gap-4" role="alert">
+        <p className="text-destructive font-medium">Failed to load session</p>
+        <p className="text-muted-foreground text-sm">
+          The video session could not be loaded. Please try again.
+        </p>
         <Button onClick={() => navigate({ to: "/doctor/sessions" })}>
           Back to Sessions
         </Button>
@@ -48,6 +45,7 @@ function DoctorSessionDetailRoute() {
     <div className="flex h-svh flex-col bg-background">
       <header className="flex items-center gap-3 border-b px-6 py-4">
         <Button
+          aria-label="Back to sessions"
           onClick={() => navigate({ to: "/doctor/sessions" })}
           size="icon"
           variant="ghost"

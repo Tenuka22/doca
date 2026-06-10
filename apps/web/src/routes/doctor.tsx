@@ -1,4 +1,8 @@
 import {
+  SignInButton as ClerkSignInButton,
+  useUser,
+} from "@clerk/tanstack-react-start";
+import {
   createFileRoute,
   Link,
   Outlet,
@@ -13,14 +17,23 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@zen-doc/ui/components/breadcrumb";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@zen-doc/ui/components/card";
 import { Separator } from "@zen-doc/ui/components/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@zen-doc/ui/components/sidebar";
+import { StethoscopeIcon } from "lucide-react";
 
 import { DoctorSidebar } from "@/components/doctor-sidebar";
+import { useRole } from "@/hooks/use-role";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/doctor")({
@@ -29,10 +42,9 @@ export const Route = createFileRoute("/doctor")({
       return;
     }
 
-    const data = await context.queryClient.fetchQuery({
-      queryKey: orpc.doctorProfile.queryKey(),
-      queryFn: () => orpc.doctorProfile.call(),
-    });
+    const data = await context.queryClient.ensureQueryData(
+      orpc.doctorProfile.queryOptions()
+    );
 
     if (!data?.profile) {
       throw redirect({ to: "/doctor/profile" });
@@ -86,6 +98,54 @@ function Breadcrumbs() {
 }
 
 function DoctorLayoutRoute() {
+  const user = useUser();
+  const role = useRole();
+
+  if (!user.isLoaded) {
+    return null;
+  }
+
+  if (!user.user) {
+    return (
+      <div className="flex min-h-svh items-center justify-center">
+        <Card className="w-full max-w-md rounded-3xl">
+          <CardHeader className="items-center text-center">
+            <div className="rounded-2xl border bg-muted/40 p-4">
+              <StethoscopeIcon className="size-6" />
+            </div>
+            <div className="space-y-2">
+              <CardTitle>Sign in required</CardTitle>
+              <CardDescription>
+                Access your doctor dashboard after signing in.
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <ClerkSignInButton />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (role !== "doctor") {
+    return (
+      <div className="flex min-h-svh items-center justify-center">
+        <Card className="w-full max-w-md rounded-3xl">
+          <CardHeader className="items-center text-center">
+            <div className="rounded-2xl border bg-muted/40 p-4">
+              <StethoscopeIcon className="size-6" />
+            </div>
+            <div className="space-y-2">
+              <CardTitle>Unauthorized</CardTitle>
+              <CardDescription>You do not have doctor access.</CardDescription>
+            </div>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <DoctorSidebar />

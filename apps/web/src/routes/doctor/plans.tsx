@@ -1,16 +1,10 @@
-import {
-  SignInButton as ClerkSignInButton,
-  useUser,
-} from "@clerk/tanstack-react-start";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Badge } from "@zen-doc/ui/components/badge";
 import { Button } from "@zen-doc/ui/components/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@zen-doc/ui/components/card";
@@ -36,9 +30,9 @@ import {
   EmptyTitle,
 } from "@zen-doc/ui/components/empty";
 import { Input } from "@zen-doc/ui/components/input";
+import { Textarea } from "@zen-doc/ui/components/textarea";
 import { Label } from "@zen-doc/ui/components/label";
 import { Separator } from "@zen-doc/ui/components/separator";
-import { Skeleton } from "@zen-doc/ui/components/skeleton";
 import {
   CheckIcon,
   ClockIcon,
@@ -49,10 +43,7 @@ import {
   PackageIcon,
   PlusIcon,
   StarIcon,
-  StethoscopeIcon,
-  TrendingUpIcon,
 } from "lucide-react";
-import type { ReactNode } from "react";
 import { useState } from "react";
 import {
   Bar,
@@ -62,7 +53,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { toast } from "sonner";
+
+import {
+  DashboardSkeleton,
+  MetricCard,
+  SectionHeader,
+} from "@/components/dashboard-metrics";
+import { useDoctorPlans, usePlanStats } from "@/hooks/queries/doctor";
+import { notify } from "@/lib/notify";
 import { orpc } from "@/utils/orpc";
 
 interface DoctorPlan {
@@ -77,85 +75,6 @@ interface DoctorPlan {
   sortOrder: number;
 }
 
-function DashboardSkeleton() {
-  return (
-    <div className="flex flex-col gap-6">
-      <Skeleton className="h-48 rounded-3xl" />
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <Skeleton className="h-36 rounded-2xl" key={index.toString()} />
-        ))}
-      </div>
-
-      <Skeleton className="h-[400px] rounded-3xl" />
-    </div>
-  );
-}
-
-function MetricCard({
-  description,
-  icon,
-  title,
-  trend,
-  value,
-}: {
-  description: string;
-  icon: ReactNode;
-  title: string;
-  trend?: string;
-  value: string;
-}) {
-  return (
-    <Card className="rounded-3xl border-border/60">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <CardDescription>{title}</CardDescription>
-            <CardTitle className="text-4xl tracking-tight">{value}</CardTitle>
-          </div>
-
-          <div className="rounded-2xl border bg-muted/40 p-3 text-muted-foreground">
-            {icon}
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardFooter className="mt-auto flex items-center justify-between text-muted-foreground text-sm">
-        <span>{description}</span>
-
-        {trend ? (
-          <Badge className="gap-1" variant="secondary">
-            <TrendingUpIcon className="size-3" />
-            {trend}
-          </Badge>
-        ) : null}
-      </CardFooter>
-    </Card>
-  );
-}
-
-function SectionHeader({
-  action,
-  description,
-  title,
-}: {
-  action?: ReactNode;
-  description: string;
-  title: string;
-}) {
-  return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div className="space-y-1">
-        <h2 className="font-semibold text-xl tracking-tight">{title}</h2>
-        <p className="text-muted-foreground text-sm">{description}</p>
-      </div>
-
-      {action}
-    </div>
-  );
-}
-
 function CreatePlanDialog() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -167,7 +86,7 @@ function CreatePlanDialog() {
   const createMutation = useMutation(
     orpc.createDoctorPlan.mutationOptions({
       onSuccess: async () => {
-        toast.success("Plan created");
+        notify.success("Plan created");
         setOpen(false);
         setName("");
         setDescription("");
@@ -176,7 +95,7 @@ function CreatePlanDialog() {
         setFeatures("");
       },
       onError: (error: Error) => {
-        toast.error(error.message);
+        notify.error(error.message);
       },
     })
   );
@@ -255,8 +174,9 @@ function CreatePlanDialog() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="features">Features</Label>
-            <Input
+            <Textarea
               id="features"
+              className="min-h-24 resize-y"
               onChange={(e) => setFeatures(e.target.value)}
               placeholder="One feature per line"
               value={features}
@@ -281,60 +201,22 @@ export const Route = createFileRoute("/doctor/plans")({
   loaderDeps: () => ({}),
   loader: async ({ context }) => {
     try {
-      await context.queryClient.prefetchQuery({
-        queryKey: orpc.planStats.queryKey(),
-        queryFn: () => orpc.planStats.call(),
-      });
+      await context.queryClient.ensureQueryData(orpc.planStats.queryOptions());
 
-      await context.queryClient.prefetchQuery({
-        queryKey: orpc.listDoctorPlans.queryKey(),
-        queryFn: () => orpc.listDoctorPlans.call(),
-      });
+      await context.queryClient.ensureQueryData(
+        orpc.listDoctorPlans.queryOptions()
+      );
     } catch {}
   },
   component: DoctorPlansRoute,
 });
 
 function DoctorPlansRoute() {
-  const user = useUser();
+  const statsQuery = usePlanStats();
+  const plansQuery = useDoctorPlans();
 
-  const statsQuery = useQuery({
-    queryKey: orpc.planStats.queryKey(),
-    queryFn: () => orpc.planStats.call(),
-  });
-
-  const plansQuery = useQuery({
-    queryKey: orpc.listDoctorPlans.queryKey(),
-    queryFn: () => orpc.listDoctorPlans.call(),
-  });
-
-  if (!user.isLoaded) {
+  if (statsQuery.isPending && plansQuery.isPending) {
     return <DashboardSkeleton />;
-  }
-
-  if (!user.user) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center">
-        <Card className="w-full max-w-md rounded-3xl">
-          <CardHeader className="items-center text-center">
-            <div className="rounded-2xl border bg-muted/40 p-4">
-              <StethoscopeIcon className="size-6" />
-            </div>
-
-            <div className="space-y-2">
-              <CardTitle>Sign in required</CardTitle>
-              <CardDescription>
-                Access your plans dashboard after signing in.
-              </CardDescription>
-            </div>
-          </CardHeader>
-
-          <CardContent className="flex justify-center">
-            <ClerkSignInButton />
-          </CardContent>
-        </Card>
-      </div>
-    );
   }
 
   const stats = statsQuery.data;
@@ -571,7 +453,7 @@ function DoctorPlansRoute() {
 
             return (
               <Card
-                className={`flex flex-col border-border/60 bg-gradient-to-br from-card to-card/50 shadow-sm transition-all hover:shadow-md ${
+                className={`flex flex-col border-border/60 bg-gradient-to-br from-card to-card/50 shadow-sm transition-all duration-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary ${
                   plan.isDefault ? "ring-1 ring-primary/20" : ""
                 }`}
                 key={plan.id}

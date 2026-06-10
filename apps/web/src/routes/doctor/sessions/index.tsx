@@ -1,19 +1,8 @@
-import {
-  SignInButton as ClerkSignInButton,
-  useUser,
-} from "@clerk/tanstack-react-start";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Badge } from "@zen-doc/ui/components/badge";
 import { Button } from "@zen-doc/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@zen-doc/ui/components/card";
+import { Card, CardContent, CardHeader } from "@zen-doc/ui/components/card";
 import {
   ChartContainer,
   ChartTooltip,
@@ -34,16 +23,20 @@ import {
   CalendarClockIcon,
   CalendarDaysIcon,
   CheckCircle2Icon,
-  Clock3Icon,
   InboxIcon,
   SparklesIcon,
-  StethoscopeIcon,
   TrendingUpIcon,
   VideoIcon,
-  XCircleIcon,
 } from "lucide-react";
-import type { ReactNode } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+
+import {
+  DashboardSkeleton,
+  MetricCard,
+  SectionHeader,
+} from "@/components/dashboard-metrics";
+import { SessionStatusBadge } from "@/components/session-status-badge";
+import { useDoctorSessions, useSessionStats } from "@/hooks/queries/doctor";
 import { orpc } from "@/utils/orpc";
 
 interface SessionItem {
@@ -54,115 +47,6 @@ interface SessionItem {
   patientId: string;
   startAt: string;
   status: string;
-}
-
-function SessionStatusBadge({ status }: { status: string }) {
-  if (status === "requested" || status === "rescheduled") {
-    return (
-      <Badge className="gap-1" variant="secondary">
-        <Clock3Icon className="size-3.5" />
-        {status === "requested" ? "Requested" : "Rescheduled"}
-      </Badge>
-    );
-  }
-
-  if (status === "approved" || status === "attended") {
-    return (
-      <Badge className="gap-1" variant="default">
-        <CheckCircle2Icon className="size-3.5" />
-        {status === "approved" ? "Approved" : "Attended"}
-      </Badge>
-    );
-  }
-
-  return (
-    <Badge className="gap-1" variant="destructive">
-      <XCircleIcon className="size-3.5" />
-      Failed
-    </Badge>
-  );
-}
-
-function DashboardSkeleton() {
-  return (
-    <div className="flex flex-col gap-6">
-      <Skeleton className="h-48 rounded-3xl" />
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <Skeleton className="h-36 rounded-2xl" key={index.toString()} />
-        ))}
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
-        <Skeleton className="h-[400px] rounded-3xl" />
-        <Skeleton className="h-[400px] rounded-3xl" />
-      </div>
-    </div>
-  );
-}
-
-function MetricCard({
-  description,
-  icon,
-  title,
-  trend,
-  value,
-}: {
-  description: string;
-  icon: ReactNode;
-  title: string;
-  trend?: string;
-  value: string;
-}) {
-  return (
-    <Card className="rounded-3xl border-border/60">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <CardDescription>{title}</CardDescription>
-            <CardTitle className="text-4xl tracking-tight">{value}</CardTitle>
-          </div>
-
-          <div className="rounded-2xl border bg-muted/40 p-3 text-muted-foreground">
-            {icon}
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardFooter className="mt-auto flex items-center justify-between text-muted-foreground text-sm">
-        <span>{description}</span>
-
-        {trend ? (
-          <Badge className="gap-1" variant="secondary">
-            <TrendingUpIcon className="size-3" />
-            {trend}
-          </Badge>
-        ) : null}
-      </CardFooter>
-    </Card>
-  );
-}
-
-function SectionHeader({
-  action,
-  description,
-  title,
-}: {
-  action?: ReactNode;
-  description: string;
-  title: string;
-}) {
-  return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div className="space-y-1">
-        <h2 className="font-semibold text-xl tracking-tight">{title}</h2>
-        <p className="text-muted-foreground text-sm">{description}</p>
-      </div>
-
-      {action}
-    </div>
-  );
 }
 
 function PendingRequests({
@@ -218,7 +102,10 @@ function PendingRequests({
         const end = new Date(session.endAt);
 
         return (
-          <Card className="rounded-2xl border-border/60" key={session.id}>
+          <Card
+            className="rounded-2xl border-border/60 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-primary"
+            key={session.id}
+          >
             <CardContent className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-3">
                 <div className="rounded-xl border bg-muted/40 p-2 text-muted-foreground">
@@ -283,61 +170,26 @@ export const Route = createFileRoute("/doctor/sessions/")({
   loaderDeps: () => ({}),
   loader: async ({ context }) => {
     try {
-      await context.queryClient.prefetchQuery({
-        queryKey: orpc.sessionStats.queryKey(),
-        queryFn: () => orpc.sessionStats.call(),
-      });
+      await context.queryClient.ensureQueryData(
+        orpc.sessionStats.queryOptions()
+      );
 
-      await context.queryClient.prefetchQuery({
-        queryKey: orpc.listDoctorSessions.queryKey(),
-        queryFn: () => orpc.listDoctorSessions.call(),
-      });
+      await context.queryClient.ensureQueryData(
+        orpc.listDoctorSessions.queryOptions()
+      );
     } catch {}
   },
   component: DoctorSessionsRoute,
 });
 
 function DoctorSessionsRoute() {
-  const user = useUser();
   const navigate = useNavigate();
 
-  const statsQuery = useQuery({
-    queryKey: orpc.sessionStats.queryKey(),
-    queryFn: () => orpc.sessionStats.call(),
-  });
+  const statsQuery = useSessionStats();
+  const doctorSessionsQuery = useDoctorSessions();
 
-  const doctorSessionsQuery = useQuery({
-    queryKey: orpc.listDoctorSessions.queryKey(),
-    queryFn: () => orpc.listDoctorSessions.call(),
-  });
-
-  if (!user.isLoaded) {
+  if (statsQuery.isPending && doctorSessionsQuery.isPending) {
     return <DashboardSkeleton />;
-  }
-
-  if (!user.user) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center">
-        <Card className="w-full max-w-md rounded-3xl">
-          <CardHeader className="items-center text-center">
-            <div className="rounded-2xl border bg-muted/40 p-4">
-              <StethoscopeIcon className="size-6" />
-            </div>
-
-            <div className="space-y-2">
-              <CardTitle>Sign in required</CardTitle>
-              <CardDescription>
-                Access your sessions dashboard after signing in.
-              </CardDescription>
-            </div>
-          </CardHeader>
-
-          <CardContent className="flex justify-center">
-            <ClerkSignInButton />
-          </CardContent>
-        </Card>
-      </div>
-    );
   }
 
   const stats = statsQuery.data;
@@ -586,7 +438,7 @@ function DoctorSessionsRoute() {
 
                     return (
                       <Card
-                        className="rounded-2xl border-border/60 transition-all hover:shadow-md"
+                        className="rounded-2xl border-border/60 transition-all duration-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary"
                         key={session.id}
                       >
                         <CardContent className="flex flex-col gap-3">
@@ -599,7 +451,7 @@ function DoctorSessionsRoute() {
                                 <p className="font-medium text-sm leading-tight">
                                   {session.patientId.slice(0, 12)}...
                                 </p>
-                                <p className="text-[10px] text-muted-foreground">
+                                <p className="text-muted-foreground text-[10px]">
                                   ID: {session.id.slice(0, 8)}...
                                 </p>
                               </div>
@@ -695,7 +547,7 @@ function DoctorSessionsRoute() {
 
                   return (
                     <Card
-                      className="rounded-2xl border-border/60 transition-all hover:shadow-md"
+                      className="rounded-2xl border-border/60 transition-all duration-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary"
                       key={session.id}
                     >
                       <CardContent className="flex flex-col gap-3">
@@ -708,7 +560,7 @@ function DoctorSessionsRoute() {
                               <p className="font-medium text-sm leading-tight">
                                 {session.patientId.slice(0, 12)}...
                               </p>
-                              <p className="text-[10px] text-muted-foreground">
+                              <p className="text-muted-foreground text-[10px]">
                                 ID: {session.id.slice(0, 8)}...
                               </p>
                             </div>

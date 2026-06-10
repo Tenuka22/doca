@@ -1,123 +1,32 @@
-import {
-  SignInButton as ClerkSignInButton,
-  useUser,
-} from "@clerk/tanstack-react-start";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useUser } from "@clerk/tanstack-react-start";
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Avatar, AvatarFallback } from "@zen-doc/ui/components/avatar";
 import { Badge } from "@zen-doc/ui/components/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@zen-doc/ui/components/card";
+import { Card, CardContent, CardHeader } from "@zen-doc/ui/components/card";
 import { Separator } from "@zen-doc/ui/components/separator";
-import { Skeleton } from "@zen-doc/ui/components/skeleton";
 import {
   BadgeCheckIcon,
   BookOpenIcon,
   FileIcon,
   GlobeIcon,
   LanguagesIcon,
-  StethoscopeIcon,
-  TrendingUpIcon,
   UserCircleIcon,
   VideoIcon,
 } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { MetricCard, SectionHeader } from "@/components/dashboard-metrics";
 import { DoctorFilesPanel, DoctorProfileCard } from "@/components/doctors";
+import { useDoctorProfile, useProfileStats } from "@/hooks/queries/doctor";
 import { orpc } from "@/utils/orpc";
-
-function DashboardSkeleton() {
-  return (
-    <div className="flex flex-col gap-6">
-      <Skeleton className="h-48 rounded-3xl" />
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <Skeleton className="h-36 rounded-2xl" key={index.toString()} />
-        ))}
-      </div>
-
-      <Skeleton className="h-[300px] rounded-3xl" />
-    </div>
-  );
-}
-
-function MetricCard({
-  description,
-  icon,
-  title,
-  trend,
-  value,
-}: {
-  description: string;
-  icon: ReactNode;
-  title: string;
-  trend?: string;
-  value: string;
-}) {
-  return (
-    <Card className="rounded-3xl border-border/60">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <CardDescription>{title}</CardDescription>
-            <CardTitle className="text-4xl tracking-tight">{value}</CardTitle>
-          </div>
-
-          <div className="rounded-2xl border bg-muted/40 p-3 text-muted-foreground">
-            {icon}
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardFooter className="mt-auto flex items-center justify-between text-muted-foreground text-sm">
-        <span>{description}</span>
-
-        {trend ? (
-          <Badge className="gap-1" variant="secondary">
-            <TrendingUpIcon className="size-3" />
-            {trend}
-          </Badge>
-        ) : null}
-      </CardFooter>
-    </Card>
-  );
-}
-
-function SectionHeader({
-  action,
-  description,
-  title,
-}: {
-  action?: ReactNode;
-  description: string;
-  title: string;
-}) {
-  return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div className="space-y-1">
-        <h2 className="font-semibold text-xl tracking-tight">{title}</h2>
-        <p className="text-muted-foreground text-sm">{description}</p>
-      </div>
-
-      {action}
-    </div>
-  );
-}
 
 export const Route = createFileRoute("/doctor/profile")({
   loaderDeps: () => ({}),
   loader: async ({ context }) => {
     try {
-      await context.queryClient.prefetchQuery({
-        queryKey: orpc.profileStats.queryKey(),
-        queryFn: () => orpc.profileStats.call(),
-      });
+      await context.queryClient.ensureQueryData(
+        orpc.profileStats.queryOptions()
+      );
     } catch {}
   },
   component: DoctorProfileRoute,
@@ -236,10 +145,7 @@ async function seedDevFiles(userId: string) {
         fileKind: f.kind,
       });
     } catch {
-      console.warn(
-        "[DEV] Could not upload fake file (profile needs permanent status):",
-        f.name
-      );
+      // File upload failed silently in dev mode
     }
   }
 }
@@ -247,12 +153,8 @@ async function seedDevFiles(userId: string) {
 function DoctorProfileRoute() {
   const user = useUser();
 
-  const statsQuery = useQuery({
-    queryKey: orpc.profileStats.queryKey(),
-    queryFn: () => orpc.profileStats.call(),
-  });
-
-  const doctorProfileQuery = useQuery(orpc.doctorProfile.queryOptions());
+  const statsQuery = useProfileStats();
+  const doctorProfileQuery = useDoctorProfile();
   const profileData = doctorProfileQuery.data as
     | { profile: { permanent: boolean } | null; role: string }
     | undefined;
@@ -303,8 +205,8 @@ function DoctorProfileRoute() {
           });
           await statsQuery.refetch();
         }
-      } catch (error) {
-        console.error("[DEV] Auto-fill error:", error);
+      } catch {
+        // Dev auto-fill failed silently
       }
     })();
   }, [
@@ -318,36 +220,7 @@ function DoctorProfileRoute() {
     queryClient,
   ]);
 
-  if (!user.isLoaded) {
-    return <DashboardSkeleton />;
-  }
-
-  if (!user.user) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center">
-        <Card className="w-full max-w-md rounded-3xl">
-          <CardHeader className="items-center text-center">
-            <div className="rounded-2xl border bg-muted/40 p-4">
-              <StethoscopeIcon className="size-6" />
-            </div>
-
-            <div className="space-y-2">
-              <CardTitle>Sign in required</CardTitle>
-              <CardDescription>
-                Access your doctor profile after signing in.
-              </CardDescription>
-            </div>
-          </CardHeader>
-
-          <CardContent className="flex justify-center">
-            <ClerkSignInButton />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const name = user.user.fullName ?? user.user.username ?? "Doctor";
+  const name = user.user?.fullName ?? user.user?.username ?? "Doctor";
   const initials = name
     .split(" ")
     .map((part) => part[0])
@@ -362,7 +235,6 @@ function DoctorProfileRoute() {
   const specialtyCount = stats?.specialtyCount ?? 0;
   const languageCount = stats?.languageCount ?? 0;
   const isPermanent = stats?.isPermanent ?? false;
-  const accountAgeDays = stats?.accountAgeDays ?? 0;
   const profileExists = stats?.profileExists ?? false;
 
   return (
@@ -411,8 +283,8 @@ function DoctorProfileRoute() {
         <MetricCard
           description={`${profileExists ? "In progress" : "Not started yet"}`}
           icon={<UserCircleIcon className="size-5" />}
-          title="Completeness"
-          trend={profileExists ? `${completenessPercentage}%` : "0%"}
+          title="Profile completeness"
+          trend={profileExists ? `${completenessPercentage}%` : undefined}
           value={`${completenessPercentage}%`}
         />
 
@@ -434,9 +306,6 @@ function DoctorProfileRoute() {
           description="Languages you speak with patients"
           icon={<LanguagesIcon className="size-5" />}
           title="Languages"
-          trend={
-            accountAgeDays > 0 ? `${accountAgeDays}d on platform` : undefined
-          }
           value={languageCount.toString()}
         />
       </section>
