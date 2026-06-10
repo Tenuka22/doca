@@ -27,38 +27,10 @@ import { Card } from "@/components/ui/card";
 import { IconButton } from "@/components/ui/icon-button";
 import { Screen } from "@/components/ui/screen";
 import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
-import { Tag } from "@/components/ui/tag";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { useSessionTiming } from "@/hooks/use-session-timing";
 import { orpc } from "@/utils/orpc";
 import { useThemeColor } from "@/utils/theme";
-
-const statusLabelMap: Record<string, string> = {
-  attended: "Attended",
-  approved: "Approved",
-  requested: "Requested",
-  rescheduled: "Rescheduled",
-  timing_balance_failure: "Failed to Agree",
-};
-
-const statusVariantMap: Record<
-  string,
-  "success" | "warning" | "destructive" | "muted"
-> = {
-  attended: "success",
-  approved: "success",
-  requested: "warning",
-  timing_balance_failure: "destructive",
-};
-
-function StatusBadge({ status }: { status: string }) {
-  const variant = statusVariantMap[status] ?? "muted";
-  const label = statusLabelMap[status] ?? status;
-  return (
-    <Tag shape="pill" variant={variant}>
-      {label}
-    </Tag>
-  );
-}
 
 export default function AppointmentsScreen() {
   const { user } = useUser();

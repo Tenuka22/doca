@@ -46,10 +46,3 @@ export function useErrorHandler({ onHardError }: UseErrorHandlerOptions = {}) {
 
   return { handleError };
 }
-
-export function _mutationOnError(
-  handler: ReturnType<typeof useErrorHandler>["handleError"],
-  retry?: () => void
-) {
-  return (error: unknown) => handler(error, { retry });
-}

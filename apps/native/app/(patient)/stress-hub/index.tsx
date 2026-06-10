@@ -4,7 +4,6 @@ import { useMutation } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
 import {
   Activity,
-  AlertTriangle,
   ArrowLeft,
   BarChart3,
   Brain,
@@ -22,6 +21,14 @@ import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
 import { vibrate } from "@/utils/haptics";
 import { orpc } from "@/utils/orpc";
 import {
+  CLASS_COLORS,
+  CLASS_LABELS,
+  classIndex,
+  computeInsights,
+  statusFromPrediction,
+  type Insights,
+} from "@/utils/stress/analysis";
+import {
   appendBundles,
   getBundles,
   getSimulationState,
@@ -30,9 +37,6 @@ import {
   setSimulationState,
 } from "@/utils/stress-storage";
 import { useThemeColor } from "@/utils/theme";
-
-const CLASS_LABELS = ["Baseline", "Amusement", "Stress"] as const;
-const CLASS_COLORS = ["#3b82f6", "#22c55e", "#ef4444"] as const;
 
 function generateMockSample(): number[] {
   const meanRr = 700 + Math.random() * 300;
@@ -48,142 +52,6 @@ function generateMockSample(): number[] {
     Math.round(pnn50 * 100) / 100,
     Math.round(hr * 100) / 100,
   ];
-}
-
-function statusFromPrediction(predictedClass: string): {
-  label: string;
-  color: string;
-  bg: string;
-  icon: typeof Brain;
-} {
-  switch (predictedClass.toLowerCase()) {
-    case "stress":
-      return {
-        label: "High Stress",
-        color: "text-destructive",
-        bg: "bg-destructive/15",
-        icon: AlertTriangle,
-      };
-    case "amusement":
-      return {
-        label: "Relaxed",
-        color: "text-success",
-        bg: "bg-success/15",
-        icon: TrendingDown,
-      };
-    default:
-      return {
-        label: "Baseline",
-        color: "text-primary",
-        bg: "bg-primary/15",
-        icon: Brain,
-      };
-  }
-}
-
-function classIndex(predictedClass: string): number {
-  return Math.max(
-    0,
-    CLASS_LABELS.findIndex(
-      (l) => l.toLowerCase() === predictedClass.toLowerCase()
-    )
-  );
-}
-
-interface Insights {
-  averageConfidence: number;
-  currentStreak: number;
-  dominantLabel: string;
-  dominantState: number;
-  sessionMinutes: number;
-  stateCounts: [number, number, number];
-  streakColor: string;
-  streakLabel: string;
-  stressRatio: number;
-  trendDirection: "up" | "down" | "stable";
-  trendLabel: string;
-}
-
-function computeInsights(bundles: StressBundle[]): Insights | null {
-  const withPrediction = bundles.filter((b) => b.prediction);
-  if (withPrediction.length === 0) {
-    return null;
-  }
-
-  const counts: [number, number, number] = [0, 0, 0];
-  let totalConfidence = 0;
-
-  for (const b of withPrediction) {
-    const idx = classIndex(b.prediction!.predictedClass);
-    counts[idx]++;
-    totalConfidence += b.prediction!.probabilities[idx] ?? 0;
-  }
-
-  const dominantState = counts.indexOf(Math.max(...counts));
-  const stressRatio =
-    withPrediction.length > 0 ? (counts[2] / withPrediction.length) * 100 : 0;
-
-  let streak = 1;
-  for (let i = withPrediction.length - 2; i >= 0; i--) {
-    if (
-      withPrediction[i].prediction!.predictedClass.toLowerCase() ===
-      withPrediction[i + 1].prediction!.predictedClass.toLowerCase()
-    ) {
-      streak++;
-    } else {
-      break;
-    }
-  }
-
-  const lastIdx = classIndex(
-    withPrediction[withPrediction.length - 1].prediction!.predictedClass
-  );
-  const streakColor = CLASS_COLORS[lastIdx];
-
-  const recent = withPrediction.slice(-6);
-  const recentStress = recent.filter(
-    (b) => b.prediction!.predictedClass.toLowerCase() === "stress"
-  ).length;
-  const earlier = withPrediction.slice(-12, -6);
-  const earlierStress = earlier.filter(
-    (b) => b.prediction!.predictedClass.toLowerCase() === "stress"
-  ).length;
-
-  const trendDirection =
-    recentStress > earlierStress + 1
-      ? "up"
-      : recentStress < earlierStress - 1
-        ? "down"
-        : "stable";
-
-  const sessionMinutes =
-    bundles.length > 1
-      ? Math.round(
-          (bundles[bundles.length - 1].createdAt - bundles[0].createdAt) /
-            60_000
-        )
-      : 0;
-
-  return {
-    stateCounts: counts,
-    dominantState,
-    dominantLabel: CLASS_LABELS[dominantState],
-    stressRatio: Math.round(stressRatio),
-    currentStreak: streak,
-    streakLabel: CLASS_LABELS[lastIdx],
-    streakColor,
-    trendDirection,
-    trendLabel:
-      trendDirection === "up"
-        ? "Stress up"
-        : trendDirection === "down"
-          ? "Stress down"
-          : "Stable",
-    averageConfidence: Math.round(
-      (totalConfidence / withPrediction.length) * 100
-    ),
-    sessionMinutes,
-  };
 }
 
 export default function StressHubScreen() {

@@ -13,26 +13,10 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { Card } from "@/components/ui/card";
 import { RootBottomBar } from "@/components/ui/root-bottom-bar";
 import { Screen } from "@/components/ui/screen";
-import type { SpriteAction } from "@/components/ui/sprite-animation";
 import { SpriteAnimation } from "@/components/ui/sprite-animation";
+import { moodToAction } from "@/utils/mood";
 import { orpc } from "@/utils/orpc";
 import { useThemeColor } from "@/utils/theme";
-
-function moodToAction(mood: string): SpriteAction {
-  if (mood === "sleep") {
-    return "alert";
-  }
-  if (mood === "sad") {
-    return "alert";
-  }
-  if (mood === "yawn") {
-    return "thinking";
-  }
-  if (mood === "happy") {
-    return "happy";
-  }
-  return "idle";
-}
 
 export default function GuardianActivitiesScreen() {
   const colors = useThemeColor();

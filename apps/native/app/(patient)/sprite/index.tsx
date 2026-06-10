@@ -8,17 +8,8 @@ import { IconButton } from "@/components/ui/icon-button";
 import { Screen } from "@/components/ui/screen";
 import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
 import { SpriteAnimation } from "@/components/ui/sprite-animation";
+import { moodToAction } from "@/utils/mood";
 import { orpc } from "@/utils/orpc";
-
-function moodToAction(mood: string): "idle" | "happy" | "thinking" | "alert" {
-  if (mood === "sleep") {
-    return "alert";
-  }
-  if (mood === "yawn") {
-    return "thinking";
-  }
-  return "idle";
-}
 
 const WELLNESS_ACTIONS = [
   {

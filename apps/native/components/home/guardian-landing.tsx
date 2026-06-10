@@ -12,23 +12,10 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import type { SpriteAction } from "@/components/ui/sprite-animation";
 import { SpriteAnimation } from "@/components/ui/sprite-animation";
+import { moodToAction } from "@/utils/mood";
 import { orpc } from "@/utils/orpc";
 import { useThemeColor } from "@/utils/theme";
-
-function moodToAction(mood: string): SpriteAction {
-  if (mood === "sleep" || mood === "sad") {
-    return "alert";
-  }
-  if (mood === "yawn") {
-    return "thinking";
-  }
-  if (mood === "happy") {
-    return "happy";
-  }
-  return "idle";
-}
 
 export function GuardianLanding() {
   const colors = useThemeColor();

@@ -1,20 +1,9 @@
 import { Text, View } from "react-native";
-import type { SpriteAction } from "@/components/ui/sprite-animation";
 
 interface SpriteHealthBarProps {
   health: number;
   mood: string;
   streakDays: number;
-}
-
-function moodToAction(mood: string): SpriteAction {
-  if (mood === "sleep") {
-    return "alert";
-  }
-  if (mood === "yawn") {
-    return "thinking";
-  }
-  return "idle";
 }
 
 export function SpriteHealthBar({

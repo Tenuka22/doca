@@ -172,7 +172,3 @@ export function parseError(error: unknown): ParsedError {
     isSoft: false,
   };
 }
-
-export function _isSoftError(error: unknown): boolean {
-  return parseError(error).isSoft;
-}
