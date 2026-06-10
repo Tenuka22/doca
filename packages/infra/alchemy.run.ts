@@ -29,10 +29,16 @@ const db = await D1Database("primary-database", {
 const doctorMaterialsKv = await KVNamespace("doctor-materials");
 const modelFeaturesKv = await KVNamespace("model-features");
 
-const redis = await UpstashRedis("zen-doc", {
-  name: "zen-doc",
-  primaryRegion: "sa-east-1",
-});
+const redis = await UpstashRedis(
+  process.env.NODE_ENV === "production" ? "prod-zen-doc" : "zen-doc",
+  {
+    name:
+      process.env.NODE_ENV === "production"
+        ? "prod-zen-doc"
+        : "zen-doc",
+    primaryRegion: "us-east-1",
+  }
+);
 
 export const server = await Worker("server", {
   cwd: "../../apps/server",
