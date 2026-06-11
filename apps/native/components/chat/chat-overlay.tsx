@@ -37,7 +37,9 @@ const SUGGESTIONS = [
   "I've been feeling anxious lately",
   "I need help managing stress",
   "I'm having trouble sleeping",
-  "I want to talk to someone about burnout",
+  "What does the Sprite companion do?",
+  "How do I book a doctor appointment?",
+  "Tell me about the Stress Hub feature",
 ];
 
 const MAX_MODAL_HEIGHT = 540;
@@ -55,7 +57,6 @@ async function saveLocalMessages(messages: ChatMessage[]) {
   try {
     await AsyncStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(messages));
   } catch {
-    // Silently fail — local storage is best-effort
   }
 }
 
@@ -63,7 +64,6 @@ async function clearLocalMessages() {
   try {
     await AsyncStorage.removeItem(LOCAL_STORAGE_KEY);
   } catch {
-    // Silently fail
   }
 }
 
@@ -298,10 +298,10 @@ export function ChatOverlay() {
               >
                 <View className="flex-1">
                   <Text className="font-black font-sans text-foreground text-xl uppercase tracking-tight">
-                    Ask a Doctor
+                    ZenDoc Assistant
                   </Text>
                   <Text className="font-medium font-sans text-muted-foreground text-xs">
-                    Get matched with the right specialist
+                    Ask about features, find a doctor, or get wellness tips
                   </Text>
                 </View>
 
@@ -367,8 +367,8 @@ export function ChatOverlay() {
                     </Text>
                     <Text className="text-center font-medium font-sans text-muted-foreground text-sm leading-relaxed">
                       {isSignedIn
-                        ? "Describe how you're feeling and we'll recommend the right doctor for you."
-                        : "Describe how you're feeling and we'll recommend a doctor. Sign in to save your chat history."}
+                        ? "Explore ZenDoc features, find a doctor, or get wellness tips."
+                        : "Ask about ZenDoc features or find a doctor. Sign in to save your chat history."}
                     </Text>
                     {!isSignedIn && (
                       <Pressable
@@ -458,7 +458,7 @@ export function ChatOverlay() {
                 <View className="flex-1 rounded-card border-2 border-border bg-card">
                   <TextInput
                     className="max-h-24 px-4 py-3 font-medium font-sans text-foreground text-sm"
-                    placeholder="Describe your concerns..."
+                    placeholder="Ask about features, doctors, or wellness..."
                     placeholderTextColor={colors.mutedForeground}
                     value={input}
                     onChangeText={setInput}
