@@ -24,6 +24,9 @@ function AdminSessionPage() {
     endAt: string;
   } | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<
+    "patient" | "doctor" | "admin"
+  >("patient");
 
   if (!user) {
     return null;
@@ -59,7 +62,10 @@ function AdminSessionPage() {
         <VideoRoomWeb
           endAt={activeSession.endAt}
           onClose={() => setActiveSession(null)}
-          role="doctor"
+          onFetchToken={(sid) =>
+            orpc.getTestLiveKitToken.call({ sessionId: sid })
+          }
+          role={selectedRole}
           sessionId={activeSession.id}
           startAt={activeSession.startAt}
         />
@@ -86,7 +92,7 @@ function AdminSessionPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleJoinAsDoctor = () => {
+  const handleJoin = () => {
     if (!sessionId) {
       return;
     }
@@ -161,10 +167,11 @@ function AdminSessionPage() {
           <CardHeader>
             <div className="space-y-1">
               <h2 className="font-semibold text-xl tracking-tight">
-                Step 2: Join as doctor
+                Step 2: Join session
               </h2>
               <p className="text-muted-foreground text-sm">
-                Enter a session ID and join the video call as a doctor.
+                Enter a session ID and join the video call as a patient, doctor,
+                or admin.
               </p>
             </div>
           </CardHeader>
@@ -176,9 +183,26 @@ function AdminSessionPage() {
               value={sessionId}
             />
 
-            <Button disabled={!sessionId} onClick={handleJoinAsDoctor}>
+            <div className="flex flex-wrap gap-2">
+              <p className="w-full text-muted-foreground text-xs">
+                Join as
+              </p>
+              {(["patient", "doctor", "admin"] as const).map((role) => (
+                <Button
+                  key={role}
+                  onClick={() => setSelectedRole(role)}
+                  size="sm"
+                  variant={selectedRole === role ? "default" : "outline"}
+                >
+                  {role.charAt(0).toUpperCase() + role.slice(1)}
+                </Button>
+              ))}
+            </div>
+
+            <Button disabled={!sessionId} onClick={handleJoin}>
               <Video className="mr-2 size-4" />
-              Join as Doctor
+              Join as{" "}
+              {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}
             </Button>
           </CardContent>
         </Card>
