@@ -1,4 +1,3 @@
-import { useUser } from "@clerk/tanstack-react-start";
 import { createFileRoute } from "@tanstack/react-router";
 import { Badge } from "@zen-doc/ui/components/badge";
 import { Button } from "@zen-doc/ui/components/button";
@@ -30,34 +29,22 @@ import {
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import {
-  DashboardSkeleton,
   MetricCard,
   SectionHeader,
 } from "@/components/dashboard-metrics";
-import { useAdminStats } from "@/hooks/queries/admin";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/admin/")({
-  loaderDeps: () => ({}),
-  loader: async ({ context }) => {
-    try {
-      await context.queryClient.ensureQueryData(orpc.stats.queryOptions());
-    } catch {}
-  },
-  component: AdminDashboardRoute,
+	loaderDeps: () => ({}),
+	loader: async ({ context }) => {
+		return context.queryClient.ensureQueryData(orpc.stats.queryOptions());
+	},
+	component: AdminDashboardRoute,
 });
 
 function AdminDashboardRoute() {
-  const user = useUser();
-  const statsQuery = useAdminStats();
-
-  if (statsQuery.isPending) {
-    return <DashboardSkeleton />;
-  }
-
-  const name = user.user?.fullName ?? user.user?.username ?? "Admin";
-  const stats = statsQuery.data;
-  const sessionsByDay = stats?.sessionsByDay ?? [];
+	const stats = Route.useLoaderData();
+	const sessionsByDay = stats?.sessionsByDay ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -77,7 +64,7 @@ function AdminDashboardRoute() {
 
                 <div className="space-y-2">
                   <h1 className="font-semibold text-4xl tracking-tight">
-                    Welcome back, {name}
+                    Welcome back
                   </h1>
                   <p className="max-w-2xl text-muted-foreground text-sm md:text-base">
                     Monitor platform activity, manage doctor registrations, and

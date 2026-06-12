@@ -1,109 +1,118 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Badge } from "@zen-doc/ui/components/badge";
 import { Button } from "@zen-doc/ui/components/button";
 import { Card, CardContent, CardHeader } from "@zen-doc/ui/components/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
 } from "@zen-doc/ui/components/dialog";
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
 } from "@zen-doc/ui/components/empty";
 import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
+	InputGroup,
+	InputGroupAddon,
+	InputGroupInput,
 } from "@zen-doc/ui/components/input-group";
 import { Label } from "@zen-doc/ui/components/label";
 import { Separator } from "@zen-doc/ui/components/separator";
 import { format } from "date-fns";
 import {
-  ArrowUpCircle,
-  BanknoteIcon,
-  CheckCircle2,
-  Clock,
-  DollarSignIcon,
-  History,
-  Info,
-  Loader2,
-  Wallet,
-  XCircle,
+	ArrowUpCircle,
+	BanknoteIcon,
+	CheckCircle2,
+	Clock,
+	DollarSignIcon,
+	History,
+	Info,
+	Loader2,
+	Wallet,
+	XCircle,
 } from "lucide-react";
 import { useState } from "react";
 
 import { MetricCard } from "@/components/dashboard-metrics";
-import {
-  useConnectAccountStatus,
-  useDoctorCredits,
-} from "@/hooks/queries/doctor";
 import { notify } from "@/lib/notify";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/doctor/credits")({
-  component: DoctorCreditsRoute,
+	loader: async ({ context }) => {
+		const [credits, connectStatus] = await Promise.all([
+			context.queryClient.ensureQueryData(orpc.getDoctorCredits.queryOptions()),
+			context.queryClient.ensureQueryData(
+				orpc.getConnectAccountStatus.queryOptions(),
+			),
+		]);
+		return { credits, connectStatus };
+	},
+	component: DoctorCreditsRoute,
 });
 
 function DoctorCreditsRoute() {
-  const [showCashout, setShowCashout] = useState(false);
-  const [cashoutCents, setCashoutCents] = useState("");
+	const { credits, connectStatus } = Route.useLoaderData();
+	const [showCashout, setShowCashout] = useState(false);
+	const [cashoutCents, setCashoutCents] = useState("");
 
-  const creditsQuery = useDoctorCredits();
+	const queryClient = useQueryClient();
+	const creditsQuery = {
+		refetch: () =>
+			queryClient.invalidateQueries({
+				queryKey: orpc.getDoctorCredits.queryKey(),
+			}),
+	};
 
-  const cashoutMutation = useMutation(
-    orpc.requestCashout.mutationOptions({
-      onSuccess: async () => {
-        notify.success("Cashout initiated successfully");
-        setShowCashout(false);
-        setCashoutCents("");
-        await creditsQuery.refetch();
-      },
-      onError: (error: Error) => {
-        notify.error(error instanceof Error ? error.message : "Cashout failed");
-      },
-    })
-  );
+	const cashoutMutation = useMutation(
+		orpc.requestCashout.mutationOptions({
+			onSuccess: async () => {
+				notify.success("Cashout initiated successfully");
+				setShowCashout(false);
+				setCashoutCents("");
+				await creditsQuery.refetch();
+			},
+			onError: (error: Error) => {
+				notify.error(error instanceof Error ? error.message : "Cashout failed");
+			},
+		}),
+	);
 
-  const connectStatusQuery = useConnectAccountStatus();
+	const stripeConnected = connectStatus?.stripeAccountEnabled;
 
-  const stripeConnected = connectStatusQuery.data?.stripeAccountEnabled;
+	const createConnectLinkMutation = useMutation(
+		orpc.createConnectAccountLink.mutationOptions({
+			onSuccess: (data) => {
+				window.open(data.url, "_blank");
+			},
+			onError: (error: Error) => {
+				notify.error(
+					error instanceof Error
+						? error.message
+						: "Failed to create Stripe link",
+				);
+			},
+		}),
+	);
 
-  const createConnectLinkMutation = useMutation(
-    orpc.createConnectAccountLink.mutationOptions({
-      onSuccess: (data) => {
-        window.open(data.url, "_blank");
-      },
-      onError: (error: Error) => {
-        notify.error(
-          error instanceof Error
-            ? error.message
-            : "Failed to create Stripe link"
-        );
-      },
-    })
-  );
+	const creditsData = credits?.credits;
+	const cashoutRequests = (credits?.cashoutRequests ?? []) as Array<{
+		amountCents: number;
+		createdAt: string;
+		id: string;
+		status: string;
+	}>;
 
-  const data = creditsQuery.data;
-  const credits = data?.credits;
-  const cashoutRequests = (data?.cashoutRequests ?? []) as Array<{
-    amountCents: number;
-    createdAt: string;
-    id: string;
-    status: string;
-  }>;
-
-  const balanceCents = credits?.balanceCents ?? 0;
-  const totalEarnedCents = credits?.totalEarnedCents ?? 0;
-  const totalCashedOutCents = credits?.totalCashedOutCents ?? 0;
+	const balanceCents = creditsData?.balanceCents ?? 0;
+	const totalEarnedCents = creditsData?.totalEarnedCents ?? 0;
+	const totalCashedOutCents = creditsData?.totalCashedOutCents ?? 0;
 
   function formatCents(cents: number): string {
     return `$${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -203,26 +212,26 @@ function DoctorCreditsRoute() {
                   requesting a payout.
                 </p>
               )}
-              {connectStatusQuery.isFetched && stripeConnected === false && (
-                <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-700 text-xs dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                  Stripe Connect account not set up.{" "}
-                  <button
-                    className="font-medium underline"
-                    disabled={createConnectLinkMutation.isPending}
-                    onClick={() =>
-                      createConnectLinkMutation.mutate({
-                        returnUrl: window.location.href,
-                        refreshUrl: window.location.href,
-                      })
-                    }
-                    type="button"
-                  >
-                    {createConnectLinkMutation.isPending
-                      ? "Connecting..."
-                      : "Connect now"}
-                  </button>
-                </p>
-              )}
+							{connectStatus && stripeConnected === false && (
+								<p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-700 text-xs dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+									Stripe Connect account not set up.{" "}
+									<button
+										className="font-medium underline"
+										disabled={createConnectLinkMutation.isPending}
+										onClick={() =>
+											createConnectLinkMutation.mutate({
+												returnUrl: window.location.href,
+												refreshUrl: window.location.href,
+											})
+										}
+										type="button"
+									>
+										{createConnectLinkMutation.isPending
+											? "Connecting..."
+											: "Connect now"}
+									</button>
+								</p>
+							)}
               <div className="grid gap-2">
                 <Label className="font-semibold text-sm" htmlFor="amount">
                   Amount to Withdraw (USD)
@@ -272,13 +281,9 @@ function DoctorCreditsRoute() {
         </Dialog>
       </div>
 
-      {creditsQuery.isPending ? (
-        <div className="flex h-64 items-center justify-center rounded-xl border border-border/60 border-dashed">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground/50" />
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+			{/* Balance widgets */}
+			<div className="space-y-6">
+				<section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <MetricCard
               description="Available for your next payout request"
               icon={<Wallet className="size-5" />}
@@ -380,7 +385,6 @@ function DoctorCreditsRoute() {
             </CardContent>
           </Card>
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
 }

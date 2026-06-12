@@ -3,20 +3,18 @@ import { Badge } from "@zen-doc/ui/components/badge";
 import { Button } from "@zen-doc/ui/components/button";
 import { Card, CardContent, CardHeader } from "@zen-doc/ui/components/card";
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
 } from "@zen-doc/ui/components/empty";
 import { Separator } from "@zen-doc/ui/components/separator";
-import { Skeleton } from "@zen-doc/ui/components/skeleton";
 import { format } from "date-fns";
 import { CalendarDaysIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { z } from "zod";
 
 import { SessionStatusBadge } from "@/components/session-status-badge";
-import { useSessions } from "@/hooks/queries/admin";
 import { orpc } from "@/utils/orpc";
 
 const searchSchema = z.object({
@@ -24,36 +22,23 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/admin/sessions/")({
-  validateSearch: searchSchema,
-  loaderDeps: ({ search }) => ({ page: search.page }),
-  loader: async ({ context, deps }) => {
-    const input = { page: deps.page };
-    try {
-      await context.queryClient.ensureQueryData(
-        orpc.sessions.queryOptions({ input })
-      );
-    } catch {}
-  },
-  component: AdminSessionsRoute,
+	validateSearch: searchSchema,
+	loaderDeps: ({ search }) => ({ page: search.page }),
+	loader: async ({ context, deps }) => {
+		const input = { page: deps.page };
+		return context.queryClient.ensureQueryData(
+			orpc.sessions.queryOptions({ input }),
+		);
+	},
+	component: AdminSessionsRoute,
 });
 
 function AdminSessionsRoute() {
-  const navigate = Route.useNavigate();
-  const search = Route.useSearch();
-  const input = { page: search.page };
+	const navigate = Route.useNavigate();
+	const search = Route.useSearch();
+	const data = Route.useLoaderData();
 
-  const sessionsQuery = useSessions(input);
-
-  const rows = sessionsQuery.data?.items ?? [];
-
-  if (sessionsQuery.isPending) {
-    return (
-      <div className="flex flex-col gap-6">
-        <Skeleton className="h-48 rounded-3xl" />
-        <Skeleton className="h-64 rounded-3xl" />
-      </div>
-    );
-  }
+	const rows = data?.items ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -163,11 +148,11 @@ function AdminSessionsRoute() {
           {rows.length > 0 ? (
             <div className="mt-4 flex items-center justify-between">
               <p className="text-muted-foreground text-sm">
-                Page {sessionsQuery.data?.page ?? search.page}
+                Page {data?.page ?? search.page}
               </p>
               <div className="flex gap-2">
                 <Button
-                  disabled={!sessionsQuery.data?.prevPage}
+                  disabled={!data?.prevPage}
                   onClick={() => {
                     navigate({
                       search: {
@@ -183,7 +168,7 @@ function AdminSessionsRoute() {
                   Prev
                 </Button>
                 <Button
-                  disabled={!sessionsQuery.data?.nextPage}
+                  disabled={!data?.nextPage}
                   onClick={() => {
                     navigate({
                       search: {
@@ -199,6 +184,7 @@ function AdminSessionsRoute() {
                   <ChevronRight className="ml-1 size-3" />
                 </Button>
               </div>
+
             </div>
           ) : null}
         </CardContent>

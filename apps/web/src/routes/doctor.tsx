@@ -1,55 +1,64 @@
 import {
-  SignInButton as ClerkSignInButton,
-  useUser,
+	SignInButton as ClerkSignInButton,
 } from "@clerk/tanstack-react-start";
 import {
-  createFileRoute,
-  Link,
-  Outlet,
-  redirect,
-  useMatches,
+	createFileRoute,
+	Link,
+	Outlet,
+	redirect,
+	useMatches,
 } from "@tanstack/react-router";
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
+	Breadcrumb,
+	BreadcrumbItem,
+	BreadcrumbLink,
+	BreadcrumbList,
+	BreadcrumbPage,
+	BreadcrumbSeparator,
 } from "@zen-doc/ui/components/breadcrumb";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
 } from "@zen-doc/ui/components/card";
 import { Separator } from "@zen-doc/ui/components/separator";
 import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
+	SidebarInset,
+	SidebarProvider,
+	SidebarTrigger,
 } from "@zen-doc/ui/components/sidebar";
 import { StethoscopeIcon } from "lucide-react";
 
 import { DoctorSidebar } from "@/components/doctor-sidebar";
 import { orpc } from "@/utils/orpc";
+import { getServerSession } from "@/utils/clerk-auth";
 
 export const Route = createFileRoute("/doctor")({
-  beforeLoad: async ({ context, location }) => {
-    if (location.pathname === "/doctor/profile") {
-      return;
-    }
+	beforeLoad: async ({ context, location }) => {
+		const session = await getServerSession();
 
-    const data = await context.queryClient.ensureQueryData(
-      orpc.doctorProfile.queryOptions()
-    );
+		if (!session) {
+			return { session: null };
+		}
 
-    if (!data?.profile) {
-      throw redirect({ to: "/doctor/profile" });
-    }
-  },
-  component: DoctorLayoutRoute,
+		if (location.pathname === "/doctor/profile") {
+			return { session };
+		}
+
+		const data = await context.queryClient.ensureQueryData(
+			orpc.doctorProfile.queryOptions(),
+		);
+
+		if (!data?.profile) {
+			throw redirect({ to: "/doctor/profile" });
+		}
+
+		return { session };
+	},
+	loader: ({ context }) => ({ session: context.session }),
+	component: DoctorLayoutRoute,
 });
 
 function Breadcrumbs() {
@@ -97,34 +106,30 @@ function Breadcrumbs() {
 }
 
 function DoctorLayoutRoute() {
-  const user = useUser();
+	const { session } = Route.useLoaderData();
 
-  if (!user.isLoaded) {
-    return null;
-  }
-
-  if (!user.user) {
-    return (
-      <div className="flex min-h-svh items-center justify-center">
-        <Card className="w-full max-w-md rounded-3xl">
-          <CardHeader className="items-center text-center">
-            <div className="rounded-2xl border bg-muted/40 p-4">
-              <StethoscopeIcon className="size-6" />
-            </div>
-            <div className="space-y-2">
-              <CardTitle>Sign in required</CardTitle>
-              <CardDescription>
-                Access your doctor dashboard after signing in.
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <ClerkSignInButton />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+	if (!session) {
+		return (
+			<div className="flex min-h-svh items-center justify-center">
+				<Card className="w-full max-w-md rounded-3xl">
+					<CardHeader className="items-center text-center">
+						<div className="rounded-2xl border bg-muted/40 p-4">
+							<StethoscopeIcon className="size-6" />
+						</div>
+						<div className="space-y-2">
+							<CardTitle>Sign in required</CardTitle>
+							<CardDescription>
+								Access your doctor dashboard after signing in.
+							</CardDescription>
+						</div>
+					</CardHeader>
+					<CardContent className="flex justify-center">
+						<ClerkSignInButton />
+					</CardContent>
+				</Card>
+			</div>
+		);
+	}
 
   return (
     <SidebarProvider>

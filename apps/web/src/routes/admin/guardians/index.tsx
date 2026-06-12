@@ -3,19 +3,17 @@ import { Badge } from "@zen-doc/ui/components/badge";
 import { Button } from "@zen-doc/ui/components/button";
 import { Card, CardContent, CardHeader } from "@zen-doc/ui/components/card";
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
 } from "@zen-doc/ui/components/empty";
 import { Separator } from "@zen-doc/ui/components/separator";
-import { Skeleton } from "@zen-doc/ui/components/skeleton";
 import { format } from "date-fns";
 import { ChevronLeft, ChevronRight, UserRoundIcon } from "lucide-react";
 import { z } from "zod";
 
-import { useGuardians } from "@/hooks/queries/admin";
 import { orpc } from "@/utils/orpc";
 
 const searchSchema = z.object({
@@ -23,36 +21,23 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/admin/guardians/")({
-  validateSearch: searchSchema,
-  loaderDeps: ({ search }) => ({ page: search.page }),
-  loader: async ({ context, deps }) => {
-    const input = { page: deps.page };
-    try {
-      await context.queryClient.ensureQueryData(
-        orpc.guardians.queryOptions({ input })
-      );
-    } catch {}
-  },
-  component: AdminGuardiansRoute,
+	validateSearch: searchSchema,
+	loaderDeps: ({ search }) => ({ page: search.page }),
+	loader: async ({ context, deps }) => {
+		const input = { page: deps.page };
+		return context.queryClient.ensureQueryData(
+			orpc.guardians.queryOptions({ input }),
+		);
+	},
+	component: AdminGuardiansRoute,
 });
 
 function AdminGuardiansRoute() {
-  const navigate = Route.useNavigate();
-  const search = Route.useSearch();
-  const input = { page: search.page };
+	const navigate = Route.useNavigate();
+	const search = Route.useSearch();
+	const data = Route.useLoaderData();
 
-  const guardiansQuery = useGuardians(input);
-
-  const rows = guardiansQuery.data?.items ?? [];
-
-  if (guardiansQuery.isPending) {
-    return (
-      <div className="flex flex-col gap-6">
-        <Skeleton className="h-48 rounded-3xl" />
-        <Skeleton className="h-64 rounded-3xl" />
-      </div>
-    );
-  }
+	const rows = data?.items ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -142,11 +127,11 @@ function AdminGuardiansRoute() {
           {rows.length > 0 ? (
             <div className="mt-4 flex items-center justify-between">
               <p className="text-muted-foreground text-sm">
-                Page {guardiansQuery.data?.page ?? search.page}
+                Page {data?.page ?? search.page}
               </p>
               <div className="flex gap-2">
                 <Button
-                  disabled={!guardiansQuery.data?.prevPage}
+                  disabled={!data?.prevPage}
                   onClick={() => {
                     navigate({
                       search: { page: Math.max(1, search.page - 1) },
@@ -160,7 +145,7 @@ function AdminGuardiansRoute() {
                   Prev
                 </Button>
                 <Button
-                  disabled={!guardiansQuery.data?.nextPage}
+                  disabled={!data?.nextPage}
                   onClick={() => {
                     navigate({
                       search: { page: search.page + 1 },

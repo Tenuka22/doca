@@ -1,5 +1,4 @@
 import { SignInButton, useUser } from "@clerk/tanstack-react-start";
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import {
   Avatar,
@@ -46,101 +45,23 @@ import {
 } from "@/utils/doctor/profile-utils";
 import { orpc } from "@/utils/orpc";
 
-interface DoctorProfileView {
-  approach: string | null;
-  approachSteps: { id: string; text: string }[];
-  bio: string | null;
-  consultationModes: string[];
-  createdAt: string;
-  displayName: string | null;
-  education: string | null;
-  experienceStartYear: number | null;
-  focusAreas: string[];
-  headline: string | null;
-  languages: string[];
-  licenseNumber: string | null;
-  location: string | null;
-  permanent: boolean;
-  placeAddress: string | null;
-  placeDescription: string | null;
-  placeName: string | null;
-  specialties: string[];
-  stripeAccountEnabled: boolean | null;
-}
-
-interface DoctorEducationView {
-  degree: string;
-  id: string;
-  institution: string;
-  year: number | null;
-}
-
 export const Route = createFileRoute("/admin/doctors/$doctorId")({
-  loader: async ({
-    context,
-    params,
-  }): Promise<{
-    initialData: {
-      profile: DoctorProfileView | null;
-      files: {
-        id: string;
-        caption: string | null;
-        fileKind: string;
-        fileName: string;
-      }[];
-      education: DoctorEducationView[];
-      portrait: { id: string } | null;
-    };
-  }> => {
-    const input = { doctorId: params.doctorId };
-    try {
-      const initialData = await context.queryClient.fetchQuery({
-        queryKey: orpc.getDoctor.queryKey({ input }),
-        queryFn: () => orpc.getDoctor.call(input),
-      });
-      return {
-        initialData: {
-          profile: initialData?.profile ?? null,
-          files: initialData?.files ?? [],
-          education: initialData?.education ?? [],
-          portrait: initialData?.portrait ?? null,
-        },
-      };
-    } catch {
-      return {
-        initialData: {
-          profile: null,
-          files: [],
-          education: [],
-          portrait: null,
-        },
-      };
-    }
-  },
-  component: AdminDoctorDetailRoute,
+	loader: async ({ context, params }) => {
+		const input = { doctorId: params.doctorId };
+		return context.queryClient.ensureQueryData(orpc.getDoctor.queryOptions({ input }));
+	},
+	component: AdminDoctorDetailRoute,
 });
 
 function AdminDoctorDetailRoute() {
-  const user = useUser();
-  const router = useRouter();
-  const params = Route.useParams();
-  const loaderData = Route.useLoaderData();
-  const doctorId = params.doctorId;
+	const user = useUser();
+	const router = useRouter();
+	const params = Route.useParams();
+	const data = Route.useLoaderData();
+	const doctorId = params.doctorId;
 
-  const doctorQuery = useQuery({
-    queryKey: orpc.getDoctor.queryKey({ input: { doctorId } }),
-    queryFn: () => orpc.getDoctor.call({ doctorId }),
-    initialData: {
-      profile: loaderData?.initialData.profile ?? null,
-      files: loaderData?.initialData.files ?? [],
-      education: loaderData?.initialData.education ?? [],
-      portrait: loaderData?.initialData.portrait ?? null,
-    },
-    enabled: !!doctorId,
-  });
-
-  const profile = doctorQuery.data?.profile;
-  const files = doctorQuery.data?.files ?? [];
+	const profile = data?.profile;
+	const files = data?.files ?? [];
 
   const displayName =
     profile?.displayName ?? profile?.licenseNumber ?? "Doctor";

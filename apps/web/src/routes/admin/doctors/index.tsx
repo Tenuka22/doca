@@ -3,26 +3,24 @@ import { Badge } from "@zen-doc/ui/components/badge";
 import { Button } from "@zen-doc/ui/components/button";
 import { Card, CardContent, CardHeader } from "@zen-doc/ui/components/card";
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
 } from "@zen-doc/ui/components/empty";
 import { Input } from "@zen-doc/ui/components/input";
 import { Separator } from "@zen-doc/ui/components/separator";
-import { Skeleton } from "@zen-doc/ui/components/skeleton";
 import {
-  ArrowRightIcon,
-  CheckCircle2Icon,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  StethoscopeIcon,
+	ArrowRightIcon,
+	CheckCircle2Icon,
+	ChevronLeft,
+	ChevronRight,
+	Search,
+	StethoscopeIcon,
 } from "lucide-react";
 import { z } from "zod";
 
-import { useApprovedDoctors } from "@/hooks/queries/admin";
 import { orpc } from "@/utils/orpc";
 
 const adminSearchSchema = z.object({
@@ -31,39 +29,26 @@ const adminSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/admin/doctors/")({
-  validateSearch: adminSearchSchema,
-  loaderDeps: ({ search }) => ({
-    page: search.page,
-    query: search.query,
-  }),
-  loader: async ({ context, deps }) => {
-    const input = { page: deps.page, query: deps.query };
-    try {
-      await context.queryClient.ensureQueryData(
-        orpc.approvedDoctors.queryOptions({ input })
-      );
-    } catch {}
-  },
-  component: AdminDoctorsRoute,
+	validateSearch: adminSearchSchema,
+	loaderDeps: ({ search }) => ({
+		page: search.page,
+		query: search.query,
+	}),
+	loader: async ({ context, deps }) => {
+		const input = { page: deps.page, query: deps.query };
+		return context.queryClient.ensureQueryData(
+			orpc.approvedDoctors.queryOptions({ input }),
+		);
+	},
+	component: AdminDoctorsRoute,
 });
 
 function AdminDoctorsRoute() {
-  const navigate = Route.useNavigate();
-  const search = Route.useSearch();
-  const input = { page: search.page, query: search.query };
+	const navigate = Route.useNavigate();
+	const search = Route.useSearch();
+	const data = Route.useLoaderData();
 
-  const approvedDoctors = useApprovedDoctors(input);
-
-  const rows = approvedDoctors.data?.items ?? [];
-
-  if (approvedDoctors.isPending) {
-    return (
-      <div className="flex flex-col gap-6">
-        <Skeleton className="h-48 rounded-3xl" />
-        <Skeleton className="h-64 rounded-3xl" />
-      </div>
-    );
-  }
+	const rows = data?.items ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -213,11 +198,11 @@ function AdminDoctorsRoute() {
           {rows.length > 0 ? (
             <div className="mt-4 flex items-center justify-between">
               <p className="text-muted-foreground text-sm">
-                Page {approvedDoctors.data?.page ?? search.page}
+                Page {data?.page ?? search.page}
               </p>
               <div className="flex gap-2">
                 <Button
-                  disabled={!approvedDoctors.data?.prevPage}
+                  disabled={!data?.prevPage}
                   onClick={() => {
                     navigate({
                       search: {
@@ -234,7 +219,7 @@ function AdminDoctorsRoute() {
                   Prev
                 </Button>
                 <Button
-                  disabled={!approvedDoctors.data?.nextPage}
+                  disabled={!data?.nextPage}
                   onClick={() => {
                     navigate({
                       search: {
