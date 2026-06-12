@@ -1,14 +1,14 @@
+import { type } from "@orpc/server"
 import { protectedProcedure } from '../../../index'
 
-export const clearChatHistoryRoute = protectedProcedure.handler(
-  async ({ context }) => {
+export const clearChatHistoryRoute = protectedProcedure
+  .input(type<{ chatId: string }>())
+  .handler(async ({ context, input }) => {
     if (!context.auth?.userId) {
       return { ok: false }
     }
 
-    await context.doctorChatKv.delete(`chat:${context.auth.userId}`)
-    await context.doctorChatKv.delete(`chat-hx-embed:${context.auth.userId}`)
+    await context.chatHistoryKv.delete(`chat:${input.chatId}:${context.auth.userId}`)
 
     return { ok: true }
-  }
-)
+  })

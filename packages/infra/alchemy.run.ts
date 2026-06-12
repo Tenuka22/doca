@@ -29,8 +29,9 @@ const db = await D1Database("primary-database", {
 
 const doctorMaterialsKv = await KVNamespace("doctor-materials");
 const modelFeaturesKv = await KVNamespace("model-features");
-const doctorChatKv = await KVNamespace("doctor-chat");
+const chatHistoryKv = await KVNamespace("chat-history");
 const doctorEmbeddingsKv = await KVNamespace("doctor-embeddings");
+const chatUserCacheKv = await KVNamespace("chat-user-cache");
 
 const redis = await UpstashRedis(
   process.env.NODE_ENV === "production" ? "prod-zen-doc" : "zen-doc-dev",
@@ -47,17 +48,23 @@ export const server = await Worker("server", {
   cwd: "../../apps/server",
   entrypoint: "src/index.ts",
   compatibility: "node",
+  compatibilityFlags: ["no_handle_cross_request_promise_resolution"],
   bindings: {
     DB: db,
     DOCTOR_MATERIALS_KV: doctorMaterialsKv,
     MODEL_FEATURES_KV: modelFeaturesKv,
-    DOCTOR_CHAT_KV: doctorChatKv,
+    CHAT_HISTORY_KV: chatHistoryKv,
     DOCTOR_EMBEDDINGS_KV: doctorEmbeddingsKv,
+    CHAT_USER_CACHE_KV: chatUserCacheKv,
     AI: aiBinding,
     CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
     UPSTASH_REDIS_REST_URL: redis.endpoint,
     UPSTASH_REDIS_REST_TOKEN: redis.restToken,
     CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
+    LANGSMITH_TRACING: alchemy.secret.env.LANGSMITH_TRACING!,
+    LANGSMITH_ENDPOINT: alchemy.secret.env.LANGSMITH_ENDPOINT!,
+    LANGSMITH_API_KEY: alchemy.secret.env.LANGSMITH_API_KEY!,
+    LANGSMITH_PROJECT: alchemy.secret.env.LANGSMITH_PROJECT!,
     CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
     STRESS_PREDICTOR_URL: alchemy.env.STRESS_PREDICTOR_URL!,
     STRESS_PREDICTOR_SECRET: alchemy.secret.env.STRESS_PREDICTOR_SECRET!,

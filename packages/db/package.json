@@ -18,6 +18,8 @@
   "scripts": {
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
+    "db:local": "bun run scripts/setup-local.ts",
+    "db:setup": "bun run db:generate && bun run db:local",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {

@@ -1,7 +1,13 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@clerk/expo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Calendar, MessageCircle, SendHorizonal, X } from "lucide-react-native";
+import { useRouter, useSegments } from "expo-router";
+import {
+  ArrowRight,
+  MessageCircle,
+  SendHorizonal,
+  X,
+} from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -13,8 +19,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-
-import { useRouter, useSegments } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useToast } from "@/components/ui/toast";
 import { orpc } from "@/utils/orpc";
@@ -22,15 +26,11 @@ import { useThemeColor } from "@/utils/theme";
 
 const LOCAL_STORAGE_KEY = "chat_local_messages";
 
-interface DoctorSuggestion {
-  id: string;
-  name: string;
-}
-
 interface ChatMessage {
-  role: "user" | "assistant";
   content: string;
-  doctors?: DoctorSuggestion[];
+  doctorReferences?: Array<{ doctorId: string; displayName: string }>;
+  role: "user" | "assistant";
+  toolCallInProgress?: string;
 }
 
 const SUGGESTIONS = [
@@ -56,21 +56,19 @@ async function loadLocalMessages(): Promise<ChatMessage[]> {
 async function saveLocalMessages(messages: ChatMessage[]) {
   try {
     await AsyncStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(messages));
-  } catch {
-  }
+  } catch {}
 }
 
 async function clearLocalMessages() {
   try {
     await AsyncStorage.removeItem(LOCAL_STORAGE_KEY);
-  } catch {
-  }
+  } catch {}
 }
 
 export function ChatOverlay() {
   const router = useRouter();
   const segments = useSegments();
-  const isHome = segments[0] === "(guardian)"|| segments[0] === "(patient)";
+  const isHome = segments[0] === "(guardian)" || segments[0] === "(patient)";
   const isLanding = segments[0] === "landing";
   const colors = useThemeColor();
   const insets = useSafeAreaInsets();
@@ -91,6 +89,7 @@ export function ChatOverlay() {
 
   const historyQuery = useQuery(
     orpc.getChatHistory.queryOptions({
+      input: { chatId: "default" },
       enabled: visible && !!isSignedIn,
       retry: false,
       meta: { ignoreError: true },
@@ -130,16 +129,6 @@ export function ChatOverlay() {
     setVisible(false);
   }, []);
 
-  const handleBookDoctor = useCallback(
-    (doctorId: string) => {
-      closeChat();
-      setTimeout(() => {
-        router.push(`/doctors/${doctorId}/booking`);
-      }, 400);
-    },
-    [closeChat, router]
-  );
-
   const handleSignIn = useCallback(() => {
     closeChat();
     setTimeout(() => {
@@ -157,67 +146,108 @@ export function ChatOverlay() {
     setStreaming(true);
 
     const userMessage: ChatMessage = { role: "user", content: text };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
 
-    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+    // Instead of local state management, we rely on the refetch to avoid dupes
+    // and just show a temporary pending message if needed.
+    // But for simplicity, we'll just show the full history on finish.
+
+    setMessages((prev) => [
+      ...prev,
+      userMessage,
+      { role: "assistant", content: "" },
+    ]);
 
     try {
       const iterator = await orpc.chatPatient.call({
         chatId: "default",
-        messages: updatedMessages.map((m) => ({
-          id: crypto.randomUUID(),
-          role: m.role,
-          parts: [{ type: "text" as const, text: m.content }],
-        })),
+        messages: [
+          {
+            id: crypto.randomUUID(),
+            role: "user",
+            parts: [{ type: "text" as const, text }],
+          },
+        ],
       });
 
       let accumulatedText = "";
-      let pendingDoctors: DoctorSuggestion[] = [];
 
       const cancel = consumeEventIterator(iterator, {
         onEvent: (data: unknown) => {
           const event = data as {
-            type: "text-delta" | "doctor-suggestions";
+            type: string;
             text?: string;
-            doctors?: DoctorSuggestion[];
+            toolName?: string;
+            doctorId?: string;
+            displayName?: string;
           };
-          if (event.type === "text-delta" && event.text) {
+
+          if (event.type === "tool-call-start") {
+            setMessages((prev) => {
+              const next = [...prev];
+              const lastIdx = next.length - 1;
+              if (next[lastIdx]?.role === "assistant") {
+                next[lastIdx] = {
+                  ...next[lastIdx],
+                  content: "",
+                  toolCallInProgress: event.toolName || "tool",
+                };
+              }
+              return next;
+            });
+          } else if (event.type === "tool-call-end") {
+            setMessages((prev) => {
+              const next = [...prev];
+              const lastIdx = next.length - 1;
+              if (next[lastIdx]?.role === "assistant") {
+                next[lastIdx] = {
+                  ...next[lastIdx],
+                  toolCallInProgress: undefined,
+                };
+              }
+              return next;
+            });
+          } else if (event.type === "text-delta" && event.text) {
             accumulatedText += event.text;
             setMessages((prev) => {
               const next = [...prev];
               const lastIdx = next.length - 1;
               if (next[lastIdx]?.role === "assistant") {
                 next[lastIdx] = {
-                  role: "assistant",
+                  ...next[lastIdx],
                   content: accumulatedText,
+                  toolCallInProgress: undefined,
                 };
               }
               return next;
             });
-          }
-          if (event.type === "doctor-suggestions" && event.doctors) {
-            pendingDoctors = event.doctors;
+          } else if (event.type === "doctor-reference") {
+            const doctorId = event.doctorId;
+            const displayName = event.displayName;
+            if (doctorId && displayName) {
+              setMessages((prev) => {
+                const next = [...prev];
+                const lastIdx = next.length - 1;
+                if (next[lastIdx]?.role === "assistant") {
+                  const refs = next[lastIdx].doctorReferences || [];
+                  if (!refs.some((r) => r.doctorId === doctorId)) {
+                    next[lastIdx] = {
+                      ...next[lastIdx],
+                      doctorReferences: [...refs, { doctorId, displayName }],
+                    };
+                  }
+                }
+                return next;
+              });
+            }
           }
         },
         onFinish: () => {
           setStreaming(false);
-          const finalMessages = [...updatedMessages];
-          const assistantMsg: ChatMessage = {
-            role: "assistant",
-            content: accumulatedText,
-          };
-          if (pendingDoctors.length > 0) {
-            assistantMsg.doctors = pendingDoctors;
-          }
-          finalMessages.push(assistantMsg);
-          setMessages(finalMessages);
-          if (!isSignedIn) {
-            saveLocalMessages(finalMessages);
-          }
+          historyQuery.refetch();
         },
         onError: () => {
           setStreaming(false);
+          historyQuery.refetch();
         },
       });
 
@@ -238,7 +268,7 @@ export function ChatOverlay() {
       if (clearHistoryMutation.isPending) {
         return;
       }
-      clearHistoryMutation.mutate({});
+      clearHistoryMutation.mutate({ chatId: "default" });
     } else {
       clearLocalMessages();
       setMessages([]);
@@ -262,8 +292,8 @@ export function ChatOverlay() {
     <>
       {/* Chat Button */}
       <Pressable
-        onPress={() => setVisible(true)}
         className="absolute right-6 z-50 h-14 w-14 items-center justify-center rounded-full"
+        onPress={() => setVisible(true)}
         style={{
           backgroundColor: colors.primary,
           bottom: isLanding ? 24 : isHome ? 86 : 120,
@@ -279,12 +309,15 @@ export function ChatOverlay() {
 
       {/* Chat Modal — bottom sheet style */}
       <Modal
-        visible={visible}
         animationType="slide"
-        transparent
         onRequestClose={closeChat}
+        transparent
+        visible={visible}
       >
-        <Pressable className="flex-1 justify-end bg-black/40" onPress={closeChat}>
+        <Pressable
+          className="flex-1 justify-end bg-black/40"
+          onPress={closeChat}
+        >
           <Pressable onPress={() => {}}>
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -293,7 +326,7 @@ export function ChatOverlay() {
             >
               {/* Header */}
               <View
-                className="flex-row items-center justify-between border-b-[3px] border-border px-page pb-4"
+                className="flex-row items-center justify-between border-border border-b-[3px] px-page pb-4"
                 style={{ paddingTop: insets.top + 12 }}
               >
                 <View className="flex-1">
@@ -308,8 +341,8 @@ export function ChatOverlay() {
                 <View className="flex-row items-center gap-2">
                   {hasMessages && (
                     <Pressable
-                      onPress={handleClearHistory}
                       className="rounded-control border-2 border-border bg-card px-3 py-1.5"
+                      onPress={handleClearHistory}
                     >
                       <Text className="font-bold font-sans text-[10px] text-muted-foreground uppercase tracking-wider">
                         Clear
@@ -317,8 +350,8 @@ export function ChatOverlay() {
                     </Pressable>
                   )}
                   <Pressable
-                    onPress={closeChat}
                     className="rounded-full border-2 border-border bg-card p-2"
+                    onPress={closeChat}
                   >
                     <X color={colors.foreground} size={18} strokeWidth={2.5} />
                   </Pressable>
@@ -332,13 +365,13 @@ export function ChatOverlay() {
                     <Text className="font-bold font-sans text-foreground text-xs">
                       Sign in to save your chat history
                     </Text>
-                    <Text className="font-medium font-sans text-muted-foreground text-[10px]">
+                    <Text className="font-medium font-sans text-[10px] text-muted-foreground">
                       Your current messages are saved on this device only
                     </Text>
                   </View>
                   <Pressable
-                    onPress={handleSignIn}
                     className="rounded-lg bg-primary px-4 py-2"
+                    onPress={handleSignIn}
                   >
                     <Text className="font-bold font-sans text-primary-foreground text-xs">
                       Sign In
@@ -349,11 +382,77 @@ export function ChatOverlay() {
 
               {/* Messages */}
               <ScrollView
-                ref={scrollRef}
                 className="flex-1 px-page"
                 contentContainerStyle={{ paddingVertical: 16, flexGrow: 1 }}
+                ref={scrollRef}
               >
-                {!hasMessages && !streaming ? (
+                {hasMessages || streaming ? (
+                  <View className="gap-4">
+                    {messages.map((msg, index) => {
+                      const isProcessingToolCall =
+                        msg.role === "assistant" && msg.toolCallInProgress;
+
+                      return (
+                        <View
+                          className={`max-w-[85%] rounded-card border-2 px-4 py-3 ${
+                            msg.role === "user"
+                              ? "self-end border-primary bg-primary/10"
+                              : "self-start border-border bg-card"
+                          }`}
+                          key={index}
+                        >
+                          {isProcessingToolCall ? (
+                            <View className="flex-row items-center gap-2">
+                              <Text className="font-medium font-sans text-muted-foreground text-sm">
+                                Calling {msg.toolCallInProgress}...
+                              </Text>
+                            </View>
+                          ) : (
+                            <Text
+                              className={`font-medium font-sans text-sm leading-relaxed ${
+                                msg.role === "user"
+                                  ? "text-foreground"
+                                  : "text-foreground/90"
+                              }`}
+                            >
+                              <FormattedBold text={msg.content} />
+                              {index === messages.length - 1 &&
+                                msg.role === "assistant" &&
+                                streaming &&
+                                msg.content?.trim() && (
+                                  <Text className="text-primary"> ▊</Text>
+                                )}
+                            </Text>
+                          )}
+                          {msg.role === "assistant" &&
+                            msg.doctorReferences &&
+                            msg.doctorReferences.length > 0 && (
+                              <View className="mt-2 flex-row flex-wrap gap-2 border-border border-t pt-2">
+                                {msg.doctorReferences.map((ref) => (
+                                  <Pressable
+                                    className="flex-row items-center gap-1 rounded-full bg-primary/10 px-3 py-1.5"
+                                    key={ref.doctorId}
+                                    onPress={() =>
+                                      router.push(`/doctors/${ref.doctorId}`)
+                                    }
+                                  >
+                                    <Text className="font-bold font-sans text-[10px] text-primary uppercase tracking-wider">
+                                      {ref.displayName}
+                                    </Text>
+                                    <ArrowRight
+                                      color={colors.primary}
+                                      size={12}
+                                      strokeWidth={2.5}
+                                    />
+                                  </Pressable>
+                                ))}
+                              </View>
+                            )}
+                        </View>
+                      );
+                    })}
+                  </View>
+                ) : (
                   <View className="flex-1 items-center justify-center gap-4 px-8">
                     <View className="h-16 w-16 items-center justify-center rounded-2xl border-[3px] border-border bg-card">
                       <MessageCircle
@@ -372,8 +471,8 @@ export function ChatOverlay() {
                     </Text>
                     {!isSignedIn && (
                       <Pressable
-                        onPress={handleSignIn}
                         className="rounded-xl border-2 border-primary bg-primary px-6 py-3"
+                        onPress={handleSignIn}
                       >
                         <Text className="font-bold font-sans text-primary-foreground text-sm">
                           Sign In to Get Started
@@ -383,9 +482,9 @@ export function ChatOverlay() {
                     <View className="mt-2 w-full gap-2">
                       {SUGGESTIONS.map((suggestion) => (
                         <Pressable
+                          className="rounded-card border-2 border-border/60 bg-card/50 px-4 py-3"
                           key={suggestion}
                           onPress={() => setInput(suggestion)}
-                          className="rounded-card border-2 border-border/60 bg-card/50 px-4 py-3"
                         >
                           <Text className="font-medium font-sans text-foreground/80 text-sm">
                             {suggestion}
@@ -394,84 +493,31 @@ export function ChatOverlay() {
                       ))}
                     </View>
                   </View>
-                ) : (
-                  <View className="gap-4">
-                    {messages.map((msg, index) => (
-                      <View
-                        key={index}
-                        className={`max-w-[85%] rounded-card border-2 px-4 py-3 ${
-                          msg.role === "user"
-                            ? "self-end border-primary bg-primary/10"
-                            : "self-start border-border bg-card"
-                        }`}
-                      >
-                        <Text
-                          className={`font-medium font-sans text-sm leading-relaxed ${
-                            msg.role === "user"
-                              ? "text-foreground"
-                              : "text-foreground/90"
-                          }`}
-                        >
-                          {msg.content}
-                          {index === messages.length - 1 &&
-                            msg.role === "assistant" &&
-                            streaming && (
-                              <Text className="text-primary"> ▊</Text>
-                            )}
-                        </Text>
-                        {msg.role === "assistant" &&
-                          msg.doctors &&
-                          msg.doctors.length > 0 &&
-                          !streaming && (
-                            <View className="mt-3 gap-2">
-                              {msg.doctors.map((doctor) => (
-                                <Pressable
-                                  key={doctor.id}
-                                  onPress={() =>
-                                    handleBookDoctor(doctor.id)
-                                  }
-                                  className="flex-row items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5"
-                                >
-                                  <Calendar
-                                    color={colors.primary}
-                                    size={16}
-                                    strokeWidth={2}
-                                  />
-                                  <Text className="font-bold font-sans text-primary text-xs">
-                                    Book {doctor.name}
-                                  </Text>
-                                </Pressable>
-                              ))}
-                            </View>
-                          )}
-                      </View>
-                    ))}
-                  </View>
                 )}
               </ScrollView>
 
               {/* Input */}
               <View
-                className="flex-row items-end gap-2 border-t-[3px] border-border px-page pt-3"
+                className="flex-row items-end gap-2 border-border border-t-[3px] px-page pt-3"
                 style={{ paddingBottom: insets.bottom + 12 }}
               >
                 <View className="flex-1 rounded-card border-2 border-border bg-card">
                   <TextInput
+                    blurOnSubmit
                     className="max-h-24 px-4 py-3 font-medium font-sans text-foreground text-sm"
+                    editable={!streaming}
+                    multiline
+                    onChangeText={setInput}
+                    onSubmitEditing={handleSend}
                     placeholder="Ask about features, doctors, or wellness..."
                     placeholderTextColor={colors.mutedForeground}
                     value={input}
-                    onChangeText={setInput}
-                    multiline
-                    onSubmitEditing={handleSend}
-                    blurOnSubmit
-                    editable={!streaming}
                   />
                 </View>
                 <Pressable
-                  onPress={handleSend}
-                  disabled={!input.trim() || streaming}
                   className="h-12 w-12 items-center justify-center rounded-card border-2 border-border bg-card"
+                  disabled={!input.trim() || streaming}
+                  onPress={handleSend}
                   style={{
                     opacity: !input.trim() || streaming ? 0.4 : 1,
                   }}
@@ -487,6 +533,24 @@ export function ChatOverlay() {
           </Pressable>
         </Pressable>
       </Modal>
+    </>
+  );
+}
+
+function FormattedBold({ text }: { text: string }) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+          return (
+            <Text className="font-bold" key={i}>
+              {part.slice(2, -2)}
+            </Text>
+          );
+        }
+        return <Text key={i}>{part}</Text>;
+      })}
     </>
   );
 }

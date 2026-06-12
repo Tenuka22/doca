@@ -1,23 +1,24 @@
+import { type } from "@orpc/server"
 import { protectedProcedure } from '../../../index'
 
-export const getChatHistoryRoute = protectedProcedure.handler(
-  async ({ context }) => {
+export const getChatHistoryRoute = protectedProcedure
+  .input(type<{ chatId: string }>())
+  .handler(async ({ context, input }) => {
     if (!context.auth?.userId) {
       return { messages: [] }
     }
 
     try {
-      const stored = await context.doctorChatKv.get(
-        `chat:${context.auth.userId}`,
+      const stored = await context.chatHistoryKv.get(
+        `chat:${input.chatId}:${context.auth.userId}`,
         'text'
       )
       if (!stored) {
         return { messages: [] }
       }
 
-      return { messages: JSON.parse(stored) as Array<{ role: string; content: string; doctors?: Array<{ id: string; name: string }> }> }
+      return { messages: JSON.parse(stored) as Array<{ role: string; content: string }> }
     } catch {
       return { messages: [] }
     }
-  }
-)
+  })

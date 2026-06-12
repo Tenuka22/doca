@@ -1,25 +1,26 @@
 import { useUser } from "@clerk/tanstack-react-start";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Badge } from "@zen-doc/ui/components/badge";
 import { Button } from "@zen-doc/ui/components/button";
 import { Card, CardContent } from "@zen-doc/ui/components/card";
 import {
+  ArrowRight,
   Bot,
-  Calendar,
-  RotateCcw,
   MessageCircle,
   SendHorizonal,
   ShieldIcon,
   Sparkles,
+  Trash2,
   User,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { orpc } from "@/utils/orpc";
 
 interface ChatMessage {
-  role: "user" | "assistant";
   content: string;
-  doctors?: Array<{ id: string; name: string }>;
+  doctorReferences?: Array<{ doctorId: string; displayName: string }>;
+  role: "user" | "assistant";
 }
 
 const SUGGESTIONS = [
@@ -28,6 +29,25 @@ const SUGGESTIONS = [
   "What doctors specialize in sleep disorders?",
   "Find me a therapist for relationship counseling",
 ];
+
+function FormattedText({ text }: { text: string }) {
+  if (!text) {
+    return null;
+  }
+  const parts = text.split(/(\*\*[^*]+\*\*)/);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+          return <strong key={i}>{part.slice(2, -2)}</strong>;
+        }
+        return <Fragment key={i}>{part}</Fragment>;
+      })}
+    </>
+  );
+}
+
+const DEFAULT_CHAT_ID = "admin-test";
 
 export const Route = createFileRoute("/admin/chat")({
   component: AdminChatPage,
@@ -38,12 +58,38 @@ function AdminChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [toolCallInProgress, setToolCallInProgress] = useState<string | null>(null);
   const cancelRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const chatId = DEFAULT_CHAT_ID;
 
   const hasMessages = messages.length > 0;
   const isAdmin = user?.publicMetadata?.role === "admin";
+
+  const historyQuery = useQuery(
+    orpc.getChatHistory.queryOptions({
+      input: { chatId },
+      enabled: !!user,
+      retry: false,
+      meta: { ignoreError: true },
+    })
+  );
+
+  const clearMutation = useMutation(
+    orpc.clearChatHistory.mutationOptions({
+      onSuccess: () => {
+        setMessages([]);
+        historyQuery.refetch();
+      },
+    })
+  );
+
+  useEffect(() => {
+    if (historyQuery.data && messages.length === 0) {
+      setMessages(historyQuery.data.messages as ChatMessage[]);
+    }
+  }, [historyQuery.data]);
 
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
@@ -62,18 +108,13 @@ function AdminChatPage() {
 
   const handleSend = useCallback(async () => {
     const text = input.trim();
-    if (!text || streaming) {
-      return;
-    }
+    if (!text || streaming) return;
 
     setInput("");
     setStreaming(true);
 
     const userMessage: ChatMessage = { role: "user", content: text };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-
-    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+    setMessages((prev) => [...prev, userMessage, { role: "assistant", content: "" }]);
 
     const controller = new AbortController();
     cancelRef.current = controller;
@@ -81,57 +122,60 @@ function AdminChatPage() {
     try {
       const iterator = await orpc.chatPatient.call(
         {
-          chatId: "admin-test",
-          messages: updatedMessages.map((m) => ({
+          chatId,
+          messages: [{
             id: crypto.randomUUID(),
-            role: m.role as "user" | "assistant",
-            parts: [{ type: "text" as const, text: m.content }],
-          })),
+            role: "user",
+            parts: [{ type: "text" as const, text }],
+          }],
         },
         { signal: controller.signal }
       );
 
-      let accumulatedText = "";
-      let pendingDoctors: Array<{ id: string; name: string }> = [];
+      let buffer = "";
+      const refs: ChatMessage["doctorReferences"] = [];
 
       for await (const event of iterator) {
-        if (controller.signal.aborted) {
-          break;
-        }
+        if (controller.signal.aborted) break;
+
         const chunk = event as {
-          type: "text-delta" | "doctor-suggestions";
+          type: string;
           text?: string;
-          doctors?: Array<{ id: string; name: string }>;
+          toolName?: string;
+          doctorId?: string;
+          displayName?: string;
+          doctors?: Array<{ doctorId: string; displayName: string }>;
         };
-        if (chunk.type === "text-delta" && chunk.text) {
-          accumulatedText += chunk.text;
+
+        if (chunk.type === "tool-call-start") {
+          setToolCallInProgress(chunk.toolName || "tool");
+        } else if (chunk.type === "tool-call-end") {
+          setToolCallInProgress(null);
+        } else if (chunk.type === "text-delta" && chunk.text) {
+          buffer = chunk.text;
           setMessages((prev) => {
             const next = [...prev];
-            const lastIdx = next.length - 1;
-            if (next[lastIdx]?.role === "assistant") {
-              next[lastIdx] = { role: "assistant", content: accumulatedText };
+            const last = next[next.length - 1];
+            if (last?.role === "assistant") {
+              next[next.length - 1] = {
+                role: "assistant",
+                content: buffer,
+                doctorReferences: refs.length ? [...refs] : undefined,
+              };
             }
             return next;
           });
-        }
-        if (chunk.type === "doctor-suggestions" && chunk.doctors) {
-          pendingDoctors = chunk.doctors;
-        }
-      }
-
-      if (pendingDoctors.length > 0) {
-        setMessages((prev) => {
-          const next = [...prev];
-          const lastIdx = next.length - 1;
-          if (next[lastIdx]?.role === "assistant") {
-            next[lastIdx] = {
-              role: "assistant",
-              content: accumulatedText,
-              doctors: pendingDoctors,
-            };
+        } else if (chunk.type === "doctor-reference" && chunk.doctorId && chunk.displayName) {
+          if (!refs.some((r) => r.doctorId === chunk.doctorId)) {
+            refs.push({ doctorId: chunk.doctorId, displayName: chunk.displayName });
           }
-          return next;
-        });
+        } else if (chunk.type === "related-doctors-mentioned" && chunk.doctors) {
+          for (const doc of chunk.doctors) {
+            if (!refs.some((r) => r.doctorId === doc.doctorId)) {
+              refs.push({ doctorId: doc.doctorId, displayName: doc.displayName });
+            }
+          }
+        }
       }
     } catch {
       if (!controller.signal.aborted) {
@@ -139,27 +183,27 @@ function AdminChatPage() {
       }
     } finally {
       setStreaming(false);
+      setToolCallInProgress(null);
       cancelRef.current = null;
     }
-  }, [input, messages, streaming]);
+  }, [input, streaming, chatId]);
 
   const handleClear = useCallback(() => {
     if (cancelRef.current) {
       cancelRef.current.abort();
       cancelRef.current = null;
     }
-    setMessages([]);
-    setStreaming(false);
-  }, []);
+    clearMutation.mutate({ chatId });
+  }, [clearMutation, chatId]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        handleSend();
+        e.currentTarget.form?.requestSubmit();
       }
     },
-    [handleSend]
+    []
   );
 
   if (!user) {
@@ -207,8 +251,13 @@ function AdminChatPage() {
               </div>
 
               {hasMessages && (
-                <Button onClick={handleClear} size="sm" variant="outline">
-                  <RotateCcw className="mr-2 size-4" />
+                <Button
+                  disabled={clearMutation.isPending}
+                  onClick={handleClear}
+                  size="sm"
+                  variant="outline"
+                >
+                  <Trash2 className="mr-2 size-4" />
                   Clear
                 </Button>
               )}
@@ -218,44 +267,28 @@ function AdminChatPage() {
       </Card>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-lg">
-        <div className="flex-1 bg-muted/20 h-[80vh] overflow-y-auto">
-          {!hasMessages && !streaming ? (
-            <div className="flex h-full flex-col items-center justify-center gap-6 px-6 py-24">
-              <div className="inline-flex size-16 items-center justify-center rounded-2xl border-[3px] border-border bg-card shadow-sm">
-                <Sparkles className="size-8 text-primary" />
-              </div>
-              <div className="space-y-2 text-center">
-                <h2 className="font-semibold text-xl tracking-tight">
-                  Test the Chat Assistant
-                </h2>
-                <p className="mx-auto max-w-md text-muted-foreground text-sm">
-                  Describe symptoms or ask for a doctor recommendation. The AI
-                  will match you with relevant specialists.
-                </p>
-              </div>
-              <div className="flex w-full max-w-lg flex-wrap justify-center gap-2">
-                {SUGGESTIONS.map((suggestion) => (
-                  <Button
-                    key={suggestion}
-                    onClick={() => setInput(suggestion)}
-                    size="sm"
-                    variant="secondary"
-                    className="rounded-full"
-                  >
-                    <MessageCircle className="mr-2 size-3" />
-                    {suggestion}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          ) : (
+        <div className="h-[80vh] flex-1 overflow-y-auto bg-muted/20">
+          {hasMessages || streaming ? (
             <div className="flex flex-col gap-6 p-6">
               {messages.map((msg, index) => {
                 const isUser = msg.role === "user";
+                const isLast = index === messages.length - 1;
+
+                // Skip rendering empty assistant messages (usually tool calls in history)
+                // except when it's the very last message and we are currently streaming.
+                if (
+                  !(isUser || msg.content?.trim() || (streaming && isLast))
+                ) {
+                  return null;
+                }
+
+                // Show tool call indicator when a tool is running
+                const isProcessingToolCall = !isUser && toolCallInProgress && isLast;
+
                 return (
                   <div
-                    key={index}
                     className={`flex items-start gap-3 ${isUser ? "flex-row-reverse" : ""}`}
+                    key={index}
                   >
                     <div
                       className={`flex size-8 shrink-0 items-center justify-center rounded-full border ${
@@ -277,37 +310,37 @@ function AdminChatPage() {
                           : "border-border bg-card"
                       }`}
                     >
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                        {msg.content}
-                        {index === messages.length - 1 &&
-                          msg.role === "assistant" &&
-                          streaming && (
-                            <span className="ml-0.5 inline-block animate-pulse text-primary">
-                              ▊
-                            </span>
-                          )}
-                      </p>
+                      {isProcessingToolCall ? (
+                        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                          <div className="size-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          <span>Calling {toolCallInProgress}...</span>
+                        </div>
+                      ) : (
+                        <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                          <FormattedText text={msg.content} />
+                          {isLast &&
+                            msg.role === "assistant" &&
+                            streaming &&
+                            msg.content?.trim() && (
+                              <span className="ml-0.5 inline-block animate-pulse text-primary">
+                                ▊
+                              </span>
+                            )}
+                        </div>
+                      )}
                       {msg.role === "assistant" &&
-                        msg.doctors &&
-                        msg.doctors.length > 0 &&
-                        !streaming && (
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            {msg.doctors.map((doctor) => (
-                              <Button
-                                key={doctor.id}
-                                size="sm"
-                                variant="outline"
-                                className="gap-2 rounded-full"
-                                onClick={() =>
-                                  window.open(
-                                    `/doctors/${doctor.id}/booking`,
-                                    "_blank"
-                                  )
-                                }
+                        msg.doctorReferences &&
+                        msg.doctorReferences.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-2 border-border border-t pt-2">
+                            {msg.doctorReferences.map((ref) => (
+                              <a
+                                className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 font-bold text-[10px] text-primary uppercase tracking-wider transition-colors hover:bg-primary/20"
+                                href={`/doctors/${ref.doctorId}`}
+                                key={ref.doctorId}
                               >
-                                <Calendar className="size-3" />
-                                Book {doctor.name}
-                              </Button>
+                                {ref.displayName}
+                                <ArrowRight className="size-3" />
+                              </a>
                             ))}
                           </div>
                         )}
@@ -316,10 +349,39 @@ function AdminChatPage() {
                 );
               })}
             </div>
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center gap-6 px-6 py-24">
+              <div className="inline-flex size-16 items-center justify-center rounded-2xl border-[3px] border-border bg-card shadow-sm">
+                <Sparkles className="size-8 text-primary" />
+              </div>
+              <div className="space-y-2 text-center">
+                <h2 className="font-semibold text-xl tracking-tight">
+                  Test the Chat Assistant
+                </h2>
+                <p className="mx-auto max-w-md text-muted-foreground text-sm">
+                  Describe symptoms or ask for a doctor recommendation. The AI
+                  will match you with relevant specialists.
+                </p>
+              </div>
+              <div className="flex w-full max-w-lg flex-wrap justify-center gap-2">
+                {SUGGESTIONS.map((suggestion) => (
+                  <Button
+                    className="rounded-full"
+                    key={suggestion}
+                    onClick={() => setInput(suggestion)}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    <MessageCircle className="mr-2 size-3" />
+                    {suggestion}
+                  </Button>
+                ))}
+              </div>
+            </div>
           )}
         </div>
 
-        <div className="border-t border-border bg-background p-4">
+        <div className="border-border border-t bg-background p-4">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -328,27 +390,27 @@ function AdminChatPage() {
           >
             <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card px-3 py-2 focus-within:ring-1 focus-within:ring-ring">
               <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Describe your concerns..."
+                className="w-full resize-none bg-transparent text-foreground text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
                 disabled={streaming}
-                rows={1}
-                className="w-full resize-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground disabled:opacity-50"
+                onChange={(e) => setInput(e.target.value)}
                 onInput={(e) => {
                   const target = e.currentTarget;
                   target.style.height = "auto";
                   target.style.height = `${Math.min(target.scrollHeight, 200)}px`;
                 }}
+                onKeyDown={handleKeyDown}
+                placeholder="Describe your concerns..."
+                ref={textareaRef}
+                rows={1}
+                value={input}
               />
               <div className="flex items-center justify-end">
                 <div className="flex items-center gap-2">
                   <Button
-                    type="submit"
+                    className="size-8 rounded-full"
                     disabled={!input.trim() || streaming}
                     size="icon"
-                    className="size-8 rounded-full"
+                    type="submit"
                   >
                     {streaming ? (
                       <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />

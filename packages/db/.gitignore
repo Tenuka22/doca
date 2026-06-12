@@ -28,6 +28,10 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .cache
 *.tsbuildinfo
 
+# local SQLite database
+zen-doc.db
+.migration-state.json
+
 # IntelliJ based IDEs
 .idea
 
