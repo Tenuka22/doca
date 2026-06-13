@@ -3,11 +3,14 @@ import { drizzle } from "drizzle-orm/d1";
 
 import {
   type CreditTransaction as CreditTransactionSchema,
+  conversations as conversationsTable,
   creditTransactions as creditTransactionsTable,
   type DoctorCashoutRequest as DoctorCashoutRequestSchema,
   type DoctorCredit as DoctorCreditSchema,
   type DoctorEducationEntry as DoctorEducationEntrySchema,
   type DoctorFile as DoctorFileSchema,
+  type DoctorHubChannel as DoctorHubChannelSchema,
+  type DoctorMaterial as DoctorMaterialSchema,
   type DoctorPlan as DoctorPlanSchema,
   type DoctorProfile as DoctorProfileSchema,
   type DoctorScheduleEntry as DoctorScheduleEntrySchema,
@@ -17,15 +20,21 @@ import {
   doctorCredits as doctorCreditsTable,
   doctorEducationEntries as doctorEducationEntriesTable,
   doctorFiles as doctorFilesTable,
+  doctorHubChannels as doctorHubChannelsTable,
+  doctorHubMaterials as doctorHubMaterialsTable,
   doctorPlans as doctorPlansTable,
+  doctorPlaylists as doctorPlaylistsTable,
   doctorProfiles as doctorProfilesTable,
   doctorScheduleEntries as doctorScheduleEntriesTable,
   doctorSessions as doctorSessionsTable,
   doctorWeeklyAvailability as doctorWeeklyAvailabilityTable,
   type GuardianProfile as GuardianProfileSchema,
   guardianProfiles as guardianProfilesTable,
+  type HubUploadSession as HubUploadSessionSchema,
+  hubUploadSessions as hubUploadSessionsTable,
   type MoonlightCredit as MoonlightCreditSchema,
   type MoonlightCreditTransaction as MoonlightCreditTransactionSchema,
+  messages as messagesTable,
   moonlightCredits as moonlightCreditsTable,
   moonlightCreditTransactions as moonlightCreditTransactionsTable,
   type PatientProfile as PatientProfileSchema,
@@ -47,8 +56,6 @@ import {
   userSubscriptions as userSubscriptionsTable,
   type WellnessAction as WellnessActionSchema,
   wellnessActions as wellnessActionsTable,
-  conversations as conversationsTable,
-  messages as messagesTable,
 } from "./schema";
 
 export {
@@ -66,6 +73,10 @@ export const doctorProfiles = doctorProfilesTable;
 export const doctorFiles = doctorFilesTable;
 export const doctorEducationEntries = doctorEducationEntriesTable;
 export const doctorSessions = doctorSessionsTable;
+export const doctorHubMaterials = doctorHubMaterialsTable;
+export const doctorPlaylists = doctorPlaylistsTable;
+export const doctorHubChannels = doctorHubChannelsTable;
+export const hubUploadSessions = hubUploadSessionsTable;
 export const doctorScheduleEntries = doctorScheduleEntriesTable;
 export const patientProfiles = patientProfilesTable;
 export const guardianProfiles = guardianProfilesTable;
@@ -95,6 +106,9 @@ export type DoctorScheduleEntry = DoctorScheduleEntrySchema;
 export type DoctorEducationEntry = DoctorEducationEntrySchema;
 export type PatientProfile = PatientProfileSchema;
 export type GuardianProfile = GuardianProfileSchema;
+export type DoctorHubChannel = DoctorHubChannelSchema;
+export type DoctorMaterial = DoctorMaterialSchema;
+export type HubUploadSession = HubUploadSessionSchema;
 export type DoctorPlan = DoctorPlanSchema;
 export type UserCredit = UserCreditSchema;
 export type CreditTransaction = CreditTransactionSchema;
@@ -138,6 +152,10 @@ export function createDb() {
       stressDownloadAcknowledgments,
       conversations,
       messages,
+      doctorHubMaterials,
+      doctorPlaylists,
+      doctorHubChannels,
+      hubUploadSessions,
     },
   });
 }

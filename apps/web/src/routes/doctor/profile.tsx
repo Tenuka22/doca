@@ -6,13 +6,14 @@ import { Badge } from "@zen-doc/ui/components/badge";
 import { Card, CardContent, CardHeader } from "@zen-doc/ui/components/card";
 import { Separator } from "@zen-doc/ui/components/separator";
 import {
-	BadgeCheckIcon,
-	BookOpenIcon,
-	FileIcon,
-	GlobeIcon,
-	LanguagesIcon,
-	UserCircleIcon,
-	VideoIcon,
+  BadgeCheckIcon,
+  BookOpenIcon,
+  FileIcon,
+  GlobeIcon,
+  LanguagesIcon,
+  RadioIcon,
+  UserCircleIcon,
+  VideoIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { MetricCard, SectionHeader } from "@/components/dashboard-metrics";
@@ -20,15 +21,15 @@ import { DoctorFilesPanel, DoctorProfileCard } from "@/components/doctors";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/doctor/profile")({
-	loaderDeps: () => ({}),
-	loader: async ({ context }) => {
-		const [stats, profileData] = await Promise.all([
-			context.queryClient.ensureQueryData(orpc.profileStats.queryOptions()),
-			context.queryClient.ensureQueryData(orpc.doctorProfile.queryOptions()),
-		]);
-		return { stats, profileData };
-	},
-	component: DoctorProfileRoute,
+  loaderDeps: () => ({}),
+  loader: async ({ context }) => {
+    const [stats, profileData] = await Promise.all([
+      context.queryClient.ensureQueryData(orpc.profileStats.queryOptions()),
+      context.queryClient.ensureQueryData(orpc.doctorProfile.queryOptions()),
+    ]);
+    return { stats, profileData };
+  },
+  component: DoctorProfileRoute,
 });
 
 const FILE_KIND_COLORS: Record<string, string> = {
@@ -150,68 +151,71 @@ async function seedDevFiles(userId: string) {
 }
 
 function DoctorProfileRoute() {
-	const user = useUser();
-	const { stats, profileData } = Route.useLoaderData();
-	const canManageFiles = profileData?.profile?.permanent ?? false;
+  const user = useUser();
+  const { stats, profileData } = Route.useLoaderData();
+  const canManageFiles = profileData?.profile?.permanent ?? false;
 
-	const [devAutoFillDone, setDevAutoFillDone] = useState(false);
-	const queryClient = useQueryClient();
+  const [devAutoFillDone, setDevAutoFillDone] = useState(false);
+  const queryClient = useQueryClient();
 
-	useEffect(() => {
-		if (!import.meta.env.DEV) {
-			return;
-		}
-		if (!user.user) {
-			return;
-		}
-		if (devAutoFillDone) {
-			return;
-		}
+  useEffect(() => {
+    if (!import.meta.env.DEV) {
+      return;
+    }
+    if (!user.user) {
+      return;
+    }
+    if (devAutoFillDone) {
+      return;
+    }
 
-		if (profileData?.profile || (stats?.fileCount ?? 0) > 0) {
-			setDevAutoFillDone(true);
-			return;
-		}
+    if (profileData?.profile || (stats?.fileCount ?? 0) > 0) {
+      setDevAutoFillDone(true);
+      return;
+    }
 
-		setDevAutoFillDone(true);
+    setDevAutoFillDone(true);
 
-		(async () => {
-			try {
-				if (!profileData?.profile) {
-					await seedDevProfile(user.user.id);
-				}
+    (async () => {
+      try {
+        if (!profileData?.profile) {
+          await seedDevProfile(user.user.id);
+        }
 
-				if ((stats?.fileCount ?? 0) === 0) {
-					await seedDevFiles(user.user.id);
-				}
-				queryClient.invalidateQueries();
-			} catch {
-				// Dev auto-fill failed silently
-			}
-		})();
-	}, [
-		user.isLoaded,
-		user.user,
-		profileData,
-		stats,
-		devAutoFillDone,
-		queryClient,
-	]);
+        if ((stats?.fileCount ?? 0) === 0) {
+          await seedDevFiles(user.user.id);
+        }
+        queryClient.invalidateQueries();
+      } catch {
+        // Dev auto-fill failed silently
+      }
+    })();
+  }, [
+    user.isLoaded,
+    user.user,
+    profileData,
+    stats,
+    devAutoFillDone,
+    queryClient,
+  ]);
 
-	const name = user.user?.fullName ?? user.user?.username ?? "Doctor";
-	const initials = name
-		.split(" ")
-		.map((part) => part[0])
-		.join("")
-		.toUpperCase()
-		.slice(0, 2);
+  const name = user.user?.fullName ?? user.user?.username ?? "Doctor";
+  const initials = name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
-	const completenessPercentage = stats?.completenessPercentage ?? 0;
-	const fileCount = stats?.fileCount ?? 0;
-	const specialtyCount = stats?.specialtyCount ?? 0;
-	const languageCount = stats?.languageCount ?? 0;
-	const isPermanent = stats?.isPermanent ?? false;
-	const profileExists = stats?.profileExists ?? false;
+  const completenessPercentage = stats?.completenessPercentage ?? 0;
+  const fileCount = stats?.fileCount ?? 0;
+  const specialtyCount = stats?.specialtyCount ?? 0;
+  const languageCount = stats?.languageCount ?? 0;
+  const isPermanent = stats?.isPermanent ?? false;
+  const profileExists = stats?.profileExists ?? false;
+
+  const hubVideoCount = stats?.hubVideoCount ?? 0;
+  const hubAudioCount = stats?.hubAudioCount ?? 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -283,6 +287,22 @@ function DoctorProfileRoute() {
           icon={<LanguagesIcon className="size-5" />}
           title="Languages"
           value={languageCount.toString()}
+        />
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
+        <MetricCard
+          description="Videos in your content hub"
+          icon={<VideoIcon className="size-5" />}
+          title="Hub videos"
+          value={hubVideoCount.toString()}
+        />
+
+        <MetricCard
+          description="Audio recordings in your hub"
+          icon={<RadioIcon className="size-5" />}
+          title="Hub audio"
+          value={hubAudioCount.toString()}
         />
       </section>
 

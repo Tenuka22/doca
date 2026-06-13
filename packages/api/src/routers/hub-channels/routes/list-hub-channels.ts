@@ -1,18 +1,18 @@
-import { doctorPlaylists } from "@zen-doc/db";
-import { listPlaylistsSchema } from "@zen-doc/db/schemas-types";
+import { doctorHubChannels } from "@zen-doc/db";
+import { listHubChannelsSchema } from "@zen-doc/db/schemas-types";
 import { eq } from "drizzle-orm";
 import { requireDoctor } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
 
-export const listPlaylistsRoute = protectedProcedure
-  .input(listPlaylistsSchema)
+export const listHubChannelsRoute = protectedProcedure
+  .input(listHubChannelsSchema)
   .handler(async ({ context, input }) => {
     const { userId: doctorId } = await requireDoctor(context);
 
     return await context.db
       .select()
-      .from(doctorPlaylists)
-      .where(eq(doctorPlaylists.doctorId, doctorId))
+      .from(doctorHubChannels)
+      .where(eq(doctorHubChannels.doctorId, doctorId))
       .limit(input.pageSize)
       .offset((input.page - 1) * input.pageSize);
   });

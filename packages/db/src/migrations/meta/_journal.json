@@ -43,6 +43,13 @@
       "when": 1781280457402,
       "tag": "0005_tricky_shape",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1781400000000,
+      "tag": "0006_hub_channels_upload",
+      "breakpoints": true
     }
   ]
 }

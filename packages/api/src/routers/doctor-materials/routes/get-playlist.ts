@@ -1,8 +1,8 @@
 import { doctorPlaylists } from "@zen-doc/db";
 import { idSchema } from "@zen-doc/db/schemas-types";
-import { requireDoctor } from "../../../../../hooks";
-import { protectedProcedure } from "../../../../../index";
-import { eq, and } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { requireDoctor } from "../../../hooks";
+import { protectedProcedure } from "../../../index";
 
 export const getPlaylistRoute = protectedProcedure
   .input(idSchema)
@@ -12,7 +12,12 @@ export const getPlaylistRoute = protectedProcedure
     const [playlist] = await context.db
       .select()
       .from(doctorPlaylists)
-      .where(and(eq(doctorPlaylists.id, input.id), eq(doctorPlaylists.doctorId, doctorId)))
+      .where(
+        and(
+          eq(doctorPlaylists.id, input.id),
+          eq(doctorPlaylists.doctorId, doctorId)
+        )
+      )
       .limit(1);
 
     if (!playlist) {

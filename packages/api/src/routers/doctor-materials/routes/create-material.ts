@@ -1,40 +1,35 @@
 import { doctorHubMaterials } from "@zen-doc/db";
 import { createMaterialSchema } from "@zen-doc/db/schemas-types";
-import { env } from "@zen-doc/env/server";
-import { requireDoctor } from "../../../../../hooks";
-import { protectedProcedure } from "../../../../../index";
 import { eq } from "drizzle-orm";
+import { requireDoctor } from "../../../hooks";
+import { protectedProcedure } from "../../../index";
 
 export const createMaterialRoute = protectedProcedure
   .input(createMaterialSchema)
   .handler(async ({ context, input }) => {
     const { userId: doctorId } = await requireDoctor(context);
 
-    if (doctorId !== input.doctorId) {
-      throw new Error("Forbidden");
-    }
-
     const createdId = crypto.randomUUID();
     const timestamp = new Date().toISOString();
-    
-    // Simplistic handling for file as per prompt for now
-    let fileKey = "";
-    if (input.file) {
-       fileKey = `doctor-materials/${doctorId}/${createdId}-${input.file.name || 'file'}`;
-       // Simplified for now, following established pattern
-       await env.DOCTOR_MATERIALS_KV.put(fileKey, await input.file.arrayBuffer());
-    }
 
     await context.db.insert(doctorHubMaterials).values({
       id: createdId,
       doctorId,
+      channelId: input.channelId ?? null,
       title: input.title,
       description: input.description ?? null,
       content: input.content ?? null,
-      fileKey: fileKey || null,
+      fileKey: null,
+      thumbnailKey: null,
       fileType: input.fileType,
-      tags: input.tags ?? null,
-      metadata: input.metadata ?? null,
+      fileName: null,
+      mimeType: null,
+      size: null,
+      durationSeconds: null,
+      visibility: input.visibility,
+      status: "ready",
+      tags: input.tags ? JSON.stringify(input.tags) : null,
+      metadata: null,
       playlistId: input.playlistId ?? null,
       isIndividual: input.isIndividual,
       createdAt: timestamp,

@@ -1,4 +1,4 @@
-import { doctorFiles, doctorProfiles } from "@zen-doc/db";
+import { doctorFiles, doctorHubMaterials, doctorProfiles } from "@zen-doc/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -83,6 +83,18 @@ export const profileStatsRoute = protectedProcedure
         )
       : 0;
 
+    const hubMaterials = await context.db
+      .select()
+      .from(doctorHubMaterials)
+      .where(eq(doctorHubMaterials.doctorId, userId));
+
+    const hubVideoCount = hubMaterials.filter(
+      (m) => m.fileType === "video" && m.status === "ready"
+    ).length;
+    const hubAudioCount = hubMaterials.filter(
+      (m) => m.fileType === "audio" && m.status === "ready"
+    ).length;
+
     return {
       profileExists: !!profile,
       isPermanent: profile?.permanent ?? false,
@@ -92,5 +104,7 @@ export const profileStatsRoute = protectedProcedure
       specialtyCount,
       languageCount,
       accountAgeDays,
+      hubVideoCount,
+      hubAudioCount,
     };
   });

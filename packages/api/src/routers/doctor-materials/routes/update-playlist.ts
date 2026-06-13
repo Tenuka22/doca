@@ -1,8 +1,8 @@
 import { doctorPlaylists } from "@zen-doc/db";
 import { updatePlaylistSchema } from "@zen-doc/db/schemas-types";
-import { requireDoctor } from "../../../../../hooks";
-import { protectedProcedure } from "../../../../../index";
 import { and, eq } from "drizzle-orm";
+import { requireDoctor } from "../../../hooks";
+import { protectedProcedure } from "../../../index";
 
 export const updatePlaylistRoute = protectedProcedure
   .input(updatePlaylistSchema)
@@ -12,7 +12,12 @@ export const updatePlaylistRoute = protectedProcedure
     const [existing] = await context.db
       .select()
       .from(doctorPlaylists)
-      .where(and(eq(doctorPlaylists.id, input.id), eq(doctorPlaylists.doctorId, doctorId)))
+      .where(
+        and(
+          eq(doctorPlaylists.id, input.id),
+          eq(doctorPlaylists.doctorId, doctorId)
+        )
+      )
       .limit(1);
 
     if (!existing) {
@@ -24,7 +29,10 @@ export const updatePlaylistRoute = protectedProcedure
       .update(doctorPlaylists)
       .set({
         title: input.title ?? existing.title,
-        description: input.description === undefined ? existing.description : input.description,
+        description:
+          input.description === undefined
+            ? existing.description
+            : input.description,
         updatedAt: timestamp,
       })
       .where(eq(doctorPlaylists.id, input.id));

@@ -1,25 +1,38 @@
 import { doctorHubMaterials } from "@zen-doc/db";
 import { listMaterialsSchema } from "@zen-doc/db/schemas-types";
-import { requireDoctor } from "../../../../../hooks";
-import { protectedProcedure } from "../../../../../index";
-import { eq, and } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { requireDoctor } from "../../../hooks";
+import { protectedProcedure } from "../../../index";
 
 export const listMaterialsRoute = protectedProcedure
   .input(listMaterialsSchema)
   .handler(async ({ context, input }) => {
     const { userId: doctorId } = await requireDoctor(context);
 
+    const conditions = [eq(doctorHubMaterials.doctorId, doctorId)];
+    if (input.channelId) {
+      conditions.push(eq(doctorHubMaterials.channelId, input.channelId));
+    }
+    if (input.playlistId) {
+      conditions.push(eq(doctorHubMaterials.playlistId, input.playlistId));
+    }
+    if (input.visibility) {
+      conditions.push(eq(doctorHubMaterials.visibility, input.visibility));
+    }
+    if (input.status) {
+      conditions.push(eq(doctorHubMaterials.status, input.status));
+    }
+
     const materials = await context.db
       .select()
       .from(doctorHubMaterials)
-      .where(
-        and(
-          eq(doctorHubMaterials.doctorId, doctorId),
-          input.playlistId ? eq(doctorHubMaterials.playlistId, input.playlistId) : undefined
-        )
-      )
+      .where(and(...conditions))
       .limit(input.pageSize)
       .offset((input.page - 1) * input.pageSize);
 
-    return materials;
+    return materials.map((m) => ({
+      ...m,
+      tags: m.tags ? JSON.parse(m.tags) : null,
+      metadata: m.metadata ? JSON.parse(m.metadata) : null,
+    }));
   });

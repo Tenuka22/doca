@@ -1,28 +1,28 @@
-import { doctorHubMaterials } from "@zen-doc/db";
+import { doctorHubChannels } from "@zen-doc/db";
 import { idSchema } from "@zen-doc/db/schemas-types";
 import { and, eq } from "drizzle-orm";
 import { requireDoctor } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
 
-export const getMaterialRoute = protectedProcedure
+export const getHubChannelRoute = protectedProcedure
   .input(idSchema)
   .handler(async ({ context, input }) => {
     const { userId: doctorId } = await requireDoctor(context);
 
-    const [material] = await context.db
+    const [channel] = await context.db
       .select()
-      .from(doctorHubMaterials)
+      .from(doctorHubChannels)
       .where(
         and(
-          eq(doctorHubMaterials.id, input.id),
-          eq(doctorHubMaterials.doctorId, doctorId)
+          eq(doctorHubChannels.id, input.id),
+          eq(doctorHubChannels.doctorId, doctorId)
         )
       )
       .limit(1);
 
-    if (!material) {
-      throw new Error("Material not found");
+    if (!channel) {
+      throw new Error("Channel not found");
     }
 
-    return material;
+    return channel;
   });

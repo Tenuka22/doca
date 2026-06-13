@@ -334,20 +334,80 @@ export const moonlightCreditTransactions = sqliteTable(
   }
 );
 
+const hubVisibilityValues = ["public", "unlisted", "private"] as const;
+const hubMaterialStatusValues = [
+  "uploading",
+  "processing",
+  "ready",
+  "failed",
+] as const;
+const hubUploadStatusValues = [
+  "pending",
+  "in_progress",
+  "completed",
+  "failed",
+  "cancelled",
+] as const;
+
+export const doctorHubChannels = sqliteTable("doctor_hub_channels", {
+  id: text("id").primaryKey(),
+  doctorId: text("doctor_id").notNull(),
+  name: text("name").notNull(),
+  handle: text("handle").notNull(),
+  description: text("description"),
+  avatarKey: text("avatar_key"),
+  bannerKey: text("banner_key"),
+  isDefault: integer("is_default", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+  updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
+});
+
 export const doctorHubMaterials = sqliteTable("doctor_hub_materials", {
   id: text("id").primaryKey(),
   doctorId: text("doctor_id").notNull(),
+  channelId: text("channel_id"),
   title: text("title").notNull(),
   description: text("description"),
-  content: text("content"), // Rich text (normal text area for now)
+  content: text("content"),
   fileKey: text("file_key"),
+  thumbnailKey: text("thumbnail_key"),
   fileType: text("file_type", { enum: ["video", "audio"] }).notNull(),
-  tags: text("tags"), // JSON array of enums
-  metadata: text("metadata"), // JSON object
+  fileName: text("file_name"),
+  mimeType: text("mime_type"),
+  size: integer("size"),
+  durationSeconds: integer("duration_seconds"),
+  visibility: text("visibility", { enum: hubVisibilityValues })
+    .notNull()
+    .default("private"),
+  status: text("status", { enum: hubMaterialStatusValues })
+    .notNull()
+    .default("uploading"),
+  tags: text("tags"),
+  metadata: text("metadata"),
   playlistId: text("playlist_id"),
   isIndividual: integer("is_individual", { mode: "boolean" })
     .notNull()
     .default(true),
+  createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+  updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
+});
+
+export const hubUploadSessions = sqliteTable("hub_upload_sessions", {
+  id: text("id").primaryKey(),
+  doctorId: text("doctor_id").notNull(),
+  materialId: text("material_id"),
+  fileName: text("file_name").notNull(),
+  mimeType: text("mime_type").notNull(),
+  totalSize: integer("total_size").notNull(),
+  chunkSize: integer("chunk_size").notNull(),
+  totalChunks: integer("total_chunks").notNull(),
+  uploadedChunks: text("uploaded_chunks"), // JSON array of completed chunk indices
+  status: text("status", { enum: hubUploadStatusValues })
+    .notNull()
+    .default("pending"),
+  fileKey: text("file_key"),
   createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
   updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
 });
@@ -361,8 +421,10 @@ export const doctorPlaylists = sqliteTable("doctor_playlists", {
   updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
 });
 
+export type DoctorHubChannel = typeof doctorHubChannels.$inferSelect;
 export type DoctorMaterial = typeof doctorHubMaterials.$inferSelect;
 export type DoctorPlaylist = typeof doctorPlaylists.$inferSelect;
+export type HubUploadSession = typeof hubUploadSessions.$inferSelect;
 export type DoctorProfile = typeof doctorProfiles.$inferSelect;
 export type DoctorSession = typeof doctorSessions.$inferSelect;
 export type DoctorFile = typeof doctorFiles.$inferSelect;
@@ -389,6 +451,13 @@ export type MoonlightCreditTransaction =
   typeof moonlightCreditTransactions.$inferSelect;
 
 export type {
+  Conversation,
+  Message,
+  NewConversation,
+  NewMessage,
+} from "./chats";
+export { conversations, messages } from "./chats";
+export type {
   NewStressDownloadAcknowledgement,
   StressDownloadAcknowledgment,
 } from "./stress-acknowledgments";
@@ -398,5 +467,3 @@ export type {
   StressPrediction,
 } from "./stress-predictions";
 export { stressPredictions } from "./stress-predictions";
-export type { Conversation, Message, NewConversation, NewMessage } from "./chats";
-export { conversations, messages } from "./chats";
