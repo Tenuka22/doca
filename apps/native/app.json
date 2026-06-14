@@ -23,7 +23,6 @@
       "newArchEnabled": true
     },
     "web": {
-      "output": "server",
       "favicon": "./assets/images/Logo.png"
     },
     "plugins": [
