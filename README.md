@@ -1,4 +1,4 @@
-﻿# zen-doc
+﻿# Doca
 
 This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, TanStack Start, Hono, ORPC, and more.
 
@@ -98,15 +98,15 @@ For more details, see the guide on [Deploying to Cloudflare with Alchemy](https:
 ## Project Structure
 
 ```
-zen-doc/
-â”œâ”€â”€ apps/
-â”‚   â”œâ”€â”€ web/         # Frontend application (React + TanStack Start)
-â”‚   â”œâ”€â”€ native/      # Mobile application (React Native, Expo)
-â”‚   â””â”€â”€ server/      # Backend API (Hono, ORPC)
-â”œâ”€â”€ packages/
-â”‚   â”œâ”€â”€ ui/          # Shared shadcn/ui components and styles
-â”‚   â”œâ”€â”€ api/         # API layer / business logic
-â”‚   â””â”€â”€ db/          # Database schema & queries
+doca/
+├── apps/
+│   ├── web/         # Frontend application (React + TanStack Start)
+│   ├── native/      # Mobile application (React Native, Expo)
+│   └── server/      # Backend API (Hono, ORPC)
+├── packages/
+│   ├── ui/          # Shared shadcn/ui components and styles
+│   ├── api/         # API layer / business logic
+│   └── db/          # Database schema & queries
 ```
 
 ## Available Scripts

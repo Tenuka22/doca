@@ -1,0 +1,7 @@
+[project]
+name = "youtube-suggestion-scraper"
+version = "0.1.0"
+description = "Scrapes Sri Lankan funny YouTube channel videos using yt-dlp"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
