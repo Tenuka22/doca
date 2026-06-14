@@ -68,7 +68,6 @@ app.get(
   upgradeWebSocket(async (c) => {
     const context = await createContext({ context: c });
 
-
     return {
       onMessage(event, ws) {
         if (ws.raw) {

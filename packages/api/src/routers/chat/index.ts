@@ -2,9 +2,9 @@
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { protectedProcedure } from "../../index";
-import { runDoctorSearchAgent } from "./helpers/agent/graph";
-import { chatSystemRegistry } from "./helpers/chat-systems";
+import { streamDoctorSearchAgent } from "./helpers/agent/graph";
 import type { Suggestion } from "./helpers/chat-systems";
+import { chatSystemRegistry } from "./helpers/chat-systems";
 
 export interface ChatMessage {
   content: string;
@@ -77,53 +77,6 @@ export const chatHttpRouter = {
   getChatSystems: protectedProcedure.input(z.object({})).handler(async () => ({
     systems: chatSystemRegistry.getActive(),
   })),
-};
-
-export const chatWsRouter = {
-  subscribeMessages: protectedProcedure
-    .input(
-      z.object({
-        conversationId: z.string(),
-      })
-    )
-    .handler(async function* ({ context, input }) {
-      const userId = context.auth?.userId;
-      if (!userId) {
-        throw new Error("Unauthorized");
-      }
-
-      const [conversation] = await context.db
-        .select()
-        .from(conversations)
-        .where(eq(conversations.id, input.conversationId))
-        .limit(1);
-
-      if (!conversation || conversation.userId !== userId) {
-        throw new Error("Conversation not found or access denied");
-      }
-
-      yield { type: "connected", conversationId: input.conversationId };
-
-      const key = `chat:${input.conversationId}:messages`;
-      let lastCount = 0;
-
-      while (true) {
-        const messagesRaw = await context.chatMessagesKv.get(key);
-        const messages: ChatMessage[] = messagesRaw
-          ? JSON.parse(messagesRaw)
-          : [];
-
-        if (messages.length > lastCount) {
-          const newMessages = messages.slice(lastCount);
-          for (const msg of newMessages) {
-            yield { type: "message", data: msg };
-          }
-          lastCount = messages.length;
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-    }),
 
   sendMessage: protectedProcedure
     .input(
@@ -133,7 +86,7 @@ export const chatWsRouter = {
         system: z.string().optional().default("doctor_search"),
       })
     )
-    .handler(async function* ({ context, input }) {
+    .handler(async function* ({ context, input, signal }) {
       const userId = context.auth?.userId;
       if (!userId) {
         throw new Error("Unauthorized");
@@ -183,20 +136,22 @@ export const chatWsRouter = {
       allMessages.push(userMessage);
       yield { type: "message", data: userMessage };
 
-      // Get AI response based on system
+      const agentGenerator = streamDoctorSearchAgent(
+        input.message,
+        context,
+        signal
+      );
       let assistantContent = "";
       let suggestions: Suggestion[] | undefined;
-      if (input.system === "doctor_search") {
-        try {
-          const result = await runDoctorSearchAgent(input.message, context);
-          assistantContent = result.content;
-          suggestions = result.suggestions;
-        } catch (e) {
-          console.error("Agent error:", e, (e as Error).stack);
-          assistantContent = "I'm sorry, I encountered an error while processing your request. Please try again.";
+
+      for await (const event of agentGenerator) {
+        if (event.type === "token") {
+          assistantContent += event.content || "";
+        } else if (event.type === "result") {
+          assistantContent = event.content || assistantContent;
+          suggestions = event.suggestions;
         }
-      } else {
-        assistantContent = "Chat system not configured";
+        yield event;
       }
 
       const assistantMessage: ChatMessage = {
@@ -211,7 +166,6 @@ export const chatWsRouter = {
       allMessages.push(assistantMessage);
       await context.chatMessagesKv.put(key, JSON.stringify(allMessages));
 
-      yield { type: "message", data: assistantMessage };
       yield { type: "done", conversationId };
     }),
 };

@@ -1,13 +1,16 @@
 import { doctorProfiles } from "@doca/db";
-import { eq } from "drizzle-orm";
 import { tool } from "@langchain/core/tools";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import type { ClerkRequestContext } from "../../../../context";
 
 export function createDoctorTools(context: ClerkRequestContext) {
   const searchDoctors = tool(
     async ({ query, limit }) => {
-      const doctors = await context.db.select().from(doctorProfiles).limit(limit);
+      const doctors = await context.db
+        .select()
+        .from(doctorProfiles)
+        .limit(limit);
       const results = doctors.filter((doc) => {
         const searchText =
           `${doc.displayName} ${doc.headline} ${doc.bio} ${doc.specialties}`.toLowerCase();

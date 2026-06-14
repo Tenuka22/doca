@@ -1,11 +1,10 @@
+import type { AppRouter } from "@doca/api/routers/index";
+import { env } from "@doca/env/web";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
-import { RPCLink as WebSocketRPCLink } from "@orpc/client/websocket";
 import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
-import type { AppRouter, WSAppRouter } from "@doca/api/routers/index";
-import { env } from "@doca/env/web";
 import { toast } from "sonner";
 
 import { getClerkAuthToken } from "@/utils/clerk-auth";
@@ -31,15 +30,6 @@ const link = new RPCLink({
   },
 });
 
-const getORPCClient = () => createORPCClient(link) as RouterClient<AppRouter>;
-
-export const client: RouterClient<AppRouter> = getORPCClient();
+export const client: RouterClient<AppRouter> = createORPCClient(link);
 
 export const orpc = createTanstackQueryUtils(client);
-
-const wsUrl = `${env.VITE_SERVER_URL.replace(/^http/, "ws")}/rpc-ws`;
-
-const websocket = new WebSocket(wsUrl);
-const wsLink = new WebSocketRPCLink({ websocket });
-
-export const orpcWs = createORPCClient(wsLink) as RouterClient<WSAppRouter>;

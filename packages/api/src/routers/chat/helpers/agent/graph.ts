@@ -1,6 +1,3 @@
-import { StateGraph, MessagesAnnotation, START, END } from "@langchain/langgraph";
-import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import type { ClerkRequestContext } from "../../../../context";
 import type { Suggestion } from "../chat-systems";
 import { createDoctorTools } from "./tools";
@@ -40,18 +37,23 @@ async function generateSuggestions(
     .map((m) => `${m.role}: ${m.content}`)
     .join("\n");
 
-  const response = await context.env.AI.run("@cf/meta/llama-3.1-8b-instruct-fast", {
-    messages: [
-      {
-        role: "user",
-        content:
-          `You generate follow-up suggestions for a medical assistant chat. Return ONLY a JSON array of objects with 'label', 'value', and 'description' fields. No other text. Example: [{"label":"Find a cardiologist","value":"find cardiologist","description":"Search for heart specialists"}]\n\nBased on this conversation, generate 3-4 follow-up options:\n\n${conversationSummary}`,
-      },
-    ],
-  });
+  const response = await context.env.AI.run(
+    "@cf/meta/llama-3.1-8b-instruct-fast",
+    {
+      messages: [
+        {
+          role: "user",
+          content: `You generate follow-up suggestions for a medical assistant chat. Return ONLY a JSON array of objects with 'label', 'value', and 'description' fields. No other text. Example: [{"label":"Find a cardiologist","value":"find cardiologist","description":"Search for heart specialists"}]\n\nBased on this conversation, generate 3-4 follow-up options:\n\n${conversationSummary}`,
+        },
+      ],
+    }
+  );
 
-  const text = ((response as Record<string, unknown>).result as Record<string, unknown> | undefined)
-    ?.response as string | undefined;
+  const text = (
+    (response as Record<string, unknown>).result as
+      | Record<string, unknown>
+      | undefined
+  )?.response as string | undefined;
 
   if (!text) {
     return [];
@@ -73,129 +75,247 @@ async function generateSuggestions(
   }
 
   return [
-    { label: "Find a doctor", value: "I need to find a doctor", description: "Search for doctors by name or specialty" },
-    { label: "Get doctor info", value: "Tell me about a doctor", description: "Learn more about a specific doctor" },
-    { label: "Browse specialties", value: "What specialties are available?", description: "See available medical specialties" },
+    {
+      label: "Find a doctor",
+      value: "I need to find a doctor",
+      description: "Search for doctors by name or specialty",
+    },
+    {
+      label: "Get doctor info",
+      value: "Tell me about a doctor",
+      description: "Learn more about a specific doctor",
+    },
+    {
+      label: "Browse specialties",
+      value: "What specialties are available?",
+      description: "See available medical specialties",
+    },
   ];
+}
+
+export interface StreamEvent {
+  content?: string;
+  data?: any;
+  id?: string;
+  name?: string;
+  status?: string;
+  suggestions?: Suggestion[];
+  type: "token" | "tool_call" | "tool_result" | "result" | "error" | "status";
+}
+
+export async function* streamDoctorSearchAgent(
+  userMessage: string,
+  context: ClerkRequestContext,
+  signal?: AbortSignal
+): AsyncGenerator<StreamEvent> {
+  const tools = createDoctorTools(context);
+
+  const toolDefs = tools.map((t) => {
+    const raw: unknown = t.schema;
+    const jsonSchema =
+      (raw as { toJSON?: () => Record<string, unknown> }).toJSON?.() ?? {};
+    const { properties, required } = jsonSchema as {
+      properties?: Record<string, unknown>;
+      required?: string[];
+    };
+    return {
+      type: "function" as const,
+      function: {
+        name: t.name,
+        description: t.description,
+        parameters: {
+          type: "object",
+          properties: properties ?? {},
+          required: required ?? [],
+        },
+      },
+    };
+  });
+
+  const messages: Array<{
+    role: string;
+    content: string;
+    tool_calls?: any[];
+    tool_call_id?: string;
+  }> = [
+    {
+      role: "system",
+      content:
+        "You are a helpful medical assistant. Provide clear, concise information. Always use tools to verify facts. Use markdown for lists and bold text.",
+    },
+    { role: "user", content: userMessage },
+  ];
+
+  let iterations = 0;
+  while (iterations < 5) {
+    if (signal?.aborted) {
+      return;
+    }
+    iterations++;
+
+    yield { type: "status", status: "Thinking..." };
+
+    let response: ReadableStream;
+    try {
+      const aiResponse = await context.env.AI.run(
+        "@cf/meta/llama-3.1-8b-instruct-fast",
+        {
+          messages: messages.map(
+            ({ role, content, tool_calls, tool_call_id }) => ({
+              role,
+              content,
+              tool_calls,
+              tool_call_id,
+            })
+          ),
+          tools: toolDefs,
+          stream: true,
+        }
+      );
+      response = aiResponse as unknown as ReadableStream;
+    } catch (e) {
+      yield { type: "error", content: "AI service error." };
+      return;
+    }
+
+    let assistantContent = "";
+    let toolCalls: any[] = [];
+
+    const reader = response.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    try {
+      while (true) {
+        if (signal?.aborted) {
+          reader.cancel();
+          return;
+        }
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!(trimmed && trimmed.startsWith("data: "))) {
+            continue;
+          }
+
+          const data = trimmed.slice(6);
+          if (data === "[DONE]") {
+            break;
+          }
+
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.response) {
+              assistantContent += parsed.response;
+              yield { type: "token", content: parsed.response };
+            }
+            if (parsed.tool_calls) {
+              for (const tc of parsed.tool_calls) {
+                const existing = toolCalls.find(
+                  (t) =>
+                    t.id === tc.id || t.name === (tc.name || tc.function?.name)
+                );
+                if (!existing) {
+                  toolCalls.push(tc);
+                  yield {
+                    type: "tool_call",
+                    name: tc.name || tc.function?.name,
+                    data: tc.arguments || tc.function?.arguments,
+                    id: tc.id,
+                  };
+                }
+              }
+            }
+          } catch (e) {}
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    messages.push({
+      role: "assistant",
+      content: assistantContent,
+      tool_calls: toolCalls.length > 0 ? toolCalls : undefined,
+    });
+
+    if (toolCalls.length === 0) {
+      let { content, suggestions } = parseSuggestions(assistantContent);
+      if (suggestions.length === 0) {
+        suggestions = await generateSuggestions(context, messages);
+      }
+      yield { type: "result", content, suggestions };
+      return;
+    }
+
+    for (const tc of toolCalls) {
+      if (signal?.aborted) {
+        return;
+      }
+      const toolName = tc.name || tc.function?.name;
+      const toolId = tc.id || toolName;
+
+      yield { type: "status", status: `Using ${toolName}...` };
+
+      const rawArgs = tc.arguments || tc.function?.arguments;
+      const toolArgs =
+        typeof rawArgs === "string" ? JSON.parse(rawArgs) : rawArgs || {};
+      const tool = tools.find((t) => t.name === toolName);
+
+      if (tool) {
+        try {
+          const result = await (tool as any).invoke(toolArgs);
+          messages.push({
+            role: "tool",
+            content: result,
+            tool_call_id: toolId,
+          });
+          yield {
+            type: "tool_result",
+            name: toolName,
+            data: result,
+            id: toolId,
+          };
+        } catch (e) {
+          const errorMsg = `Error: ${(e as Error).message}`;
+          messages.push({
+            role: "tool",
+            content: errorMsg,
+            tool_call_id: toolId,
+          });
+          yield {
+            type: "tool_result",
+            name: toolName,
+            data: errorMsg,
+            id: toolId,
+          };
+        }
+      }
+    }
+    toolCalls = [];
+  }
 }
 
 export async function runDoctorSearchAgent(
   userMessage: string,
   context: ClerkRequestContext
 ): Promise<AgentResult> {
-  const tools = createDoctorTools(context);
-  const toolNode = new ToolNode(tools);
+  const generator = streamDoctorSearchAgent(userMessage, context);
+  let lastResult: AgentResult = { content: "", suggestions: [] };
 
-  async function callModel(state: typeof MessagesAnnotation.State) {
-    const messages = state.messages.map((m) => {
-      let role: string;
-      if (m._getType() === "human") {
-        role = "user";
-      } else if (m._getType() === "ai") {
-        role = "assistant";
-      } else if (m._getType() === "system") {
-        role = "system";
-      } else {
-        role = "user";
-      }
-      return {
-        role,
-        content: typeof m.content === "string" ? m.content : JSON.stringify(m.content),
-      };
-    });
-
-    const toolDefs = tools.map((t) => {
-      const raw: unknown = t.schema;
-      const jsonSchema = (raw as { toJSON?: () => Record<string, unknown> }).toJSON?.() ?? {};
-      const { properties, required } = jsonSchema as { properties?: Record<string, unknown>; required?: string[] };
-      return {
-        type: "function" as const,
-        function: {
-          name: t.name,
-          description: t.description,
-          parameters: {
-            type: "object",
-            properties: properties ?? {},
-            required: required ?? [],
-          },
-        },
-      };
-    });
-
-  const response = await context.env.AI.run("@cf/meta/llama-3.1-8b-instruct-fast", {
-      messages,
-      tools: toolDefs,
-    });
-
-    const result = (response as Record<string, unknown>).result as Record<string, unknown> | undefined;
-    const assistantContent = (result?.response as string) ?? "";
-
-    const rawToolCalls = (result?.tool_calls as Array<Record<string, unknown>>) ?? [];
-    const toolCalls = rawToolCalls.map((tc) => {
-      const name = (tc.name as string) ?? (tc.function as Record<string, unknown> | undefined)?.name as string ?? "";
-      const args = tc.arguments ?? (tc.function as Record<string, unknown> | undefined)?.arguments ?? {};
-      return {
-        name,
-        args: typeof args === "string" ? JSON.parse(args) as Record<string, unknown> : args as Record<string, unknown>,
-        id: name,
-        type: "tool_call" as const,
-      };
-    });
-
-    return {
-      messages: [new AIMessage({ content: assistantContent, tool_calls: toolCalls })],
-    };
-  }
-
-  function shouldContinue(state: typeof MessagesAnnotation.State): "tools" | typeof END {
-    const { messages } = state;
-    const lastMessage = messages[messages.length - 1];
-    if (
-      lastMessage &&
-      "tool_calls" in lastMessage &&
-      Array.isArray((lastMessage as AIMessage).tool_calls) &&
-      (lastMessage as AIMessage).tool_calls!.length
-    ) {
-      return "tools";
+  for await (const event of generator) {
+    if (event.type === "result") {
+      lastResult = { content: event.content!, suggestions: event.suggestions! };
     }
-    return END;
   }
 
-  const graph = new StateGraph(MessagesAnnotation)
-    .addNode("agent", callModel)
-    .addNode("tools", toolNode)
-    .addEdge(START, "agent")
-    .addConditionalEdges("agent", shouldContinue)
-    .addEdge("tools", "agent")
-    .compile();
-
-  const result = await graph.invoke({
-    messages: [
-      new SystemMessage(
-        "You are a helpful medical assistant that helps users find doctors and learn about them. Use the available tools to search for doctors, get their profiles, and find doctors by specialty."
-      ),
-      new HumanMessage(userMessage),
-    ],
-  });
-
-  const lastMessage = result.messages[result.messages.length - 1];
-  const rawContent = lastMessage && typeof lastMessage.content === "string"
-    ? lastMessage.content
-    : lastMessage
-      ? JSON.stringify(lastMessage.content)
-      : "";
-
-  let { content, suggestions } = parseSuggestions(rawContent);
-
-  if (suggestions.length === 0) {
-    const history = result.messages
-      .filter((m) => m._getType() !== "system")
-      .map((m) => ({
-        role: m._getType() === "human" ? "user" : "assistant",
-        content: typeof m.content === "string" ? m.content : JSON.stringify(m.content),
-      }));
-    suggestions = await generateSuggestions(context, history);
-  }
-
-  return { content, suggestions };
+  return lastResult;
 }
