@@ -1,4 +1,4 @@
-import { env } from "@zen-doc/env/server";
+﻿import { env } from "@doca/env/server";
 
 export interface DoctorMaterialFileInput {
   fileKey: string;
@@ -20,3 +20,4 @@ export async function readDoctorMaterialFile(
     type: input.mimeType,
   });
 }
+

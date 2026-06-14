@@ -1,8 +1,8 @@
-import { mergeProps } from "@base-ui/react/merge-props";
+﻿import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
-import { Separator } from "@zen-doc/ui/components/separator";
+import { Separator } from "@doca/ui/components/separator";
 
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const buttonGroupVariants = cva(
@@ -85,3 +85,4 @@ export {
   ButtonGroupText,
   buttonGroupVariants,
 };
+

@@ -1,4 +1,4 @@
-# zen-doc
+﻿# zen-doc
 
 This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, TanStack Start, Hono, ORPC, and more.
 
@@ -79,7 +79,7 @@ npx shadcn@latest add accordion dialog popover sheet table -c packages/ui
 Import shared components like this:
 
 ```tsx
-import { Button } from "@zen-doc/ui/components/button";
+import { Button } from "@doca/ui/components/button";
 ```
 
 ### Add app-specific blocks
@@ -99,14 +99,14 @@ For more details, see the guide on [Deploying to Cloudflare with Alchemy](https:
 
 ```
 zen-doc/
-├── apps/
-│   ├── web/         # Frontend application (React + TanStack Start)
-│   ├── native/      # Mobile application (React Native, Expo)
-│   └── server/      # Backend API (Hono, ORPC)
-├── packages/
-│   ├── ui/          # Shared shadcn/ui components and styles
-│   ├── api/         # API layer / business logic
-│   └── db/          # Database schema & queries
+â”œâ”€â”€ apps/
+â”‚   â”œâ”€â”€ web/         # Frontend application (React + TanStack Start)
+â”‚   â”œâ”€â”€ native/      # Mobile application (React Native, Expo)
+â”‚   â””â”€â”€ server/      # Backend API (Hono, ORPC)
+â”œâ”€â”€ packages/
+â”‚   â”œâ”€â”€ ui/          # Shared shadcn/ui components and styles
+â”‚   â”œâ”€â”€ api/         # API layer / business logic
+â”‚   â””â”€â”€ db/          # Database schema & queries
 ```
 
 ## Available Scripts
@@ -119,3 +119,4 @@ zen-doc/
 - `bun run dev:native`: Start the React Native/Expo development server
 - `bun run db:push`: Push schema changes to database
 - `bun run db:generate`: Generate database client/types
+

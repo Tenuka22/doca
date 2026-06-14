@@ -1,4 +1,4 @@
-import { patientProfiles, wellnessActions } from "@zen-doc/db";
+﻿import { patientProfiles, wellnessActions } from "@doca/db";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -32,3 +32,4 @@ export const getManagedPatientWellnessRoute = protectedProcedure
 
     return history;
   });
+

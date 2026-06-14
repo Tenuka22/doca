@@ -1,4 +1,4 @@
-import { doctorProfiles } from "@zen-doc/db";
+﻿import { doctorProfiles } from "@doca/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { getDoctorProfile, requireAuth } from "../../../hooks";
@@ -40,7 +40,7 @@ export const createConnectAccountLinkRoute = protectedProcedure
         throw new Error(`Failed to create Stripe Connected Account: ${msg}`);
       }
     } else {
-      // Account already exists — sync its status from Stripe
+      // Account already exists â€” sync its status from Stripe
       try {
         const account = await stripe.accounts.retrieve(stripeAccountId);
         const enabled = account.details_submitted && account.charges_enabled;
@@ -71,3 +71,4 @@ export const createConnectAccountLinkRoute = protectedProcedure
 
     return { url: accountLink.url, connected: false };
   });
+

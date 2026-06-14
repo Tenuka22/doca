@@ -1,11 +1,11 @@
-import { ORPCError } from "@orpc/server";
-import type { DoctorProfile } from "@zen-doc/db";
+﻿import { ORPCError } from "@orpc/server";
+import type { DoctorProfile } from "@doca/db";
 import {
   doctorProfiles,
   parseJsonApproachSteps,
   parseJsonStringArray,
   tenantAdmins,
-} from "@zen-doc/db";
+} from "@doca/db";
 import { and, eq } from "drizzle-orm";
 
 import type { Context } from "./context";
@@ -249,7 +249,7 @@ export async function requireTenantAdminOrDoctor(
   }
 
   // Check if affiliated doctor
-  const { doctorHospitalAffiliations } = await import("@zen-doc/db");
+  const { doctorHospitalAffiliations } = await import("@doca/db");
   const [affiliation] = await context.db
     .select()
     .from(doctorHospitalAffiliations)
@@ -269,3 +269,4 @@ export async function requireTenantAdminOrDoctor(
     message: "Tenant admin or affiliated doctor access required",
   });
 }
+

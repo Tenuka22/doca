@@ -1,4 +1,4 @@
-import { doctorSessions } from "@zen-doc/db";
+﻿import { doctorSessions } from "@doca/db";
 import { and, asc, count, desc, eq, gte, lte } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -100,3 +100,4 @@ export const sessionStatsRoute = protectedProcedure
       recentSessions,
     };
   });
+

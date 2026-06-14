@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "zen-doc",
-    "slug": "zen-doc",
+    "name": "doca",
+    "slug": "doca",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/Logo.png",
-    "scheme": "zen-doc",
+    "scheme": "doca",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,

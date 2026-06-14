@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
 
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 
 function Progress({
   className,
@@ -81,3 +81,4 @@ export {
   ProgressTrack,
   ProgressValue,
 };
+

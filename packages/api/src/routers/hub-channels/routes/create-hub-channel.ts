@@ -1,5 +1,5 @@
-import { doctorHubChannels } from "@zen-doc/db";
-import { createHubChannelSchema } from "@zen-doc/db/schemas-types";
+﻿import { doctorHubChannels } from "@doca/db";
+import { createHubChannelSchema } from "@doca/db/schemas-types";
 import { eq } from "drizzle-orm";
 import { requireDoctor } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -33,3 +33,4 @@ export const createHubChannelRoute = protectedProcedure
 
     return created;
   });
+

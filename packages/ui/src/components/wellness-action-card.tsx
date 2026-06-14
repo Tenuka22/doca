@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 import type * as React from "react";
 
 interface WellnessActionCardProps extends React.ComponentProps<"div"> {
@@ -80,3 +80,4 @@ function WellnessActionCard({
 
 export type { WellnessActionCardProps };
 export { WellnessActionCard };
+

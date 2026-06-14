@@ -1,4 +1,4 @@
-import { userSubscriptions } from "@zen-doc/db";
+﻿import { userSubscriptions } from "@doca/db";
 import { and, eq } from "drizzle-orm";
 import { requireAuth } from "../../../../hooks";
 import { protectedProcedure } from "../../../../index";
@@ -21,3 +21,4 @@ export const getUserSubscriptionRoute = protectedProcedure.handler(
     return subscription ?? null;
   }
 );
+

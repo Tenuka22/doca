@@ -1,5 +1,5 @@
-import { creditTransactions, doctorSessions, userCredits } from "@zen-doc/db";
-import { cancelSessionSchema } from "@zen-doc/db/schemas-types";
+﻿import { creditTransactions, doctorSessions, userCredits } from "@doca/db";
+import { cancelSessionSchema } from "@doca/db/schemas-types";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -84,3 +84,4 @@ export const cancelSessionRoute = protectedProcedure
 
     return { ok: true };
   });
+

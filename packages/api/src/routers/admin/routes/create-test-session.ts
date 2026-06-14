@@ -1,5 +1,5 @@
-import { randomUUID } from "node:crypto";
-import { doctorSessions } from "@zen-doc/db";
+﻿import { randomUUID } from "node:crypto";
+import { doctorSessions } from "@doca/db";
 import { z } from "zod";
 import { requireAdmin } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -30,3 +30,4 @@ export const adminCreateTestSessionRoute = protectedProcedure
       endAt: endAt.toISOString(),
     };
   });
+

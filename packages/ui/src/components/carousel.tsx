@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
-import { Button } from "@zen-doc/ui/components/button";
-import { cn } from "@zen-doc/ui/lib/utils";
+import { Button } from "@doca/ui/components/button";
+import { cn } from "@doca/ui/lib/utils";
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
 } from "embla-carousel-react";
@@ -245,3 +245,4 @@ export {
   CarouselPrevious,
   useCarousel,
 };
+

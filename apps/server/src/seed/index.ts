@@ -1,4 +1,4 @@
-import { createDb } from "@zen-doc/db";
+import { createDb } from "@doca/db";
 import { seedChats } from "./chats";
 import { getDoctorIds, seedDoctors } from "./doctors";
 import { seedGamification } from "./gamification";

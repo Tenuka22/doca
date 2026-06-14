@@ -1,6 +1,6 @@
-import { doctorHubMaterials } from "@zen-doc/db";
-import { idSchema } from "@zen-doc/db/schemas-types";
-import { env } from "@zen-doc/env/server";
+﻿import { doctorHubMaterials } from "@doca/db";
+import { idSchema } from "@doca/db/schemas-types";
+import { env } from "@doca/env/server";
 import { eq } from "drizzle-orm";
 import { publicProcedure } from "../../../index";
 
@@ -34,3 +34,4 @@ export const getHubMaterialFileRoute = publicProcedure
       type: material.mimeType ?? "application/octet-stream",
     });
   });
+

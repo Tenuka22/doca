@@ -1,4 +1,4 @@
-import { stressPredictions } from "@zen-doc/db";
+﻿import { stressPredictions } from "@doca/db";
 
 export type PredictionRecord = Record<string, unknown>;
 
@@ -42,3 +42,4 @@ export async function persistPrediction(
     sampleCount,
   });
 }
+

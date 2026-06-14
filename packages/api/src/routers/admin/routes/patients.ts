@@ -1,4 +1,4 @@
-import { patientProfiles } from "@zen-doc/db";
+﻿import { patientProfiles } from "@doca/db";
 import { desc } from "drizzle-orm";
 import { z } from "zod";
 import { paginateItems, requireAdmin } from "../../../hooks";
@@ -31,3 +31,4 @@ export const adminPatientsRoute = protectedProcedure
       nextPage,
     };
   });
+

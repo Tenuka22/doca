@@ -1,21 +1,21 @@
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Badge } from "@zen-doc/ui/components/badge";
-import { Button } from "@zen-doc/ui/components/button";
-import { Card, CardContent, CardHeader } from "@zen-doc/ui/components/card";
+import { Badge } from "@doca/ui/components/badge";
+import { Button } from "@doca/ui/components/button";
+import { Card, CardContent, CardHeader } from "@doca/ui/components/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@zen-doc/ui/components/chart";
+} from "@doca/ui/components/chart";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@zen-doc/ui/components/empty";
-import { Separator } from "@zen-doc/ui/components/separator";
+} from "@doca/ui/components/empty";
+import { Separator } from "@doca/ui/components/separator";
 import { addMinutes, format, isWithinInterval, subMinutes } from "date-fns";
 import {
   CalendarCheckIcon,

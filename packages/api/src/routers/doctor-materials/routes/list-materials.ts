@@ -1,5 +1,5 @@
-import { doctorHubMaterials } from "@zen-doc/db";
-import { listMaterialsSchema } from "@zen-doc/db/schemas-types";
+﻿import { doctorHubMaterials } from "@doca/db";
+import { listMaterialsSchema } from "@doca/db/schemas-types";
 import { and, eq } from "drizzle-orm";
 import { requireDoctor } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -36,3 +36,4 @@ export const listMaterialsRoute = protectedProcedure
       metadata: m.metadata ? JSON.parse(m.metadata) : null,
     }));
   });
+

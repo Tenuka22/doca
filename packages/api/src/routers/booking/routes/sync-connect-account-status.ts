@@ -1,4 +1,4 @@
-import { doctorProfiles } from "@zen-doc/db";
+﻿import { doctorProfiles } from "@doca/db";
 import { eq } from "drizzle-orm";
 import { getDoctorProfile, requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -33,3 +33,4 @@ export const syncConnectAccountStatusRoute = protectedProcedure.handler(
     }
   }
 );
+

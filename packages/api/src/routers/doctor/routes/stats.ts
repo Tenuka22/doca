@@ -1,4 +1,4 @@
-import { doctorSessions } from "@zen-doc/db";
+﻿import { doctorSessions } from "@doca/db";
 import { and, asc, count, desc, eq, gt, gte, sum } from "drizzle-orm";
 import { z } from "zod";
 import { requireDoctor } from "../../../hooks";
@@ -84,3 +84,4 @@ export const doctorStatsRoute = protectedProcedure
       monthlyEarnings,
     };
   });
+

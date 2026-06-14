@@ -1,5 +1,6 @@
 "use client";
 
+import { APP_DISPLAY_NAME } from "@doca/app-info";
 import { useParams } from "@tanstack/react-router";
 import {
   Sidebar,
@@ -8,7 +9,7 @@ import {
   SidebarHeader,
   SidebarRail,
   useSidebar,
-} from "@zen-doc/ui/components/sidebar";
+} from "@doca/ui/components/sidebar";
 import {
   BuildingIcon,
   CalendarCheckIcon,
@@ -38,7 +39,7 @@ export function TenantSidebar() {
         ) : (
           <div className="flex flex-col gap-1">
             <span className="font-medium text-sm">Hospital Portal</span>
-            <span className="text-muted-foreground text-xs">ZenDoc</span>
+            <span className="text-muted-foreground text-xs">{APP_DISPLAY_NAME}</span>
           </div>
         )}
       </SidebarHeader>

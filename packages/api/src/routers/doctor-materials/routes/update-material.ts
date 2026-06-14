@@ -1,5 +1,5 @@
-import { doctorHubMaterials } from "@zen-doc/db";
-import { updateMaterialSchema } from "@zen-doc/db/schemas-types";
+﻿import { doctorHubMaterials } from "@doca/db";
+import { updateMaterialSchema } from "@doca/db/schemas-types";
 import { and, eq } from "drizzle-orm";
 import { requireDoctor } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -66,3 +66,4 @@ export const updateMaterialRoute = protectedProcedure
       metadata: updated.metadata ? JSON.parse(updated.metadata) : null,
     };
   });
+

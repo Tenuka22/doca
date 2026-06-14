@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "https://ui.shadcn.com/schema.json",
   "style": "base-lyra",
   "rsc": false,
@@ -12,13 +12,14 @@
   },
   "iconLibrary": "lucide",
   "aliases": {
-    "components": "@zen-doc/ui/components",
-    "utils": "@zen-doc/ui/lib/utils",
-    "hooks": "@zen-doc/ui/hooks",
-    "lib": "@zen-doc/ui/lib",
-    "ui": "@zen-doc/ui/components"
+    "components": "@doca/ui/components",
+    "utils": "@doca/ui/lib/utils",
+    "hooks": "@doca/ui/hooks",
+    "lib": "@doca/ui/lib",
+    "ui": "@doca/ui/components"
   },
   "menuColor": "default",
   "menuAccent": "subtle",
   "registries": {}
 }
+

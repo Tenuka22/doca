@@ -1,4 +1,4 @@
-import { guardianProfiles, patientProfiles } from "@zen-doc/db";
+﻿import { guardianProfiles, patientProfiles } from "@doca/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -49,3 +49,4 @@ export const acceptRequestRoute = protectedProcedure
 
     return { success: true };
   });
+

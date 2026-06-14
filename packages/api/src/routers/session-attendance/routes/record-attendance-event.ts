@@ -1,4 +1,4 @@
-import { doctorSessions, sessionAttendanceEvents } from "@zen-doc/db";
+﻿import { doctorSessions, sessionAttendanceEvents } from "@doca/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -44,3 +44,4 @@ export const recordAttendanceEventRoute = protectedProcedure
 
     return { ok: true };
   });
+

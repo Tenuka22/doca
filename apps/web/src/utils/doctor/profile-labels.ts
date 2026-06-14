@@ -3,7 +3,7 @@ import type {
   doctorFocusAreaValues,
   doctorLanguageValues,
   doctorSpecialtyValues,
-} from "@zen-doc/db/doctor-profile";
+} from "@doca/db/doctor-profile";
 
 export type DoctorSpecialty = (typeof doctorSpecialtyValues)[number];
 export type DoctorLanguage = (typeof doctorLanguageValues)[number];

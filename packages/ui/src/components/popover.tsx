@@ -1,5 +1,5 @@
-import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
-import { cn } from "@zen-doc/ui/lib/utils";
+﻿import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
+import { cn } from "@doca/ui/lib/utils";
 import type * as React from "react";
 
 function Popover({ ...props }: PopoverPrimitive.Root.Props) {
@@ -85,3 +85,4 @@ export {
   PopoverTitle,
   PopoverTrigger,
 };
+

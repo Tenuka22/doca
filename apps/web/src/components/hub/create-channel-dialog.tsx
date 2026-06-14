@@ -1,4 +1,4 @@
-import { Button } from "@zen-doc/ui/components/button";
+import { Button } from "@doca/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -6,10 +6,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@zen-doc/ui/components/dialog";
-import { Input } from "@zen-doc/ui/components/input";
-import { Label } from "@zen-doc/ui/components/label";
-import { Textarea } from "@zen-doc/ui/components/textarea";
+} from "@doca/ui/components/dialog";
+import { Input } from "@doca/ui/components/input";
+import { Label } from "@doca/ui/components/label";
+import { Textarea } from "@doca/ui/components/textarea";
 import { AtSignIcon, Loader2Icon } from "lucide-react";
 import { useState } from "react";
 import { useCreateHubChannel } from "@/hooks/hub/use-hub";

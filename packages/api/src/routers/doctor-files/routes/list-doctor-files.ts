@@ -1,4 +1,4 @@
-import { doctorFileInputSchema } from "@zen-doc/db/schemas-types";
+﻿import { doctorFileInputSchema } from "@doca/db/schemas-types";
 import { publicProcedure } from "../../../index";
 import { listFilesForDoctor } from "../file-utils";
 
@@ -7,3 +7,4 @@ export const listDoctorFilesRoute = publicProcedure
   .handler(async ({ context, input }) =>
     listFilesForDoctor(context.db, input.doctorId)
   );
+

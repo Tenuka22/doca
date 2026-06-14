@@ -1,5 +1,5 @@
-import { tenantNotifications } from "@zen-doc/db";
-import { markNotificationReadSchema } from "@zen-doc/db/schemas-types";
+﻿import { tenantNotifications } from "@doca/db";
+import { markNotificationReadSchema } from "@doca/db/schemas-types";
 import { and, eq } from "drizzle-orm";
 
 import { requireAuth } from "../../../hooks";
@@ -59,3 +59,4 @@ export const markAllNotificationsReadRoute = protectedProcedure.handler(
     return { success: true };
   }
 );
+

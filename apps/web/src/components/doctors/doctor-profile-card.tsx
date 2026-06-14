@@ -6,28 +6,28 @@ import {
   doctorFocusAreaValues,
   doctorLanguageValues,
   doctorSpecialtyValues,
-} from "@zen-doc/db/doctor-profile";
+} from "@doca/db/doctor-profile";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@zen-doc/ui/components/avatar";
-import { Badge } from "@zen-doc/ui/components/badge";
-import { Button } from "@zen-doc/ui/components/button";
+} from "@doca/ui/components/avatar";
+import { Badge } from "@doca/ui/components/badge";
+import { Button } from "@doca/ui/components/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@zen-doc/ui/components/card";
-import { Checkbox } from "@zen-doc/ui/components/checkbox";
+} from "@doca/ui/components/card";
+import { Checkbox } from "@doca/ui/components/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@zen-doc/ui/components/dialog";
+} from "@doca/ui/components/dialog";
 import {
   Field,
   FieldDescription,
@@ -35,16 +35,16 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from "@zen-doc/ui/components/field";
-import { Input } from "@zen-doc/ui/components/input";
+} from "@doca/ui/components/field";
+import { Input } from "@doca/ui/components/input";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@zen-doc/ui/components/tabs";
-import { Textarea } from "@zen-doc/ui/components/textarea";
-import { cn } from "@zen-doc/ui/lib/utils";
+} from "@doca/ui/components/tabs";
+import { Textarea } from "@doca/ui/components/textarea";
+import { cn } from "@doca/ui/lib/utils";
 import {
   Award,
   Building,

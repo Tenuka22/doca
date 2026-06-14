@@ -1,8 +1,9 @@
-{
-  "extends": "@zen-doc/config/tsconfig.base",
+﻿{
+  "extends": "@doca/config/tsconfig.base",
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src"
   },
   "include": ["src"]
 }
+

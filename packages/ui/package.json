@@ -1,5 +1,5 @@
-{
-  "name": "@zen-doc/ui",
+﻿{
+  "name": "@doca/ui",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -35,8 +35,9 @@
   "devDependencies": {
     "@types/react": "^19.2.10",
     "@types/react-dom": "catalog:",
-    "@zen-doc/config": "workspace:*",
+    "@doca/config": "workspace:*",
     "tailwindcss": "^4.1.18",
     "typescript": "^6"
   }
 }
+

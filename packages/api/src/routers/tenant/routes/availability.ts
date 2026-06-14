@@ -1,13 +1,13 @@
-import {
+﻿import {
   doctorHospitalAffiliations,
   doctorScheduleEntries,
   doctorWeeklyAvailability,
   hospitalAvailabilityOverrides,
-} from "@zen-doc/db";
+} from "@doca/db";
 import {
   createAvailabilityOverrideSchema,
   deleteAvailabilityOverrideSchema,
-} from "@zen-doc/db/schemas-types";
+} from "@doca/db/schemas-types";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -224,3 +224,4 @@ export const checkAffilationConflictsRoute = protectedProcedure
 
     return { hasConflicts: conflicts.length > 0, conflicts };
   });
+

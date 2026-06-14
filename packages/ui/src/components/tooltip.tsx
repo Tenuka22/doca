@@ -1,6 +1,6 @@
-import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
+﻿import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
 
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 
 function TooltipProvider({
   delay = 0,
@@ -62,3 +62,4 @@ function TooltipContent({
 }
 
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
+

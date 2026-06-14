@@ -1,4 +1,4 @@
-import { creditTransactions, userCredits } from "@zen-doc/db";
+﻿import { creditTransactions, userCredits } from "@doca/db";
 import { desc } from "drizzle-orm";
 import { z } from "zod";
 import { paginateItems, requireAdmin } from "../../../hooks";
@@ -44,3 +44,4 @@ export const adminUserCreditsRoute = protectedProcedure
 
     return { items: rows };
   });
+

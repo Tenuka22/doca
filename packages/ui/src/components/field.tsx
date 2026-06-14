@@ -1,7 +1,7 @@
-import { Label } from "@zen-doc/ui/components/label";
-import { Separator } from "@zen-doc/ui/components/separator";
+﻿import { Label } from "@doca/ui/components/label";
+import { Separator } from "@doca/ui/components/separator";
 
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import { useMemo } from "react";
 
@@ -234,3 +234,4 @@ export {
   FieldSet,
   FieldTitle,
 };
+

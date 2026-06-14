@@ -1,4 +1,4 @@
-import { patientProfiles, stressDownloadAcknowledgments } from "@zen-doc/db";
+﻿import { patientProfiles, stressDownloadAcknowledgments } from "@doca/db";
 import { eq } from "drizzle-orm";
 
 import { requireAuth } from "../../../hooks";
@@ -62,3 +62,4 @@ export const acknowledgeDownloadRoute = protectedProcedure.handler(
     };
   }
 );
+

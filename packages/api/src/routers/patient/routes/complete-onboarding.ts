@@ -1,4 +1,4 @@
-import { patientProfiles } from "@zen-doc/db";
+﻿import { patientProfiles } from "@doca/db";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -34,3 +34,4 @@ export const completeOnboardingRoute = protectedProcedure
 
     return { success: true };
   });
+

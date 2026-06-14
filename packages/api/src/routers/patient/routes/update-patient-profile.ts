@@ -1,5 +1,5 @@
-import { patientProfiles } from "@zen-doc/db";
-import { updatePatientProfileSchema } from "@zen-doc/db/schemas-types";
+﻿import { patientProfiles } from "@doca/db";
+import { updatePatientProfileSchema } from "@doca/db/schemas-types";
 import { eq, sql } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -71,3 +71,4 @@ export const updatePatientProfileRoute = protectedProcedure
 
     return { success: true, profile: updated };
   });
+

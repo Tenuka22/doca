@@ -1,4 +1,4 @@
-import { doctorProfiles, doctorSessions, patientProfiles } from "@zen-doc/db";
+﻿import { doctorProfiles, doctorSessions, patientProfiles } from "@doca/db";
 import { count, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { requireAdmin } from "../../../hooks";
@@ -47,3 +47,4 @@ export const adminStatsRoute = protectedProcedure
       sessionsByDay: sessionsByDay.reverse(),
     };
   });
+

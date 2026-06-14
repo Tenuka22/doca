@@ -1,10 +1,10 @@
-import {
+﻿import {
   doctorEducationEntries,
   doctorFiles,
   doctorProfiles,
   parseJsonApproachSteps,
   parseJsonStringArray,
-} from "@zen-doc/db";
+} from "@doca/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { publicProcedure } from "../../../index";
@@ -56,3 +56,4 @@ export const getDoctorRoute = publicProcedure
       education,
     };
   });
+

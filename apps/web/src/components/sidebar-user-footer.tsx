@@ -2,7 +2,7 @@
 
 import { UserButton, useUser } from "@clerk/tanstack-react-start";
 
-import { useSidebar } from "@zen-doc/ui/components/sidebar";
+import { useSidebar } from "@doca/ui/components/sidebar";
 
 export function SidebarUserFooter() {
   const { state } = useSidebar();

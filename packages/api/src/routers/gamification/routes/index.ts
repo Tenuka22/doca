@@ -1,9 +1,9 @@
-import {
+﻿import {
   moonlightCredits,
   moonlightCreditTransactions,
   spriteStates,
   wellnessActions,
-} from "@zen-doc/db";
+} from "@doca/db";
 import { and, count, desc, eq, gte } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -473,3 +473,4 @@ export const getRecentTransactionsRoute = protectedProcedure.handler(
     return transactions;
   }
 );
+

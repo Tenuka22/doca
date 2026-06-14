@@ -1,9 +1,9 @@
-import { tenantAdmins, tenantAuditLogs, tenants } from "@zen-doc/db";
+﻿import { tenantAdmins, tenantAuditLogs, tenants } from "@doca/db";
 import {
   createTenantSchema,
   tenantIdSchema,
   updateTenantSchema,
-} from "@zen-doc/db/schemas-types";
+} from "@doca/db/schemas-types";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -284,3 +284,4 @@ export const getTenantAuditLogRoute = protectedProcedure
       pageSize: input.pageSize,
     };
   });
+

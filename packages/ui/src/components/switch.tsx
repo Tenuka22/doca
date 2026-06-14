@@ -1,6 +1,6 @@
-import { Switch as SwitchPrimitive } from "@base-ui/react/switch";
+﻿import { Switch as SwitchPrimitive } from "@base-ui/react/switch";
 
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 
 function Switch({
   className,
@@ -28,3 +28,4 @@ function Switch({
 }
 
 export { Switch };
+

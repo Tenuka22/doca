@@ -1,5 +1,5 @@
-import { doctorCredits, doctorSessions } from "@zen-doc/db";
-import { CREDIT_PRICE_CENTS } from "@zen-doc/pricing";
+﻿import { doctorCredits, doctorSessions } from "@doca/db";
+import { CREDIT_PRICE_CENTS } from "@doca/pricing";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -68,3 +68,4 @@ export const acceptRescheduledSessionRoute = protectedProcedure
 
     return { ok: true };
   });
+

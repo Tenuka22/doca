@@ -4,8 +4,8 @@ import {
   doctorProfiles,
   userCredits,
   userSubscriptions,
-} from "@zen-doc/db";
-import { env } from "@zen-doc/env/server";
+} from "@doca/db";
+import { env } from "@doca/env/server";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import Stripe from "stripe";

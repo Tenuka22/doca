@@ -1,9 +1,9 @@
-import {
+﻿import {
   doctorHospitalAffiliations,
   doctorSessions,
   doctorWeeklyAvailability,
   hospitalAvailabilityOverrides,
-} from "@zen-doc/db";
+} from "@doca/db";
 import { and, eq, gte, lte, ne } from "drizzle-orm";
 import { z } from "zod";
 import { publicProcedure } from "../../../index";
@@ -190,3 +190,4 @@ export const getDoctorAvailableSlotsRoute = publicProcedure
 
     return { slots };
   });
+

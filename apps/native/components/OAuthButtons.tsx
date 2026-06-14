@@ -25,7 +25,7 @@ function OAuthButton({
   const onPress = React.useCallback(async () => {
     try {
       const { createdSessionId, setActive } = await startOAuthFlow({
-        redirectUrl: Linking.createURL("/", { scheme: "zen-doc" }),
+        redirectUrl: Linking.createURL("/", { scheme: "doca" }),
       });
 
       if (createdSessionId && setActive) {

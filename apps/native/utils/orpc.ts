@@ -4,8 +4,8 @@ import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
-import type { AppRouterClient } from "@zen-doc/api/routers/index";
-import { env } from "@zen-doc/env/native";
+import type { AppRouterClient } from "@doca/api/routers/index";
+import { env } from "@doca/env/native";
 
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 

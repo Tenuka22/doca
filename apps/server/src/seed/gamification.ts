@@ -1,10 +1,10 @@
 import { faker } from "@faker-js/faker";
-import type { createDb } from "@zen-doc/db";
+import type { createDb } from "@doca/db";
 import {
   moonlightCreditTransactions,
   spriteStates,
   wellnessActions,
-} from "@zen-doc/db";
+} from "@doca/db";
 import { eq } from "drizzle-orm";
 
 const WELLNESS_ACTION_TYPES = [

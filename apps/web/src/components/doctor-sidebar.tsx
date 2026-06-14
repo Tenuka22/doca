@@ -7,7 +7,8 @@ import {
   SidebarHeader,
   SidebarRail,
   useSidebar,
-} from "@zen-doc/ui/components/sidebar";
+} from "@doca/ui/components/sidebar";
+import { APP_DISPLAY_NAME } from "@doca/app-info";
 import {
   CalendarCheckIcon,
   ClockIcon,
@@ -37,7 +38,7 @@ export function DoctorSidebar() {
         ) : (
           <div className="flex flex-col gap-1">
             <span className="font-medium text-sm">Doctor Portal</span>
-            <span className="text-muted-foreground text-xs">ZenDoc</span>
+            <span className="text-muted-foreground text-xs">{APP_DISPLAY_NAME}</span>
           </div>
         )}
       </SidebarHeader>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
 import { Menubar as MenubarPrimitive } from "@base-ui/react/menubar";
@@ -16,9 +16,9 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@zen-doc/ui/components/dropdown-menu";
+} from "@doca/ui/components/dropdown-menu";
 
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 import { CheckIcon } from "lucide-react";
 import type * as React from "react";
 
@@ -282,3 +282,4 @@ export {
   MenubarSubTrigger,
   MenubarTrigger,
 };
+

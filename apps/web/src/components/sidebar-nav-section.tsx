@@ -8,7 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@zen-doc/ui/components/sidebar";
+} from "@doca/ui/components/sidebar";
 import type { LucideIcon } from "lucide-react";
 
 export interface SidebarNavItem {

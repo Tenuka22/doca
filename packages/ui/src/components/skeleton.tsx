@@ -1,4 +1,4 @@
-import { cn } from "@zen-doc/ui/lib/utils";
+﻿import { cn } from "@doca/ui/lib/utils";
 
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -11,3 +11,4 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 export { Skeleton };
+

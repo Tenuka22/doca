@@ -1,4 +1,4 @@
-import { moonlightCredits, patientProfiles, spriteStates } from "@zen-doc/db";
+﻿import { moonlightCredits, patientProfiles, spriteStates } from "@doca/db";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -54,3 +54,4 @@ export const getManagedPatientSpriteRoute = protectedProcedure
       },
     };
   });
+

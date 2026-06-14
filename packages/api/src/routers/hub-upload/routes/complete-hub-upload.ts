@@ -1,6 +1,6 @@
-import { doctorHubMaterials, hubUploadSessions } from "@zen-doc/db";
-import { completeHubUploadSchema } from "@zen-doc/db/schemas-types";
-import { env } from "@zen-doc/env/server";
+﻿import { doctorHubMaterials, hubUploadSessions } from "@doca/db";
+import { completeHubUploadSchema } from "@doca/db/schemas-types";
+import { env } from "@doca/env/server";
 import { and, eq } from "drizzle-orm";
 import { requireDoctor } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -126,3 +126,4 @@ export const completeHubUploadRoute = protectedProcedure
 
     return material;
   });
+

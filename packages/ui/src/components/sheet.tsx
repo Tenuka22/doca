@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
-import { Button } from "@zen-doc/ui/components/button";
+import { Button } from "@doca/ui/components/button";
 
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 import { XIcon } from "lucide-react";
 import type * as React from "react";
 
@@ -135,3 +135,4 @@ export {
   SheetTitle,
   SheetTrigger,
 };
+

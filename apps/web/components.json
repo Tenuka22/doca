@@ -16,8 +16,8 @@
   "menuAccent": "subtle",
   "aliases": {
     "components": "@/components",
-    "utils": "@zen-doc/ui/lib/utils",
-    "ui": "@zen-doc/ui/components",
+    "utils": "@doca/ui/lib/utils",
+    "ui": "@doca/ui/components",
     "lib": "@/lib",
     "hooks": "@/hooks"
   },

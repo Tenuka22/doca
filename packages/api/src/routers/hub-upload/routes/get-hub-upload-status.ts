@@ -1,5 +1,5 @@
-import { hubUploadSessions } from "@zen-doc/db";
-import { getHubUploadStatusSchema } from "@zen-doc/db/schemas-types";
+﻿import { hubUploadSessions } from "@doca/db";
+import { getHubUploadStatusSchema } from "@doca/db/schemas-types";
 import { and, eq } from "drizzle-orm";
 import { requireDoctor } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -46,3 +46,4 @@ export const getHubUploadStatusRoute = protectedProcedure
       fileKey: session.fileKey,
     };
   });
+

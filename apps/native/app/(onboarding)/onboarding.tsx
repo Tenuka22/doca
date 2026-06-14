@@ -15,6 +15,7 @@ import { Screen } from "@/components/ui/screen";
 import { orpc, queryClient } from "@/utils/orpc";
 import { encryptData, generateUserSecret, storeSecret } from "@/utils/privacy";
 import { useErrorHandler } from "@/utils/use-error-handler";
+import { APP_DISPLAY_NAME } from "@doca/app-info";
 
 const patientSchema = z.object({
   alias: z.string().min(1, "Alias is required"),
@@ -116,7 +117,7 @@ export default function OnboardingScreen() {
               Choose your role
             </Text>
             <Text className="font-normal font-sans text-muted-foreground text-sm">
-              How will you be using ZenDoc?
+              How will you be using {APP_DISPLAY_NAME}?
             </Text>
           </View>
 

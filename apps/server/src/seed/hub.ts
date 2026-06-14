@@ -1,10 +1,10 @@
 import { faker } from "@faker-js/faker";
-import type { createDb } from "@zen-doc/db";
+import type { createDb } from "@doca/db";
 import {
   doctorHubChannels,
   doctorHubMaterials,
   doctorPlaylists,
-} from "@zen-doc/db";
+} from "@doca/db";
 
 const CHANNEL_NAMES = [
   "Mental Wellness",

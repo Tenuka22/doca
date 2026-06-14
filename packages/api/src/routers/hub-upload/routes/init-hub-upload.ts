@@ -1,5 +1,5 @@
-import { doctorHubMaterials, hubUploadSessions } from "@zen-doc/db";
-import { CHUNK_SIZE, initHubUploadSchema } from "@zen-doc/db/schemas-types";
+﻿import { doctorHubMaterials, hubUploadSessions } from "@doca/db";
+import { CHUNK_SIZE, initHubUploadSchema } from "@doca/db/schemas-types";
 import { requireDoctor } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
 
@@ -64,3 +64,4 @@ export const initHubUploadRoute = protectedProcedure
       fileKey,
     };
   });
+

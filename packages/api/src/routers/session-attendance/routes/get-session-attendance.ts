@@ -1,4 +1,4 @@
-import { sessionAttendanceEvents } from "@zen-doc/db";
+﻿import { sessionAttendanceEvents } from "@doca/db";
 import { and, asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -54,3 +54,4 @@ function computeDoctorPresenceDuration(
 
   return totalMs;
 }
+

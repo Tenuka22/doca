@@ -1,5 +1,5 @@
 {
-  "name": "zen-doc",
+  "name": "doca",
   "private": true,
   "workspaces": {
     "packages": [
@@ -32,12 +32,12 @@
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F server dev",
     "dev:stress": "turbo -F stress-predictor-service dev",
-    "db:push": "turbo -F @zen-doc/db db:push",
-    "db:generate": "turbo -F @zen-doc/db db:generate",
-    "db:local": "turbo -F @zen-doc/db db:local",
-    "db:setup": "turbo -F @zen-doc/db db:setup",
-    "deploy": "turbo -F @zen-doc/infra deploy",
-    "destroy": "turbo -F @zen-doc/infra destroy",
+    "db:push": "turbo -F @doca/db db:push",
+    "db:generate": "turbo -F @doca/db db:generate",
+    "db:local": "turbo -F @doca/db db:local",
+    "db:setup": "turbo -F @doca/db db:setup",
+    "deploy": "turbo -F @doca/infra deploy",
+    "destroy": "turbo -F @doca/infra destroy",
     "check": "ultracite check",
     "fix": "ultracite fix"
   },
@@ -46,7 +46,7 @@
     "@langchain/cloudflare": "^1.0.6",
     "@langchain/core": "^1.1.48",
     "@langchain/langgraph": "^1.4.1",
-    "@zen-doc/env": "workspace:*",
+    "@doca/env": "workspace:*",
     "dotenv": "catalog:",
     "react-day-picker": "^10.0.1",
     "zod": "catalog:"
@@ -55,7 +55,7 @@
     "@biomejs/biome": "2.4.15",
     "@cloudflare/workers-types": "catalog:",
     "@types/node": "catalog:",
-    "@zen-doc/config": "workspace:*",
+    "@doca/config": "workspace:*",
     "turbo": "^2.8.12",
     "typescript": "^6",
     "ultracite": "7.7.0"

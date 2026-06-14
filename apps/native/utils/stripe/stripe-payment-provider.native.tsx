@@ -1,7 +1,8 @@
 'use client';
 
 import { StripeProvider, useStripe } from "@stripe/stripe-react-native";
-import { env } from "@zen-doc/env/native";
+import { APP_DISPLAY_NAME_SPACE } from "@doca/app-info";
+import { env } from "@doca/env/native";
 import {
   createContext,
   type PropsWithChildren,
@@ -44,7 +45,7 @@ function PaymentSheetProviderInner({ children }: PropsWithChildren) {
     }): Promise<PaymentSheetResult> => {
       const result = await stripe.initPaymentSheet({
         paymentIntentClientSecret: params.paymentIntentClientSecret,
-        merchantDisplayName: params.merchantDisplayName ?? "Zen Doc",
+        merchantDisplayName: params.merchantDisplayName ?? APP_DISPLAY_NAME_SPACE,
       });
       if (result.error) {
         return {

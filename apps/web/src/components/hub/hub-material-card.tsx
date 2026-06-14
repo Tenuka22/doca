@@ -1,11 +1,11 @@
-import { Badge } from "@zen-doc/ui/components/badge";
+import { Badge } from "@doca/ui/components/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@zen-doc/ui/components/dropdown-menu";
+} from "@doca/ui/components/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
 import {
   ClockIcon,

@@ -1,14 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Badge } from "@zen-doc/ui/components/badge";
-import { buttonVariants } from "@zen-doc/ui/components/button";
+import { Badge } from "@doca/ui/components/badge";
+import { buttonVariants } from "@doca/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@zen-doc/ui/components/card";
-import { Skeleton } from "@zen-doc/ui/components/skeleton";
+} from "@doca/ui/components/card";
+import { Skeleton } from "@doca/ui/components/skeleton";
 import {
   BuildingIcon,
   MapPinIcon,

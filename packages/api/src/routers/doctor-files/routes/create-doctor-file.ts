@@ -1,6 +1,6 @@
-import { doctorFiles } from "@zen-doc/db";
-import { createDoctorFileSchema } from "@zen-doc/db/schemas-types";
-import { env } from "@zen-doc/env/server";
+﻿import { doctorFiles } from "@doca/db";
+import { createDoctorFileSchema } from "@doca/db/schemas-types";
+import { env } from "@doca/env/server";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -53,3 +53,4 @@ export const createDoctorFileRoute = protectedProcedure
       isVideo: created.mimeType.startsWith("video/"),
     };
   });
+

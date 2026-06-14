@@ -1,5 +1,5 @@
-import { doctorHubMaterials } from "@zen-doc/db";
-import { createMaterialSchema } from "@zen-doc/db/schemas-types";
+﻿import { doctorHubMaterials } from "@doca/db";
+import { createMaterialSchema } from "@doca/db/schemas-types";
 import { eq } from "drizzle-orm";
 import { requireDoctor } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -44,3 +44,4 @@ export const createMaterialRoute = protectedProcedure
 
     return created;
   });
+

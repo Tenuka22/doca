@@ -5,6 +5,6 @@ export default defineConfig({
   format: "esm",
   outDir: "./dist",
   clean: true,
-  noExternal: [/@zen-doc\/.*/],
+  noExternal: [/@doca\/.*/],
   external: ["onnxruntime-node"],
 });

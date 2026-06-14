@@ -1,9 +1,9 @@
 import { useUser } from "@clerk/tanstack-react-start";
 import { createFileRoute } from "@tanstack/react-router";
-import { Badge } from "@zen-doc/ui/components/badge";
-import { Button } from "@zen-doc/ui/components/button";
-import { Card, CardContent, CardHeader } from "@zen-doc/ui/components/card";
-import { Input } from "@zen-doc/ui/components/input";
+import { Badge } from "@doca/ui/components/badge";
+import { Button } from "@doca/ui/components/button";
+import { Card, CardContent, CardHeader } from "@doca/ui/components/card";
+import { Input } from "@doca/ui/components/input";
 import { Copy, ShieldIcon, Video } from "lucide-react";
 import { useState } from "react";
 import { VideoRoomWeb } from "@/components/livekit/video-room";

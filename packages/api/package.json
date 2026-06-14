@@ -1,5 +1,5 @@
-{
-  "name": "@zen-doc/api",
+﻿{
+  "name": "@doca/api",
   "type": "module",
   "exports": {
     ".": {
@@ -19,9 +19,9 @@
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
-    "@zen-doc/db": "workspace:*",
-    "@zen-doc/env": "workspace:*",
-    "@zen-doc/pricing": "workspace:*",
+    "@doca/db": "workspace:*",
+    "@doca/env": "workspace:*",
+    "@doca/pricing": "workspace:*",
     "ai": "^6.0.200",
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.2",
@@ -32,8 +32,9 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@zen-doc/config": "workspace:*",
+    "@doca/config": "workspace:*",
     "hono": "catalog:",
     "typescript": "^6"
   }
 }
+

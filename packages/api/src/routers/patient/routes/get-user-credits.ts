@@ -1,4 +1,4 @@
-import { userCredits } from "@zen-doc/db";
+﻿import { userCredits } from "@doca/db";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -16,3 +16,4 @@ export const getUserCreditsRoute = protectedProcedure.handler(
     return credits ?? { userId, balance: 0 };
   }
 );
+

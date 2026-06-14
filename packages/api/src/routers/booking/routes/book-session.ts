@@ -1,4 +1,4 @@
-import { doctorPlans, doctorSessions } from "@zen-doc/db";
+﻿import { doctorPlans, doctorSessions } from "@doca/db";
 import { and, eq, gt, lt, or } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -96,3 +96,4 @@ export const bookSessionRoute = protectedProcedure
       sessionId,
     };
   });
+

@@ -1,4 +1,4 @@
-import { doctorFiles, doctorProfiles } from "@zen-doc/db";
+﻿import { doctorFiles, doctorProfiles } from "@doca/db";
 import { eq } from "drizzle-orm";
 import type { Context } from "../../context";
 
@@ -33,3 +33,4 @@ export async function listFilesForDoctor(db: Context["db"], doctorId: string) {
     isVideo: file.mimeType.startsWith("video/"),
   }));
 }
+

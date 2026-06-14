@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
-import { Button } from "@zen-doc/ui/components/button";
-import { Input } from "@zen-doc/ui/components/input";
-import { Textarea } from "@zen-doc/ui/components/textarea";
-import { cn } from "@zen-doc/ui/lib/utils";
+import { Button } from "@doca/ui/components/button";
+import { Input } from "@doca/ui/components/input";
+import { Textarea } from "@doca/ui/components/textarea";
+import { cn } from "@doca/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 
@@ -155,3 +155,4 @@ export {
   InputGroupText,
   InputGroupTextarea,
 };
+

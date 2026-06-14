@@ -1,4 +1,4 @@
-import { doctorCashoutRequests, doctorCredits } from "@zen-doc/db";
+﻿import { doctorCashoutRequests, doctorCredits } from "@doca/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -53,3 +53,4 @@ export const creditStatsRoute = protectedProcedure
       monthlyCashouts,
     };
   });
+

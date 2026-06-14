@@ -1,4 +1,4 @@
-import { patientProfiles } from "@zen-doc/db";
+﻿import { patientProfiles } from "@doca/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -24,3 +24,4 @@ export const putPrivacyDataRoute = protectedProcedure
 
     return { success: true };
   });
+

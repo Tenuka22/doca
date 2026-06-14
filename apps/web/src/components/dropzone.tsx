@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@zen-doc/ui/components/button";
-import { cn } from "@zen-doc/ui/lib/utils";
+import { Button } from "@doca/ui/components/button";
+import { cn } from "@doca/ui/lib/utils";
 import { createContext, useContext, useMemo, useRef, useState } from "react";
 
 type DropzoneStatus = "idle" | "dragging";

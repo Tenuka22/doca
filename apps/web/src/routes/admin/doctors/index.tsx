@@ -1,16 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Badge } from "@zen-doc/ui/components/badge";
-import { Button } from "@zen-doc/ui/components/button";
-import { Card, CardContent, CardHeader } from "@zen-doc/ui/components/card";
+import { Badge } from "@doca/ui/components/badge";
+import { Button } from "@doca/ui/components/button";
+import { Card, CardContent, CardHeader } from "@doca/ui/components/card";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@zen-doc/ui/components/empty";
-import { Input } from "@zen-doc/ui/components/input";
-import { Separator } from "@zen-doc/ui/components/separator";
+} from "@doca/ui/components/empty";
+import { Input } from "@doca/ui/components/input";
+import { Separator } from "@doca/ui/components/separator";
 import {
   ArrowRightIcon,
   CheckCircle2Icon,

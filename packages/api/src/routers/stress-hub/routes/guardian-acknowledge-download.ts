@@ -1,4 +1,4 @@
-import { patientProfiles, stressDownloadAcknowledgments } from "@zen-doc/db";
+﻿import { patientProfiles, stressDownloadAcknowledgments } from "@doca/db";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -70,3 +70,4 @@ export const guardianAcknowledgeDownloadRoute = protectedProcedure
       guardianAcked,
     };
   });
+

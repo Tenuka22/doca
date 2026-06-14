@@ -1,5 +1,5 @@
-import { doctorHubChannels } from "@zen-doc/db";
-import { listHubChannelsSchema } from "@zen-doc/db/schemas-types";
+﻿import { doctorHubChannels } from "@doca/db";
+import { listHubChannelsSchema } from "@doca/db/schemas-types";
 import { eq } from "drizzle-orm";
 import { requireDoctor } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -16,3 +16,4 @@ export const listHubChannelsRoute = protectedProcedure
       .limit(input.pageSize)
       .offset((input.page - 1) * input.pageSize);
   });
+

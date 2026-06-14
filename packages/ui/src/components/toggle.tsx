@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { Toggle as TogglePrimitive } from "@base-ui/react/toggle";
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const toggleVariants = cva(
@@ -42,3 +42,4 @@ function Toggle({
 }
 
 export { Toggle, toggleVariants };
+

@@ -1,6 +1,6 @@
-import { Badge } from "@zen-doc/ui/components/badge";
-import { Button } from "@zen-doc/ui/components/button";
-import { Card, CardContent } from "@zen-doc/ui/components/card";
+import { Badge } from "@doca/ui/components/badge";
+import { Button } from "@doca/ui/components/button";
+import { Card, CardContent } from "@doca/ui/components/card";
 import {
   Camera,
   CameraOff,
@@ -651,7 +651,7 @@ export function VideoRoomWeb({
 
   if (asDialog) {
     const { Dialog, DialogContent } =
-      require("@zen-doc/ui/components/dialog") as typeof import("@zen-doc/ui/components/dialog");
+      require("@doca/ui/components/dialog") as typeof import("@doca/ui/components/dialog");
     return (
       <Dialog onOpenChange={(o: boolean) => !o && onClose()} open={open}>
         <DialogContent className="max-w-5xl overflow-hidden p-0 sm:rounded-2xl">

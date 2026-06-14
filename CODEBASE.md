@@ -1,25 +1,25 @@
-# ZenDoc Codebase Guidelines
+﻿# ZenDoc Codebase Guidelines
 
 ## Monorepo Structure
 
 ```
 zen-doc/
-├── apps/
-│   ├── native/        # Expo React Native app (patients/users only)
-│   ├── server/        # Hono + oRPC backend API (Cloudflare Workers)
-│   └── web/           # TanStack Start web app (doctors + admin)
-├── packages/
-│   ├── api/           # oRPC router definitions (@zen-doc/api)
-│   ├── config/        # Shared TypeScript and tooling config (@zen-doc/config)
-│   ├── db/            # Drizzle ORM schema and queries (@zen-doc/db)
-│   ├── env/           # Environment variable schemas (@zen-doc/env)
-│   ├── infra/         # Alchemy Cloudflare deployment (@zen-doc/infra)
-│   └── ui/            # Shared shadcn/ui primitives (@zen-doc/ui)
-├── knowledge-base/    # Obsidian product documentation
-├── turbo.json
-├── tsconfig.json
-├── biome.jsonc
-└── package.json
+â”œâ”€â”€ apps/
+â”‚   â”œâ”€â”€ native/        # Expo React Native app (patients/users only)
+â”‚   â”œâ”€â”€ server/        # Hono + oRPC backend API (Cloudflare Workers)
+â”‚   â””â”€â”€ web/           # TanStack Start web app (doctors + admin)
+â”œâ”€â”€ packages/
+â”‚   â”œâ”€â”€ api/           # oRPC router definitions (@doca/api)
+â”‚   â”œâ”€â”€ config/        # Shared TypeScript and tooling config (@doca/config)
+â”‚   â”œâ”€â”€ db/            # Drizzle ORM schema and queries (@doca/db)
+â”‚   â”œâ”€â”€ env/           # Environment variable schemas (@doca/env)
+â”‚   â”œâ”€â”€ infra/         # Alchemy Cloudflare deployment (@doca/infra)
+â”‚   â””â”€â”€ ui/            # Shared shadcn/ui primitives (@doca/ui)
+â”œâ”€â”€ knowledge-base/    # Obsidian product documentation
+â”œâ”€â”€ turbo.json
+â”œâ”€â”€ tsconfig.json
+â”œâ”€â”€ biome.jsonc
+â””â”€â”€ package.json
 ```
 
 ## Tech Stack
@@ -88,11 +88,11 @@ bun run deploy           # Deploy to Cloudflare via Alchemy
 
 ### Import Conventions
 
-- **Workspace packages**: Use package name (`@zen-doc/api`, `@zen-doc/db`, `@zen-doc/ui`, `@zen-doc/env`)
+- **Workspace packages**: Use package name (`@doca/api`, `@doca/db`, `@doca/ui`, `@doca/env`)
 - **App-local code**: Use `@/` path alias
-- **UI components**: `@zen-doc/ui/components/button`
-- **Environment**: `@zen-doc/env/web`, `@zen-doc/env/native`, `@zen-doc/env/server`
-- **Database**: `@zen-doc/db`, `@zen-doc/db/schemas-types`
+- **UI components**: `@doca/ui/components/button`
+- **Environment**: `@doca/env/web`, `@doca/env/native`, `@doca/env/server`
+- **Database**: `@doca/db`, `@doca/db/schemas-types`
 - **Cross-package**: Packages export source directly via `"./src/*.ts"` (no build step)
 
 ### Type Safety Rules
@@ -102,7 +102,7 @@ bun run deploy           # Deploy to Cloudflare via Alchemy
 - Use const assertions (`as const`) for immutable values and literal types
 - Leverage TypeScript's type narrowing instead of type assertions
 - Use `z.infer` for deriving types from Zod schemas
-- Never use barrel files (index files that re-export everything) — prefer specific imports
+- Never use barrel files (index files that re-export everything) â€” prefer specific imports
 
 ## Database Patterns (Drizzle)
 
@@ -138,14 +138,14 @@ bun run deploy           # Deploy to Cloudflare via Alchemy
 
 Centralized in `packages/db/src/schemas-types/`:
 
-- `values.ts` — `as const` arrays for enum values (schedule kinds, file kinds, doctor specialties, etc.)
-- `index.ts` — Shared Zod schemas for input validation
-- `types.ts` — TypeScript types derived via `z.infer`
+- `values.ts` â€” `as const` arrays for enum values (schedule kinds, file kinds, doctor specialties, etc.)
+- `index.ts` â€” Shared Zod schemas for input validation
+- `types.ts` â€” TypeScript types derived via `z.infer`
 
 Usage:
 ```ts
-import { doctorFileKindSchema, createScheduleEntrySchema } from "@zen-doc/db/schemas-types";
-import type { DoctorProfileInput, CreateScheduleEntryInput } from "@zen-doc/db/schemas-types";
+import { doctorFileKindSchema, createScheduleEntrySchema } from "@doca/db/schemas-types";
+import type { DoctorProfileInput, CreateScheduleEntryInput } from "@doca/db/schemas-types";
 ```
 
 ## API Patterns (oRPC)
@@ -169,7 +169,7 @@ import type { DoctorProfileInput, CreateScheduleEntryInput } from "@zen-doc/db/s
 
 ### Input Validation
 
-All router inputs use Zod schemas from `@zen-doc/db/schemas-types`:
+All router inputs use Zod schemas from `@doca/db/schemas-types`:
 - `z.iso.datetime()` for datetime fields
 - `z.coerce.number()` for numeric inputs
 - `.superRefine()` for cross-field validation
@@ -211,13 +211,13 @@ All router inputs use Zod schemas from `@zen-doc/db/schemas-types`:
 - Style: `base-lyra` (shared) / `base-nova` (web app-specific)
 - CSS variables for theming (light/dark)
 - Font: Figtree Variable (web)
-- Export paths: `@zen-doc/ui/components/*`, `@zen-doc/ui/hooks/*`, `@zen-doc/ui/lib/*`
+- Export paths: `@doca/ui/components/*`, `@doca/ui/hooks/*`, `@doca/ui/lib/*`
 
 ### Component Pattern
 
 ```tsx
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const buttonVariants = cva("...", {
@@ -244,20 +244,20 @@ function Button({ className, variant, size, ...props }: ButtonProps) {
 
 ### Styling
 
-- **Web**: Tailwind CSS v4 with `@import "@zen-doc/ui/globals.css"`
+- **Web**: Tailwind CSS v4 with `@import "@doca/ui/globals.css"`
 - **Native**: NativeWind with custom theme in `global.css`
 - **Shared**: `cn()` utility = `twMerge(clsx(inputs))`
 - **Design Tokens**: CSS variables (--background, --foreground, --primary, etc.)
 
 ## Environment Variable Management
 
-### Package: `@zen-doc/env`
+### Package: `@doca/env`
 
 | Export | File | Prefix | Variables |
 |--------|------|--------|-----------|
-| `@zen-doc/env/server` | `src/server.ts` | N/A | Cloudflare Workers bindings (type-inferred) |
-| `@zen-doc/env/web` | `src/web.ts` | `VITE_` | `VITE_SERVER_URL`, `VITE_WEB_URL`, `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_STRIPE_PUBLISHABLE_KEY` |
-| `@zen-doc/env/native` | `src/native.ts` | `EXPO_PUBLIC_` | `EXPO_PUBLIC_SERVER_URL`, `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` |
+| `@doca/env/server` | `src/server.ts` | N/A | Cloudflare Workers bindings (type-inferred) |
+| `@doca/env/web` | `src/web.ts` | `VITE_` | `VITE_SERVER_URL`, `VITE_WEB_URL`, `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_STRIPE_PUBLISHABLE_KEY` |
+| `@doca/env/native` | `src/native.ts` | `EXPO_PUBLIC_` | `EXPO_PUBLIC_SERVER_URL`, `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` |
 
 ### Pattern
 
@@ -279,16 +279,16 @@ export const env = createEnv({
 
 ### Per-App .env Files
 
-- `apps/server/.env` — Server secrets (CLERK_SECRET_KEY, STRIPE_SECRET_KEY, CORS_ORIGIN)
-- `apps/web/.env` — Web client vars
-- `apps/native/.env` — Native client vars
-- `packages/infra/.env` — Deployment vars
+- `apps/server/.env` â€” Server secrets (CLERK_SECRET_KEY, STRIPE_SECRET_KEY, CORS_ORIGIN)
+- `apps/web/.env` â€” Web client vars
+- `apps/native/.env` â€” Native client vars
+- `packages/infra/.env` â€” Deployment vars
 
 ## Authentication
 
 - **Provider**: Clerk for all auth (web and native)
 - **Bridge**: `ClerkApiAuthBridge` component bridges Clerk token to ORPC client headers
-- **Roles**: via Clerk `publicMetadata.role` — `user`, `doctor`, `admin`, `pending-doctor`
+- **Roles**: via Clerk `publicMetadata.role` â€” `user`, `doctor`, `admin`, `pending-doctor`
 - **Protected procedures**: check `context.auth?.userId`
 - **Role updates**: done via `context.clerk.users.updateUserMetadata()`
 
@@ -308,15 +308,15 @@ export const orpc = createTanstackQueryUtils(client);
 ## Dependency Flow
 
 ```
-apps/web ──> @zen-doc/api, @zen-doc/env, @zen-doc/ui
-apps/native ──> @zen-doc/api, @zen-doc/env
-apps/server ──> @zen-doc/api, @zen-doc/db, @zen-doc/env
-packages/api ──> @zen-doc/db, @zen-doc/env
-packages/db ──> @zen-doc/env
-packages/ui ──> (standalone, no internal deps)
-packages/env ──> (standalone, uses @t3-oss/env-core)
-packages/infra ──> (standalone, deployment only)
-packages/config ──> (standalone, config only)
+apps/web â”€â”€> @doca/api, @doca/env, @doca/ui
+apps/native â”€â”€> @doca/api, @doca/env
+apps/server â”€â”€> @doca/api, @doca/db, @doca/env
+packages/api â”€â”€> @doca/db, @doca/env
+packages/db â”€â”€> @doca/env
+packages/ui â”€â”€> (standalone, no internal deps)
+packages/env â”€â”€> (standalone, uses @t3-oss/env-core)
+packages/infra â”€â”€> (standalone, deployment only)
+packages/config â”€â”€> (standalone, config only)
 ```
 
 ## Build and Deployment
@@ -331,7 +331,7 @@ packages/config ──> (standalone, config only)
 
 - Bundler: tsdown
 - Format: ESM
-- Bundles all `@zen-doc/*` packages inline (`noExternal`)
+- Bundles all `@doca/*` packages inline (`noExternal`)
 - Alternative: `bun build --compile` for native binary
 
 ### Web Build
@@ -391,8 +391,8 @@ packages/config ──> (standalone, config only)
 ### JSON Storage Pattern
 
 SQLite stores arrays/objects as JSON text. Helper functions in `packages/db/src/doctor-profile.ts`:
-- `parseJsonStringArray()` / `stringifyJsonStringArray()` — for string arrays
-- `parseJsonApproachSteps()` / `stringifyJsonApproachSteps()` — for approach step objects
+- `parseJsonStringArray()` / `stringifyJsonStringArray()` â€” for string arrays
+- `parseJsonApproachSteps()` / `stringifyJsonApproachSteps()` â€” for approach step objects
 
 ### Schedule Management
 
@@ -424,3 +424,4 @@ SQLite stores arrays/objects as JSON text. Helper functions in `packages/db/src/
 - Admin and doctor tools live in the web app
 - Web UX should assume larger screens, dense layouts, and dashboard-style workflows
 - Crisis handling must be conservative, fast, and auditable
+

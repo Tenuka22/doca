@@ -1,5 +1,6 @@
-{
-  "name": "@zen-doc/config",
+﻿{
+  "name": "@doca/config",
   "version": "0.0.0",
   "private": true
 }
+

@@ -1,5 +1,5 @@
-import { doctorFiles } from "@zen-doc/db";
-import { updateDoctorFileSchema } from "@zen-doc/db/schemas-types";
+﻿import { doctorFiles } from "@doca/db";
+import { updateDoctorFileSchema } from "@doca/db/schemas-types";
 import { and, eq } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -49,3 +49,4 @@ export const updateDoctorFileRoute = protectedProcedure
       isVideo: updated.mimeType.startsWith("video/"),
     };
   });
+

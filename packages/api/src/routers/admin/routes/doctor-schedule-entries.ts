@@ -1,5 +1,5 @@
-import type { DoctorScheduleEntry } from "@zen-doc/db";
-import { doctorScheduleEntries } from "@zen-doc/db";
+﻿import type { DoctorScheduleEntry } from "@doca/db";
+import { doctorScheduleEntries } from "@doca/db";
 import { and, eq, gte, lte } from "drizzle-orm";
 import { z } from "zod";
 import { requireAdmin } from "../../../hooks";
@@ -29,3 +29,4 @@ export const adminDoctorScheduleEntriesRoute = protectedProcedure
 
     return { items: items as DoctorScheduleEntry[] };
   });
+

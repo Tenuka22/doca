@@ -6,12 +6,12 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@zen-doc/ui/components/card";
+} from "@doca/ui/components/card";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@zen-doc/ui/components/sidebar";
+} from "@doca/ui/components/sidebar";
 import { ShieldIcon } from "lucide-react";
 
 import { AdminSidebar } from "@/components/admin-sidebar";

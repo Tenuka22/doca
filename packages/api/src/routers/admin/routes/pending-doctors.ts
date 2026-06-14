@@ -1,4 +1,4 @@
-import { doctorProfiles } from "@zen-doc/db";
+﻿import { doctorProfiles } from "@doca/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import {
@@ -71,3 +71,4 @@ export const adminPendingDoctorsRoute = protectedProcedure
       lastUserId: lastItem?.userId ?? null,
     };
   });
+

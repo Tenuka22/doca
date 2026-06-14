@@ -4,16 +4,16 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@zen-doc/ui/components/avatar";
-import { Badge } from "@zen-doc/ui/components/badge";
-import { Button } from "@zen-doc/ui/components/button";
+} from "@doca/ui/components/avatar";
+import { Badge } from "@doca/ui/components/badge";
+import { Button } from "@doca/ui/components/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@zen-doc/ui/components/card";
-import { Skeleton } from "@zen-doc/ui/components/skeleton";
+} from "@doca/ui/components/card";
+import { Skeleton } from "@doca/ui/components/skeleton";
 import {
   Award,
   Building,

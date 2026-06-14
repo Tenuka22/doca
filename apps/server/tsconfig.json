@@ -1,5 +1,5 @@
 {
-  "extends": "@zen-doc/config/tsconfig.base.json",
+  "extends": "@doca/config/tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
     "outDir": "dist",

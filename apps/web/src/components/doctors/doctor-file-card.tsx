@@ -1,13 +1,13 @@
-import { Badge } from "@zen-doc/ui/components/badge";
-import { Button } from "@zen-doc/ui/components/button";
-import { Card } from "@zen-doc/ui/components/card";
+import { Badge } from "@doca/ui/components/badge";
+import { Button } from "@doca/ui/components/button";
+import { Card } from "@doca/ui/components/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@zen-doc/ui/components/dropdown-menu";
-import { cn } from "@zen-doc/ui/lib/utils";
+} from "@doca/ui/components/dropdown-menu";
+import { cn } from "@doca/ui/lib/utils";
 import {
   Download,
   FileImage,

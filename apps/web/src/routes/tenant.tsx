@@ -12,20 +12,20 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@zen-doc/ui/components/breadcrumb";
+} from "@doca/ui/components/breadcrumb";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@zen-doc/ui/components/card";
-import { Separator } from "@zen-doc/ui/components/separator";
+} from "@doca/ui/components/card";
+import { Separator } from "@doca/ui/components/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@zen-doc/ui/components/sidebar";
+} from "@doca/ui/components/sidebar";
 import { BuildingIcon } from "lucide-react";
 
 import { TenantSidebar } from "@/components/tenant-sidebar";

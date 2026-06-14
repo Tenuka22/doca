@@ -1,11 +1,11 @@
-import {
+﻿import {
   doctorFiles,
   doctorProfiles,
   doctorWeeklyAvailability,
   parseJsonApproachSteps,
   parseJsonStringArray,
-} from "@zen-doc/db";
-import { listDoctorsInputSchema } from "@zen-doc/db/schemas-types";
+} from "@doca/db";
+import { listDoctorsInputSchema } from "@doca/db/schemas-types";
 import { count, desc, eq } from "drizzle-orm";
 import { publicProcedure } from "../../../index";
 
@@ -82,3 +82,4 @@ export const listDoctorsRoute = publicProcedure
       hasMore: offset + input.pageSize < filteredProfiles.length,
     };
   });
+

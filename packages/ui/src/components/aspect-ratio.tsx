@@ -1,4 +1,4 @@
-import { cn } from "@zen-doc/ui/lib/utils";
+﻿import { cn } from "@doca/ui/lib/utils";
 
 function AspectRatio({
   ratio,
@@ -20,3 +20,4 @@ function AspectRatio({
 }
 
 export { AspectRatio };
+

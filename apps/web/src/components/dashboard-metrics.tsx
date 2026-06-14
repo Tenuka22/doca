@@ -1,12 +1,12 @@
-import { Badge } from "@zen-doc/ui/components/badge";
+import { Badge } from "@doca/ui/components/badge";
 import {
   Card,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@zen-doc/ui/components/card";
-import { Skeleton } from "@zen-doc/ui/components/skeleton";
+} from "@doca/ui/components/card";
+import { Skeleton } from "@doca/ui/components/skeleton";
 import { TrendingUpIcon } from "lucide-react";
 import type { ReactNode } from "react";
 

@@ -1,28 +1,28 @@
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Badge } from "@zen-doc/ui/components/badge";
-import { Button } from "@zen-doc/ui/components/button";
+import { Badge } from "@doca/ui/components/badge";
+import { Button } from "@doca/ui/components/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@zen-doc/ui/components/card";
+} from "@doca/ui/components/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@zen-doc/ui/components/chart";
-import { Label } from "@zen-doc/ui/components/label";
+} from "@doca/ui/components/chart";
+import { Label } from "@doca/ui/components/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@zen-doc/ui/components/select";
-import { Separator } from "@zen-doc/ui/components/separator";
-import { Switch } from "@zen-doc/ui/components/switch";
+} from "@doca/ui/components/select";
+import { Separator } from "@doca/ui/components/separator";
+import { Switch } from "@doca/ui/components/switch";
 import {
   CalendarDaysIcon,
   Clock3Icon,

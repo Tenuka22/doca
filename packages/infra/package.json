@@ -1,5 +1,5 @@
-{
-  "name": "@zen-doc/infra",
+﻿{
+  "name": "@doca/infra",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,16 +8,17 @@
     "destroy": "alchemy destroy --stage=tenuk"
   },
   "dependencies": {
-    "@zen-doc/db": "workspace:*",
-    "@zen-doc/pricing": "workspace:*",
+    "@doca/db": "workspace:*",
+    "@doca/pricing": "workspace:*",
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.2",
     "stripe": "^18.5.0",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@zen-doc/config": "workspace:*",
+    "@doca/config": "workspace:*",
     "alchemy": "catalog:",
     "typescript": "^6"
   }
 }
+

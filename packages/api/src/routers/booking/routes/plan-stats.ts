@@ -1,4 +1,4 @@
-import { doctorPlans } from "@zen-doc/db";
+﻿import { doctorPlans } from "@doca/db";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -50,3 +50,4 @@ export const planStatsRoute = protectedProcedure
       defaultPlanName: defaultPlan?.name ?? null,
     };
   });
+

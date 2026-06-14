@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Badge } from "@zen-doc/ui/components/badge";
-import { Button } from "@zen-doc/ui/components/button";
-import { Card, CardContent, CardHeader } from "@zen-doc/ui/components/card";
+import { Badge } from "@doca/ui/components/badge";
+import { Button } from "@doca/ui/components/button";
+import { Card, CardContent, CardHeader } from "@doca/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -11,21 +11,21 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@zen-doc/ui/components/dialog";
+} from "@doca/ui/components/dialog";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@zen-doc/ui/components/empty";
+} from "@doca/ui/components/empty";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from "@zen-doc/ui/components/input-group";
-import { Label } from "@zen-doc/ui/components/label";
-import { Separator } from "@zen-doc/ui/components/separator";
+} from "@doca/ui/components/input-group";
+import { Label } from "@doca/ui/components/label";
+import { Separator } from "@doca/ui/components/separator";
 import { format } from "date-fns";
 import {
   ArrowUpCircle,

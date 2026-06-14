@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Dialog,
@@ -6,13 +6,13 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@zen-doc/ui/components/dialog";
+} from "@doca/ui/components/dialog";
 import {
   InputGroup,
   InputGroupAddon,
-} from "@zen-doc/ui/components/input-group";
+} from "@doca/ui/components/input-group";
 
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 import { Command as CommandPrimitive } from "cmdk";
 import { CheckIcon, SearchIcon } from "lucide-react";
 import type * as React from "react";
@@ -194,3 +194,4 @@ export {
   CommandSeparator,
   CommandShortcut,
 };
+

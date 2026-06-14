@@ -1,22 +1,22 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Badge } from "@zen-doc/ui/components/badge";
-import { Button } from "@zen-doc/ui/components/button";
+import { Badge } from "@doca/ui/components/badge";
+import { Button } from "@doca/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@zen-doc/ui/components/card";
-import { Input } from "@zen-doc/ui/components/input";
-import { Label } from "@zen-doc/ui/components/label";
+} from "@doca/ui/components/card";
+import { Input } from "@doca/ui/components/input";
+import { Label } from "@doca/ui/components/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@zen-doc/ui/components/select";
+} from "@doca/ui/components/select";
 import { useState } from "react";
 import { toast } from "sonner";
 

@@ -1,5 +1,5 @@
-import { NavigationMenu as NavigationMenuPrimitive } from "@base-ui/react/navigation-menu";
-import { cn } from "@zen-doc/ui/lib/utils";
+﻿import { NavigationMenu as NavigationMenuPrimitive } from "@base-ui/react/navigation-menu";
+import { cn } from "@doca/ui/lib/utils";
 import { cva } from "class-variance-authority";
 import { ChevronDownIcon } from "lucide-react";
 
@@ -168,3 +168,4 @@ export {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 };
+

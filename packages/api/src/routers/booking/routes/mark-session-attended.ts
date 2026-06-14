@@ -1,4 +1,4 @@
-import { doctorSessions } from "@zen-doc/db";
+﻿import { doctorSessions } from "@doca/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -43,3 +43,4 @@ export const markSessionAttendedRoute = protectedProcedure
 
     return { ok: true };
   });
+

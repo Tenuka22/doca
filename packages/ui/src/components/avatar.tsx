@@ -1,5 +1,5 @@
-import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
-import { cn } from "@zen-doc/ui/lib/utils";
+﻿import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
+import { cn } from "@doca/ui/lib/utils";
 import type * as React from "react";
 
 function Avatar({
@@ -104,3 +104,4 @@ export {
   AvatarGroupCount,
   AvatarImage,
 };
+

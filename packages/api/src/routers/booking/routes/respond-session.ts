@@ -1,10 +1,10 @@
-import {
+﻿import {
   creditTransactions,
   doctorCredits,
   doctorSessions,
   userCredits,
-} from "@zen-doc/db";
-import { CREDIT_PRICE_CENTS } from "@zen-doc/pricing";
+} from "@doca/db";
+import { CREDIT_PRICE_CENTS } from "@doca/pricing";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -139,3 +139,4 @@ export const respondSessionRoute = protectedProcedure
 
     return { ok: true };
   });
+

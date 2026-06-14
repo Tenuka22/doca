@@ -1,6 +1,6 @@
-import { mergeProps } from "@base-ui/react/merge-props";
+﻿import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 
 const badgeVariants = cva(
@@ -49,3 +49,4 @@ function Badge({
 }
 
 export { Badge, badgeVariants };
+

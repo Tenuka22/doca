@@ -7,7 +7,7 @@ import {
   MONTHLY_PLAN_CREDITS,
   MONTHLY_PLAN_TYPE,
   TAX_RATE,
-} from "@zen-doc/pricing";
+} from "@doca/pricing";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -17,6 +17,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { APP_DISPLAY_NAME_SPACE } from "@doca/app-info";
 import { orpc } from "@/utils/orpc";
 import { usePaymentSheet } from "@/utils/stripe";
 import { Button } from "./button";
@@ -56,7 +57,7 @@ export function CreditPurchase({ forPatientUserId }: CreditPurchaseProps) {
 
         const initResult = await paymentSheet.initPaymentSheet({
           paymentIntentClientSecret: result.clientSecret,
-          merchantDisplayName: "Zen Doc",
+          merchantDisplayName: APP_DISPLAY_NAME_SPACE,
         });
 
         if (initResult.error) {
@@ -100,7 +101,7 @@ export function CreditPurchase({ forPatientUserId }: CreditPurchaseProps) {
 
         const initResult = await paymentSheet.initPaymentSheet({
           paymentIntentClientSecret: result.clientSecret,
-          merchantDisplayName: "Zen Doc",
+          merchantDisplayName: APP_DISPLAY_NAME_SPACE,
         });
 
         if (initResult.error) {

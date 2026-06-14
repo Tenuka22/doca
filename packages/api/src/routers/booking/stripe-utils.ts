@@ -1,5 +1,5 @@
-import { env } from "@zen-doc/env/server";
-import { TAX_RATE } from "@zen-doc/pricing";
+﻿import { env } from "@doca/env/server";
+import { TAX_RATE } from "@doca/pricing";
 import Stripe from "stripe";
 
 let stripeInstance: Stripe | null = null;
@@ -63,3 +63,4 @@ export function refundPaymentIntent(
     payment_intent: paymentIntentId,
   });
 }
+

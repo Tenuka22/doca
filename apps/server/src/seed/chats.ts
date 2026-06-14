@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker";
-import type { createDb } from "@zen-doc/db";
-import { conversations, messages } from "@zen-doc/db";
+import type { createDb } from "@doca/db";
+import { conversations, messages } from "@doca/db";
 import { eq } from "drizzle-orm";
 
 const THERAPY_TOPICS = [

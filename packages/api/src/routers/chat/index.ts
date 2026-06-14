@@ -1,4 +1,4 @@
-import { conversations } from "@zen-doc/db";
+﻿import { conversations } from "@doca/db";
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { protectedProcedure } from "../../index";
@@ -135,3 +135,4 @@ export const chatWsRouter = {
       yield { type: "connected", conversationId: input.conversationId };
     }),
 };
+

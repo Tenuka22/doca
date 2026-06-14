@@ -1,5 +1,5 @@
-import { Button, buttonVariants } from "@zen-doc/ui/components/button";
-import { cn } from "@zen-doc/ui/lib/utils";
+﻿import { Button, buttonVariants } from "@doca/ui/components/button";
+import { cn } from "@doca/ui/lib/utils";
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
@@ -221,3 +221,4 @@ function CalendarDayButton({
 }
 
 export { Calendar, CalendarDayButton };
+

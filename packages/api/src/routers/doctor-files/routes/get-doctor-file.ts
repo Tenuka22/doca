@@ -1,5 +1,5 @@
-import { doctorFiles } from "@zen-doc/db";
-import { fileKeySchema } from "@zen-doc/db/schemas-types";
+﻿import { doctorFiles } from "@doca/db";
+import { fileKeySchema } from "@doca/db/schemas-types";
 import { eq } from "drizzle-orm";
 import { readDoctorMaterialFile } from "../../../doctor-materials";
 import { publicProcedure } from "../../../index";
@@ -29,3 +29,4 @@ export const getDoctorFileRoute = publicProcedure
 
     return doctorMaterialFile;
   });
+

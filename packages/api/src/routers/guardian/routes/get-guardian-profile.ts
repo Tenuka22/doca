@@ -1,4 +1,4 @@
-import { guardianProfiles } from "@zen-doc/db";
+﻿import { guardianProfiles } from "@doca/db";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -14,3 +14,4 @@ export const getGuardianProfileRoute = protectedProcedure.handler(
     return guardian ?? null;
   }
 );
+

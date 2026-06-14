@@ -1,16 +1,16 @@
-import {
+﻿import {
   clinicAttendance,
   clinics,
   hospitalAttendanceEvents,
   tenantAuditLogs,
   tenantNotifications,
-} from "@zen-doc/db";
+} from "@doca/db";
 import {
   clinicAttendanceSchema,
   getAttendanceSchema,
   logAttendanceEventSchema,
   updateAttendanceEventSchema,
-} from "@zen-doc/db/schemas-types";
+} from "@doca/db/schemas-types";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -226,7 +226,7 @@ export const getDoctorHospitalStatusRoute = protectedProcedure
     };
   });
 
-// ── Clinic management ────────────────────────────────────────────────
+// â”€â”€ Clinic management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const createClinicRoute = protectedProcedure
   .input(
@@ -468,3 +468,4 @@ export const getClinicAttendanceRoute = protectedProcedure
 
     return { records: filtered, clinic };
   });
+

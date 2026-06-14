@@ -1,6 +1,6 @@
-import { Button } from "@zen-doc/ui/components/button";
+﻿import { Button } from "@doca/ui/components/button";
 
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -130,3 +130,4 @@ export {
   PaginationNext,
   PaginationPrevious,
 };
+

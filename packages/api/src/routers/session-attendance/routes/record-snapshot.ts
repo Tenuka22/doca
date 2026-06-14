@@ -1,4 +1,4 @@
-import { doctorSessions, sessionSnapshots } from "@zen-doc/db";
+﻿import { doctorSessions, sessionSnapshots } from "@doca/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -45,3 +45,4 @@ export const recordSnapshotRoute = protectedProcedure
 
     return { ok: true };
   });
+

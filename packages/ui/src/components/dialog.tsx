@@ -1,7 +1,7 @@
-import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { Button } from "@zen-doc/ui/components/button";
+﻿import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { Button } from "@doca/ui/components/button";
 
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 import { XIcon } from "lucide-react";
 import type * as React from "react";
 
@@ -155,3 +155,4 @@ export {
   DialogTitle,
   DialogTrigger,
 };
+

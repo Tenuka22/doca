@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 import type * as React from "react";
 
 function Label({ className, ...props }: React.ComponentProps<"label">) {
@@ -17,3 +17,4 @@ function Label({ className, ...props }: React.ComponentProps<"label">) {
 }
 
 export { Label };
+

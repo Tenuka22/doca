@@ -1,6 +1,6 @@
-import { Slider as SliderPrimitive } from "@base-ui/react/slider";
+﻿import { Slider as SliderPrimitive } from "@base-ui/react/slider";
 
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 
 function Slider({
   className,
@@ -50,3 +50,4 @@ function Slider({
 }
 
 export { Slider };
+

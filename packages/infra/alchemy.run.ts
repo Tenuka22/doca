@@ -7,7 +7,7 @@ import {
   Website,
   Worker,
 } from "alchemy/cloudflare";
-import { UpstashRedis } from "alchemy/upstash";
+// import { UpstashRedis } from "alchemy/upstash";
 import { config } from "dotenv";
 
 config({ path: "./.env" });
@@ -21,7 +21,7 @@ if (process.env.NODE_ENV === "production") {
   config({ path: "../../apps/web/.env" });
 }
 
-const app = await alchemy("zen-doc");
+const app = await alchemy("doca");
 
 const db = await D1Database("primary-database", {
   migrationsDir: "../../packages/db/src/migrations",
@@ -31,14 +31,14 @@ const doctorMaterialsKv = await KVNamespace("doctor-materials");
 const modelFeaturesKv = await KVNamespace("model-features");
 const chatMessagesKv = await KVNamespace("chat-messages");
 
-const redis = await UpstashRedis(
-  process.env.NODE_ENV === "production" ? "prod-zen-doc" : "zen-doc-dev",
-  {
-    name:
-      process.env.NODE_ENV === "production" ? "prod-zen-doc" : "zen-doc-dev",
-    primaryRegion: "us-east-1",
-  }
-);
+// const redis = await UpstashRedis(
+//   process.env.NODE_ENV === "production" ? "prod-doca" : "doca-dev",
+//   {
+//     name:
+//       process.env.NODE_ENV === "production" ? "prod-doca" : "doca-dev",
+//     primaryRegion: "us-east-1",
+//   }
+// );
 
 const aiBinding = Ai({ binding: "AI" });
 
@@ -54,8 +54,12 @@ export const server = await Worker("server", {
     MODEL_FEATURES_KV: modelFeaturesKv,
     AI: aiBinding,
     CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
-    UPSTASH_REDIS_REST_URL: redis.endpoint,
-    UPSTASH_REDIS_REST_TOKEN: redis.restToken,
+    UPSTASH_REDIS_REST_URL:
+      // redis.endpoint,
+     "https://pure-goat-80264.upstash.io",
+    UPSTASH_REDIS_REST_TOKEN:
+      // redis.restToken,
+      "gQAAAAAAATmIAAIgcDI0ZGNjODgzNzc2ZmQ0MTA3YTgzNmQ2MTY1YmM4ZWE5OA",
     CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
     LANGSMITH_TRACING: alchemy.secret.env.LANGSMITH_TRACING!,
     LANGSMITH_ENDPOINT: alchemy.secret.env.LANGSMITH_ENDPOINT!,

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Button } from "@zen-doc/ui/components/button";
+import { Button } from "@doca/ui/components/button";
 import { ChevronLeft, Loader2 } from "lucide-react";
 import { VideoRoomWeb } from "@/components/livekit/video-room";
 import { useLiveKitToken } from "@/hooks/queries/doctor";

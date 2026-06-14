@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";
-import { Button } from "@zen-doc/ui/components/button";
+import { Button } from "@doca/ui/components/button";
 
-import { cn } from "@zen-doc/ui/lib/utils";
+import { cn } from "@doca/ui/lib/utils";
 import type * as React from "react";
 
 function AlertDialog({ ...props }: AlertDialogPrimitive.Root.Props) {
@@ -185,3 +185,4 @@ export {
   AlertDialogTitle,
   AlertDialogTrigger,
 };
+

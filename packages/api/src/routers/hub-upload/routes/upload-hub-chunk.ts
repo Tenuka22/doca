@@ -1,6 +1,6 @@
-import { hubUploadSessions } from "@zen-doc/db";
-import { uploadHubChunkSchema } from "@zen-doc/db/schemas-types";
-import { env } from "@zen-doc/env/server";
+﻿import { hubUploadSessions } from "@doca/db";
+import { uploadHubChunkSchema } from "@doca/db/schemas-types";
+import { env } from "@doca/env/server";
 import { and, eq } from "drizzle-orm";
 import { requireDoctor } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -79,3 +79,4 @@ export const uploadHubChunkRoute = protectedProcedure
       isComplete: uploadedChunks.length >= session.totalChunks,
     };
   });
+

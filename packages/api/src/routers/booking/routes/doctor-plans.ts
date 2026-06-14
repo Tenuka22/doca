@@ -1,9 +1,9 @@
-import { doctorPlans } from "@zen-doc/db";
+﻿import { doctorPlans } from "@doca/db";
 import {
   createDoctorPlanSchema,
   deleteDoctorPlanSchema,
   updateDoctorPlanSchema,
-} from "@zen-doc/db/schemas-types";
+} from "@doca/db/schemas-types";
 import { and, eq, max } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -154,3 +154,4 @@ export const deleteDoctorPlanRoute = protectedProcedure
 
     return { ok: true };
   });
+

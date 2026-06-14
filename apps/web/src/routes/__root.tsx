@@ -8,12 +8,14 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import { env } from "@zen-doc/env/web";
-import { Toaster } from "@zen-doc/ui/components/sonner";
-import { TooltipProvider } from "@zen-doc/ui/components/tooltip";
+import { env } from "@doca/env/web";
+import { Toaster } from "@doca/ui/components/sonner";
+import { TooltipProvider } from "@doca/ui/components/tooltip";
 import { useEffect } from "react";
 
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
+
+import { APP_DISPLAY_NAME, LOGO_PATH } from "@doca/app-info";
 
 import appCss from "../index.css?url";
 
@@ -55,10 +57,10 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       },
       {
         rel: "icon",
-        href: "/Logo.svg",
+        href: LOGO_PATH,
       },
     ],
-    title: "ZenDoc",
+    title: APP_DISPLAY_NAME,
   }),
 
   component: RootDocument,

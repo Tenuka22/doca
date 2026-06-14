@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Button } from "@zen-doc/ui/components/button";
+import { Button } from "@doca/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@zen-doc/ui/components/card";
+} from "@doca/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -14,11 +14,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@zen-doc/ui/components/dialog";
-import { Input } from "@zen-doc/ui/components/input";
-import { Label } from "@zen-doc/ui/components/label";
-import { Skeleton } from "@zen-doc/ui/components/skeleton";
-import { Textarea } from "@zen-doc/ui/components/textarea";
+} from "@doca/ui/components/dialog";
+import { Input } from "@doca/ui/components/input";
+import { Label } from "@doca/ui/components/label";
+import { Skeleton } from "@doca/ui/components/skeleton";
+import { Textarea } from "@doca/ui/components/textarea";
 import { PlusIcon, StethoscopeIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";

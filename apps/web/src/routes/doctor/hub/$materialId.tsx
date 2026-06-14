@@ -4,18 +4,18 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@zen-doc/ui/components/avatar";
-import { Badge } from "@zen-doc/ui/components/badge";
-import { Button } from "@zen-doc/ui/components/button";
-import { Card, CardContent, CardHeader } from "@zen-doc/ui/components/card";
+} from "@doca/ui/components/avatar";
+import { Badge } from "@doca/ui/components/badge";
+import { Button } from "@doca/ui/components/button";
+import { Card, CardContent, CardHeader } from "@doca/ui/components/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@zen-doc/ui/components/dropdown-menu";
-import { Separator } from "@zen-doc/ui/components/separator";
+} from "@doca/ui/components/dropdown-menu";
+import { Separator } from "@doca/ui/components/separator";
 import { formatDistanceToNow } from "date-fns";
 import {
   ArrowLeftIcon,

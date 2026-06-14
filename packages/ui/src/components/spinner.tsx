@@ -1,4 +1,4 @@
-import { cn } from "@zen-doc/ui/lib/utils";
+﻿import { cn } from "@doca/ui/lib/utils";
 import { Loader2Icon } from "lucide-react";
 
 function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
@@ -13,3 +13,4 @@ function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
 }
 
 export { Spinner };
+

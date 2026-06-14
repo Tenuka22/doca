@@ -1,4 +1,4 @@
-import { doctorPlans, doctorProfiles, doctorSessions } from "@zen-doc/db";
+﻿import { doctorPlans, doctorProfiles, doctorSessions } from "@doca/db";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -52,3 +52,4 @@ export const listPatientSessionsRoute = protectedProcedure.handler(
     return { sessions: enhancedSessions };
   }
 );
+

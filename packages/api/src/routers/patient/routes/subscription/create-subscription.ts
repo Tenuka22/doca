@@ -1,4 +1,4 @@
-import { userSubscriptions } from "@zen-doc/db";
+﻿import { userSubscriptions } from "@doca/db";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../../hooks";
@@ -51,3 +51,4 @@ export const createSubscriptionRoute = protectedProcedure
       sessionId: paymentIntent.id,
     };
   });
+

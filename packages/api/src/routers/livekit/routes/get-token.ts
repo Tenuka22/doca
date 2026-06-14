@@ -1,5 +1,5 @@
-import { doctorSessions } from "@zen-doc/db";
-import { env } from "@zen-doc/env/server";
+﻿import { doctorSessions } from "@doca/db";
+import { env } from "@doca/env/server";
 import { eq } from "drizzle-orm";
 import { AccessToken } from "livekit-server-sdk";
 import { z } from "zod";
@@ -77,3 +77,4 @@ export const getLiveKitTokenRoute = protectedProcedure
       },
     };
   });
+

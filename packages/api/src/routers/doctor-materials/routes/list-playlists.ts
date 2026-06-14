@@ -1,5 +1,5 @@
-import { doctorPlaylists } from "@zen-doc/db";
-import { listPlaylistsSchema } from "@zen-doc/db/schemas-types";
+﻿import { doctorPlaylists } from "@doca/db";
+import { listPlaylistsSchema } from "@doca/db/schemas-types";
 import { eq } from "drizzle-orm";
 import { requireDoctor } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -16,3 +16,4 @@ export const listPlaylistsRoute = protectedProcedure
       .limit(input.pageSize)
       .offset((input.page - 1) * input.pageSize);
   });
+

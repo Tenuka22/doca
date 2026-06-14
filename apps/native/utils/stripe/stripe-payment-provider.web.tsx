@@ -7,7 +7,7 @@ import {
   useStripe,
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import { env } from "@zen-doc/env/native";
+import { env } from "@doca/env/native";
 import {
   createContext,
   type PropsWithChildren,

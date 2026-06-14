@@ -1,4 +1,4 @@
-import { patientProfiles } from "@zen-doc/db";
+﻿import { patientProfiles } from "@doca/db";
 import { and, eq, or } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -37,3 +37,4 @@ export const getPendingRequestsRoute = protectedProcedure.handler(
     return pendingRequests;
   }
 );
+

@@ -1,4 +1,4 @@
-# Project Structure
+﻿# Project Structure
 
 ## Overview
 
@@ -14,22 +14,22 @@ This repository is a Bun/Turborepo monorepo for a TypeScript-first product stack
 
 ```text
 zen-doc/
-├── apps/
-│   ├── web/
-│   ├── server/
-│   ├── native/
-│   └── ai-trainer/
-├── packages/
-│   ├── api/
-│   ├── db/
-│   ├── env/
-│   ├── infra/
-│   ├── ui/
-│   └── config/
-├── turbo.json
-├── tsconfig.json
-├── package.json
-└── README.md
+â”œâ”€â”€ apps/
+â”‚   â”œâ”€â”€ web/
+â”‚   â”œâ”€â”€ server/
+â”‚   â”œâ”€â”€ native/
+â”‚   â””â”€â”€ ai-trainer/
+â”œâ”€â”€ packages/
+â”‚   â”œâ”€â”€ api/
+â”‚   â”œâ”€â”€ db/
+â”‚   â”œâ”€â”€ env/
+â”‚   â”œâ”€â”€ infra/
+â”‚   â”œâ”€â”€ ui/
+â”‚   â””â”€â”€ config/
+â”œâ”€â”€ turbo.json
+â”œâ”€â”€ tsconfig.json
+â”œâ”€â”€ package.json
+â””â”€â”€ README.md
 ```
 
 ## Workspace Behavior
@@ -54,7 +54,7 @@ Frontend app built with Vite and TanStack Start.
 
 - Uses React 19.
 - Uses TanStack Router, React Query, and TanStack Start SSR patterns.
-- Consumes shared UI from `@zen-doc/ui`.
+- Consumes shared UI from `@doca/ui`.
 - Consumes shared API and env packages from the workspace.
 - Also integrates Clerk and Tailwind v4.
 
@@ -64,8 +64,8 @@ Backend API service.
 
 - Uses Hono as the HTTP layer.
 - Uses ORPC for typed RPC and OpenAPI exposure.
-- Uses `@zen-doc/api` for router definitions and `@zen-doc/db` for persistence.
-- Uses `@zen-doc/env/server` for server env values.
+- Uses `@doca/api` for router definitions and `@doca/db` for persistence.
+- Uses `@doca/env/server` for server env values.
 - Supports local build with `tsdown` and packaged compilation with `bun build`.
 
 ### `apps/native`
@@ -74,8 +74,8 @@ Expo mobile app.
 
 - Uses Expo Router and React Native 0.83.
 - Uses Clerk Expo auth, React Query, and shared workspace packages.
-- Consumes `@zen-doc/api` for typed backend access.
-- Uses `@zen-doc/env/native` for mobile-specific env values.
+- Consumes `@doca/api` for typed backend access.
+- Uses `@doca/env/native` for mobile-specific env values.
 - Includes native health/wearable integrations, so this app is platform-specific and not just UI code.
 
 ### `apps/ai-trainer`
@@ -103,7 +103,7 @@ Database layer.
 
 - Holds Drizzle-based database access and schema/query code.
 - Exposes `db:push` and `db:generate` scripts.
-- Depends on `@zen-doc/env` for database configuration.
+- Depends on `@doca/env` for database configuration.
 
 ### `packages/env`
 
@@ -159,3 +159,4 @@ These are per-target environment files, not a single root env file.
 - The main monorepo is organized around `apps/*` and `packages/*`.
 - `apps/ai-trainer` is the only clearly separate non-TypeScript subtree and should be treated as an independent project.
 - The repo is set up for shared types, shared env, shared UI, and typed RPC rather than isolated app code.
+

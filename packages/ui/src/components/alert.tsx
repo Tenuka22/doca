@@ -1,4 +1,4 @@
-import { cn } from "@zen-doc/ui/lib/utils";
+﻿import { cn } from "@doca/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 
@@ -73,3 +73,4 @@ function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 export { Alert, AlertAction, AlertDescription, AlertTitle };
+

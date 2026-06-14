@@ -1,21 +1,21 @@
-import { Alert, AlertDescription } from "@zen-doc/ui/components/alert";
-import { Badge } from "@zen-doc/ui/components/badge";
-import { Button } from "@zen-doc/ui/components/button";
+import { Alert, AlertDescription } from "@doca/ui/components/alert";
+import { Badge } from "@doca/ui/components/badge";
+import { Button } from "@doca/ui/components/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@zen-doc/ui/components/card";
+} from "@doca/ui/components/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@zen-doc/ui/components/select";
-import { Skeleton } from "@zen-doc/ui/components/skeleton";
-import { Textarea } from "@zen-doc/ui/components/textarea";
+} from "@doca/ui/components/select";
+import { Skeleton } from "@doca/ui/components/skeleton";
+import { Textarea } from "@doca/ui/components/textarea";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 

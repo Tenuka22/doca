@@ -1,15 +1,15 @@
-import {
+﻿import {
   doctorHospitalAffiliations,
   doctorHospitalInvitations,
   doctorProfiles,
   tenantAuditLogs,
   tenantNotifications,
-} from "@zen-doc/db";
+} from "@doca/db";
 import {
   inviteDoctorSchema,
   respondInvitationSchema,
   updateAffiliationWindowsSchema,
-} from "@zen-doc/db/schemas-types";
+} from "@doca/db/schemas-types";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -205,7 +205,7 @@ export const respondInvitationRoute = protectedProcedure
       });
 
       // Notify tenant admins
-      const { tenantAdmins: tenantAdminsTable } = await import("@zen-doc/db");
+      const { tenantAdmins: tenantAdminsTable } = await import("@doca/db");
       const admins = await context.db
         .select()
         .from(tenantAdminsTable)
@@ -300,7 +300,7 @@ export const listDoctorAffiliationsRoute = protectedProcedure.handler(
 
     const enriched = await Promise.all(
       affiliations.map(async (aff) => {
-        const { tenants: tenantsTable } = await import("@zen-doc/db");
+        const { tenants: tenantsTable } = await import("@doca/db");
         const [tenant] = await context.db
           .select()
           .from(tenantsTable)
@@ -372,3 +372,4 @@ export const updateAffiliationWindowsRoute = protectedProcedure
 
     return { success: true };
   });
+

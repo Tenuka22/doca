@@ -1,4 +1,4 @@
-import { patientProfiles } from "@zen-doc/db";
+﻿import { patientProfiles } from "@doca/db";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
@@ -61,3 +61,4 @@ export const subscribePatientStressStreamRoute = protectedProcedure
       await publisherIterator.return();
     }
   });
+

@@ -1,5 +1,5 @@
-{
-  "name": "@zen-doc/crypto",
+﻿{
+  "name": "@doca/crypto",
   "type": "module",
   "exports": {
     ".": {
@@ -8,7 +8,8 @@
   },
   "main": "./src/index.ts",
   "devDependencies": {
-    "@zen-doc/config": "workspace:*",
+    "@doca/config": "workspace:*",
     "typescript": "^6"
   }
 }
+

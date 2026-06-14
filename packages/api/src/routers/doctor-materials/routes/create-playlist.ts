@@ -1,5 +1,5 @@
-import { doctorPlaylists } from "@zen-doc/db";
-import { createPlaylistSchema } from "@zen-doc/db/schemas-types";
+﻿import { doctorPlaylists } from "@doca/db";
+import { createPlaylistSchema } from "@doca/db/schemas-types";
 import { eq } from "drizzle-orm";
 import { requireDoctor } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -29,3 +29,4 @@ export const createPlaylistRoute = protectedProcedure
 
     return created;
   });
+

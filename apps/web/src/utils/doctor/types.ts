@@ -1,7 +1,7 @@
 import {
   scheduleKindValues,
   scheduleNoteValues,
-} from "@zen-doc/db/schemas-types/values";
+} from "@doca/db/schemas-types/values";
 import { z } from "zod";
 
 export const scheduleEntrySchema = z.object({

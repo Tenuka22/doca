@@ -1,5 +1,6 @@
 import { SignIn } from "@clerk/tanstack-react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { APP_DISPLAY_NAME } from "@doca/app-info";
 
 export const Route = createFileRoute("/sign-in")({
   component: SignInPage,
@@ -12,7 +13,7 @@ function SignInPage() {
       <div className="relative flex w-full max-w-md flex-col gap-6">
         <div className="flex flex-col items-center gap-2 text-center">
           <Link className="font-semibold text-lg tracking-tight" to="/">
-            ZenDoc
+            {APP_DISPLAY_NAME}
           </Link>
           <p className="text-muted-foreground text-sm">
             Sign in to your account

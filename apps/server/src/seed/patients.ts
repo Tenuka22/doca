@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import type { createDb } from "@zen-doc/db";
+import type { createDb } from "@doca/db";
 import {
   guardianProfiles,
   moonlightCredits,
@@ -7,7 +7,7 @@ import {
   stressDownloadAcknowledgments,
   stressPredictions,
   userCredits,
-} from "@zen-doc/db";
+} from "@doca/db";
 
 export async function seedPatients(db: ReturnType<typeof createDb>) {
   const existing = await db

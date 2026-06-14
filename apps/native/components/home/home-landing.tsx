@@ -44,6 +44,7 @@ import { Button } from "@/components/ui/button";
 import { SpriteAnimation } from "@/components/ui/sprite-animation";
 import { useSessionTiming } from "@/hooks/use-session-timing";
 import { orpc } from "@/utils/orpc";
+import { NATIVE_APP_DISPLAY_NAME } from "@doca/app-info";
 import {
   CLASS_COLORS,
   CLASS_LABELS,
@@ -58,14 +59,14 @@ interface HomeLandingProps {
   signedIn: boolean;
 }
 
-// Trust Badges (accurate to @zen-doc/crypto + stress-hub)
+// Trust Badges (accurate to @doca/crypto + stress-hub)
 const trustBadges = [
   { label: "On-Device Keys", icon: KeyRound },
   { label: "Zero-Knowledge", icon: Database },
   { label: "Encrypted Video", icon: Video },
 ] as const;
 
-// Security flow steps (accurate to @zen-doc/crypto)
+// Security flow steps (accurate to @doca/crypto)
 const securitySteps = [
   {
     icon: Fingerprint,
@@ -153,7 +154,7 @@ function HeroSection({
               </View>
               <View className="gap-1">
                 <Text className="font-black font-sans text-[10px] text-primary uppercase tracking-[0.3em]">
-                  ZenDoc Native
+                  {NATIVE_APP_DISPLAY_NAME}
                 </Text>
                 <View className="h-[3px] w-10 bg-primary" />
               </View>
@@ -1103,7 +1104,7 @@ export function HomeLanding({ signedIn }: HomeLandingProps) {
                     On-Device Key Cryptography
                   </Text>
                   <Text className="mt-1 font-normal font-sans text-muted-foreground text-sm leading-5">
-                    generateUserSecret() from @zen-doc/crypto creates a 256-bit
+                    generateUserSecret() from @doca/crypto creates a 256-bit
                     AES-GCM key via crypto.getRandomValues(). PII is encrypted
                     with crypto.subtle.encrypt + a 12-byte IV before
                     transmission — the server stores only an opaque _securedData

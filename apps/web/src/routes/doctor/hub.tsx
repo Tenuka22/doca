@@ -4,19 +4,19 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@zen-doc/ui/components/avatar";
-import { Badge } from "@zen-doc/ui/components/badge";
-import { Button } from "@zen-doc/ui/components/button";
-import { Input } from "@zen-doc/ui/components/input";
+} from "@doca/ui/components/avatar";
+import { Badge } from "@doca/ui/components/badge";
+import { Button } from "@doca/ui/components/button";
+import { Input } from "@doca/ui/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@zen-doc/ui/components/select";
-import { Skeleton } from "@zen-doc/ui/components/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@zen-doc/ui/components/tabs";
+} from "@doca/ui/components/select";
+import { Skeleton } from "@doca/ui/components/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@doca/ui/components/tabs";
 import {
   FilmIcon,
   FilterIcon,

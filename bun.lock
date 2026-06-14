@@ -5,11 +5,11 @@
     "": {
       "name": "zen-doc",
       "dependencies": {
+        "@doca/env": "workspace:*",
         "@expo/vector-icons": "^15.1.1",
         "@langchain/cloudflare": "^1.0.6",
         "@langchain/core": "^1.1.48",
         "@langchain/langgraph": "^1.4.1",
-        "@zen-doc/env": "workspace:*",
         "dotenv": "catalog:",
         "react-day-picker": "^10.0.1",
         "zod": "catalog:",
@@ -17,8 +17,8 @@
       "devDependencies": {
         "@biomejs/biome": "2.4.15",
         "@cloudflare/workers-types": "catalog:",
+        "@doca/config": "workspace:*",
         "@types/node": "catalog:",
-        "@zen-doc/config": "workspace:*",
         "turbo": "^2.8.12",
         "typescript": "^6",
         "ultracite": "7.7.0",
@@ -29,6 +29,10 @@
       "version": "1.0.0",
       "dependencies": {
         "@clerk/expo": "^3.1.3",
+        "@doca/api": "workspace:*",
+        "@doca/app-info": "workspace:*",
+        "@doca/env": "workspace:*",
+        "@doca/pricing": "workspace:*",
         "@expo/metro-runtime": "~55.0.0",
         "@expo/vector-icons": "^15.1.1",
         "@hookform/resolvers": "^5.2.2",
@@ -42,9 +46,6 @@
         "@stripe/stripe-js": "^9.6.0",
         "@stripe/stripe-react-native": "0.63.0",
         "@tanstack/react-query": "^5.90.12",
-        "@zen-doc/api": "workspace:*",
-        "@zen-doc/env": "workspace:*",
-        "@zen-doc/pricing": "workspace:*",
         "babel-preset-expo": "~55.0.18",
         "dotenv": "catalog:",
         "expo": "^55.0.17",
@@ -86,9 +87,9 @@
       },
       "devDependencies": {
         "@babel/core": "^7.28.0",
+        "@doca/config": "workspace:*",
         "@tailwindcss/postcss": "^4.3.0",
         "@types/react": "~19.2.10",
-        "@zen-doc/config": "workspace:*",
         "ajv": "^8.17.1",
         "postcss": "^8.5.14",
         "tailwindcss": "^4.3.0",
@@ -98,13 +99,13 @@
     "apps/server": {
       "name": "server",
       "dependencies": {
+        "@doca/api": "workspace:*",
+        "@doca/db": "workspace:*",
+        "@doca/env": "workspace:*",
         "@faker-js/faker": "^9.6.0",
         "@orpc/openapi": "catalog:",
         "@orpc/server": "catalog:",
         "@orpc/zod": "catalog:",
-        "@zen-doc/api": "workspace:*",
-        "@zen-doc/db": "workspace:*",
-        "@zen-doc/env": "workspace:*",
         "dotenv": "catalog:",
         "drizzle-orm": "^0.45.2",
         "hono": "catalog:",
@@ -114,8 +115,8 @@
       },
       "devDependencies": {
         "@cloudflare/workers-types": "catalog:",
+        "@doca/config": "workspace:*",
         "@types/node": "catalog:",
-        "@zen-doc/config": "workspace:*",
         "alchemy": "catalog:",
         "tsdown": "^0.21.9",
         "typescript": "^6",
@@ -131,6 +132,11 @@
         "@base-ui/react": "^1.4.1",
         "@clerk/tanstack-react-start": "^1.1.3",
         "@cloudflare/vite-plugin": "^1.37.1",
+        "@doca/api": "workspace:*",
+        "@doca/app-info": "workspace:*",
+        "@doca/env": "workspace:*",
+        "@doca/pricing": "workspace:*",
+        "@doca/ui": "workspace:*",
         "@fontsource-variable/figtree": "^5.2.10",
         "@hookform/resolvers": "^5.2.2",
         "@orpc/client": "catalog:",
@@ -141,10 +147,6 @@
         "@tanstack/react-router": "^1.168.22",
         "@tanstack/react-router-ssr-query": "^1.166.11",
         "@tanstack/react-start": "^1.167.41",
-        "@zen-doc/api": "workspace:*",
-        "@zen-doc/env": "workspace:*",
-        "@zen-doc/pricing": "workspace:*",
-        "@zen-doc/ui": "workspace:*",
         "alchemy": "^0.93.7",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
@@ -171,6 +173,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
+        "@doca/config": "workspace:*",
         "@tanstack/react-query-devtools": "^5.91.1",
         "@tanstack/react-router-devtools": "^1.166.13",
         "@testing-library/dom": "^10.4.1",
@@ -178,7 +181,6 @@
         "@types/react": "^19.2.14",
         "@types/react-dom": "catalog:",
         "@vitejs/plugin-react": "^6.0.1",
-        "@zen-doc/config": "workspace:*",
         "jsdom": "^29.0.2",
         "typescript": "^6",
         "vite": "^8.0.8",
@@ -186,17 +188,17 @@
       },
     },
     "packages/api": {
-      "name": "@zen-doc/api",
+      "name": "@doca/api",
       "dependencies": {
         "@ai-sdk/google": "^3.0.80",
         "@clerk/backend": "^3.2.1",
+        "@doca/db": "workspace:*",
+        "@doca/env": "workspace:*",
+        "@doca/pricing": "workspace:*",
         "@orpc/client": "catalog:",
         "@orpc/openapi": "catalog:",
         "@orpc/server": "catalog:",
         "@orpc/zod": "catalog:",
-        "@zen-doc/db": "workspace:*",
-        "@zen-doc/env": "workspace:*",
-        "@zen-doc/pricing": "workspace:*",
         "ai": "^6.0.200",
         "dotenv": "catalog:",
         "drizzle-orm": "^0.45.2",
@@ -207,40 +209,47 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@zen-doc/config": "workspace:*",
+        "@doca/config": "workspace:*",
         "hono": "catalog:",
         "typescript": "^6",
       },
     },
+    "packages/app-info": {
+      "name": "@doca/app-info",
+      "devDependencies": {
+        "@doca/config": "workspace:*",
+        "typescript": "^6",
+      },
+    },
     "packages/config": {
-      "name": "@zen-doc/config",
+      "name": "@doca/config",
       "version": "0.0.0",
     },
     "packages/crypto": {
-      "name": "@zen-doc/crypto",
+      "name": "@doca/crypto",
       "devDependencies": {
-        "@zen-doc/config": "workspace:*",
+        "@doca/config": "workspace:*",
         "typescript": "^6",
       },
     },
     "packages/db": {
-      "name": "@zen-doc/db",
+      "name": "@doca/db",
       "dependencies": {
+        "@doca/env": "workspace:*",
         "@libsql/client": "0.15.15",
-        "@zen-doc/env": "workspace:*",
         "dotenv": "catalog:",
         "drizzle-orm": "^0.45.1",
         "libsql": "0.5.22",
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@zen-doc/config": "workspace:*",
+        "@doca/config": "workspace:*",
         "drizzle-kit": "^0.31.8",
         "typescript": "^6",
       },
     },
     "packages/env": {
-      "name": "@zen-doc/env",
+      "name": "@doca/env",
       "version": "0.0.0",
       "dependencies": {
         "@t3-oss/env-core": "^0.13.1",
@@ -248,36 +257,36 @@
         "zod": "catalog:",
       },
       "devDependencies": {
+        "@doca/config": "workspace:*",
         "@types/node": "catalog:",
-        "@zen-doc/config": "workspace:*",
         "typescript": "^6",
       },
     },
     "packages/infra": {
-      "name": "@zen-doc/infra",
+      "name": "@doca/infra",
       "dependencies": {
-        "@zen-doc/db": "workspace:*",
-        "@zen-doc/pricing": "workspace:*",
+        "@doca/db": "workspace:*",
+        "@doca/pricing": "workspace:*",
         "dotenv": "catalog:",
         "drizzle-orm": "^0.45.2",
         "stripe": "^18.5.0",
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@zen-doc/config": "workspace:*",
+        "@doca/config": "workspace:*",
         "alchemy": "catalog:",
         "typescript": "^6",
       },
     },
     "packages/pricing": {
-      "name": "@zen-doc/pricing",
+      "name": "@doca/pricing",
       "devDependencies": {
-        "@zen-doc/config": "workspace:*",
+        "@doca/config": "workspace:*",
         "typescript": "^6",
       },
     },
     "packages/ui": {
-      "name": "@zen-doc/ui",
+      "name": "@doca/ui",
       "version": "0.0.0",
       "dependencies": {
         "@base-ui/react": "^1.0.0",
@@ -299,9 +308,9 @@
         "vaul": "^1.1.2",
       },
       "devDependencies": {
+        "@doca/config": "workspace:*",
         "@types/react": "^19.2.10",
         "@types/react-dom": "catalog:",
-        "@zen-doc/config": "workspace:*",
         "tailwindcss": "^4.1.18",
         "typescript": "^6",
       },
@@ -663,6 +672,24 @@
     "@csstools/css-tokenizer": ["@csstools/css-tokenizer@4.0.0", "", {}, "sha512-QxULHAm7cNu72w97JUNCBFODFaXpbDg+dP8b/oWFAZ2MTRppA3U00Y2L1HqaS4J6yBqxwa/Y3nMBaxVKbB/NsA=="],
 
     "@date-fns/tz": ["@date-fns/tz@1.5.0", "", {}, "sha512-lwYN/vDPeNRULcepoE/LO2Pgx+7/RV+S9ARfbc9lr2DtGkOD7pAiruHvbR1RX3Qyf6ja47EWJDMsNK5vK08DJg=="],
+
+    "@doca/api": ["@doca/api@workspace:packages/api"],
+
+    "@doca/app-info": ["@doca/app-info@workspace:packages/app-info"],
+
+    "@doca/config": ["@doca/config@workspace:packages/config"],
+
+    "@doca/crypto": ["@doca/crypto@workspace:packages/crypto"],
+
+    "@doca/db": ["@doca/db@workspace:packages/db"],
+
+    "@doca/env": ["@doca/env@workspace:packages/env"],
+
+    "@doca/infra": ["@doca/infra@workspace:packages/infra"],
+
+    "@doca/pricing": ["@doca/pricing@workspace:packages/pricing"],
+
+    "@doca/ui": ["@doca/ui@workspace:packages/ui"],
 
     "@dotenvx/dotenvx": ["@dotenvx/dotenvx@1.71.0", "", { "dependencies": { "commander": "^11.1.0", "dotenv": "^17.2.1", "eciesjs": "^0.4.10", "enquirer": "^2.4.1", "execa": "^5.1.1", "fdir": "^6.2.0", "ignore": "^5.3.0", "object-treeify": "1.1.33", "picomatch": "^4.0.4", "which": "^4.0.0", "yocto-spinner": "^1.1.0" }, "bin": { "dotenvx": "src/cli/dotenvx.js" } }, "sha512-KEUw/mGu+EDRhYWRTNGHIimVCs9NvMFaIXOGrHSXoCteKLE5EsJnmPjOPpYorjXVg/0xG0fbdVw720azw1z4ag=="],
 
@@ -1469,22 +1496,6 @@
     "@wallet-standard/wallet": ["@wallet-standard/wallet@1.1.1", "", { "dependencies": { "@wallet-standard/base": "^1.1.1" } }, "sha512-8WiRPaKk/wNNRZhB2eVhpR/JW7/aqTCMoZhgVUCujuzDmxxmGvsosMxdCG4NAdYkoyozAHCX8/xLtlWUn5mNdQ=="],
 
     "@xmldom/xmldom": ["@xmldom/xmldom@0.8.13", "", {}, "sha512-KRYzxepc14G/CEpEGc3Yn+JKaAeT63smlDr+vjB8jRfgTBBI9wRj/nkQEO+ucV8p8I9bfKLWp37uHgFrbntPvw=="],
-
-    "@zen-doc/api": ["@zen-doc/api@workspace:packages/api"],
-
-    "@zen-doc/config": ["@zen-doc/config@workspace:packages/config"],
-
-    "@zen-doc/crypto": ["@zen-doc/crypto@workspace:packages/crypto"],
-
-    "@zen-doc/db": ["@zen-doc/db@workspace:packages/db"],
-
-    "@zen-doc/env": ["@zen-doc/env@workspace:packages/env"],
-
-    "@zen-doc/infra": ["@zen-doc/infra@workspace:packages/infra"],
-
-    "@zen-doc/pricing": ["@zen-doc/pricing@workspace:packages/pricing"],
-
-    "@zen-doc/ui": ["@zen-doc/ui@workspace:packages/ui"],
 
     "@zxcvbn-ts/core": ["@zxcvbn-ts/core@3.0.4", "", { "dependencies": { "fastest-levenshtein": "1.0.16" } }, "sha512-aQeiT0F09FuJaAqNrxynlAwZ2mW/1MdXakKWNmGM1Qp/VaY6CnB/GfnMS2T8gB2231Esp1/maCWd8vTG4OuShw=="],
 

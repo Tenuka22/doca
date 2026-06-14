@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import type { createDb } from "@zen-doc/db";
+import type { createDb } from "@doca/db";
 import {
   clinicAttendance,
   clinics,
@@ -11,7 +11,7 @@ import {
   tenantAuditLogs,
   tenantNotifications,
   tenants,
-} from "@zen-doc/db";
+} from "@doca/db";
 
 const HOSPITAL_TYPES = ["PRIVATE_HOSPITAL", "PUBLIC_HOSPITAL"] as const;
 

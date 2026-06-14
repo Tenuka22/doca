@@ -1,4 +1,4 @@
-import type { DoctorProfile } from "@zen-doc/db";
+﻿import type { DoctorProfile } from "@doca/db";
 import {
   doctorEducationEntries,
   doctorPlans,
@@ -7,14 +7,14 @@ import {
   parseJsonStringArray,
   stringifyJsonApproachSteps,
   stringifyJsonStringArray,
-} from "@zen-doc/db";
-import { doctorProfileInputSchema } from "@zen-doc/db/schemas-types";
+} from "@doca/db";
+import { doctorProfileInputSchema } from "@doca/db/schemas-types";
 import {
   BASIC_PLAN_CREDITS,
   BASIC_PLAN_DURATION_MINUTES,
   BASIC_PLAN_FEATURES,
   BASIC_PLAN_NAME,
-} from "@zen-doc/pricing";
+} from "@doca/pricing";
 import { and, eq } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
@@ -133,3 +133,4 @@ export const saveDoctorProfileRoute = protectedProcedure
 
     return { ok: true, role: nextRole, profile };
   });
+

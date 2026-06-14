@@ -1,8 +1,9 @@
 import { UserButton, useUser } from "@clerk/tanstack-react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Badge } from "@zen-doc/ui/components/badge";
-import { buttonVariants } from "@zen-doc/ui/components/button";
-import { Card, CardContent } from "@zen-doc/ui/components/card";
+import { Badge } from "@doca/ui/components/badge";
+import { buttonVariants } from "@doca/ui/components/button";
+import { Card, CardContent } from "@doca/ui/components/card";
+import { APP_DISPLAY_NAME } from "@doca/app-info";
 import { ArrowRightIcon, ShieldIcon, StethoscopeIcon } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -17,7 +18,7 @@ function HomeRoute() {
     <div className="mx-auto flex min-h-svh w-full max-w-6xl flex-col gap-8">
       <header className="flex items-center justify-between rounded-b-2xl border bg-card/50 shadow-sm backdrop-blur-md h-14 px-6 py-1">
         <div className="flex items-center gap-4">
-          <span className="font-semibold text-lg tracking-tight">ZenDoc</span>
+          <span className="font-semibold text-lg tracking-tight">{APP_DISPLAY_NAME}</span>
           <nav className="hidden items-center sm:flex gap-2">
             <Link
               className="cursor-pointer rounded-lg text-muted-foreground text-sm transition-colors hover:bg-muted hover:text-foreground"
@@ -76,7 +77,7 @@ function HomeRoute() {
         <div className="flex flex-col gap-4 items-center">
           <Badge variant="secondary">Doctor Onboarding & Admin Platform</Badge>
           <h1 className="font-semibold text-lg tracking-tight">
-            Welcome to ZenDoc
+            Welcome to {APP_DISPLAY_NAME}
           </h1>
           <p className="mx-auto max-w-xl text-muted-foreground text-sm">
             Streamlined doctor onboarding, credential management, and

@@ -1,0 +1,14 @@
+{
+  "name": "@doca/app-info",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "devDependencies": {
+    "@doca/config": "workspace:*",
+    "typescript": "^6"
+  }
+}

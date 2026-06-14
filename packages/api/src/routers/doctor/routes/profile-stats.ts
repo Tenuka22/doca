@@ -1,4 +1,4 @@
-import { doctorFiles, doctorHubMaterials, doctorProfiles } from "@zen-doc/db";
+﻿import { doctorFiles, doctorHubMaterials, doctorProfiles } from "@doca/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -108,3 +108,4 @@ export const profileStatsRoute = protectedProcedure
       hubAudioCount,
     };
   });
+

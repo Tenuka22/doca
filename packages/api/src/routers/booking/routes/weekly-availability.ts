@@ -1,4 +1,4 @@
-import { doctorWeeklyAvailability } from "@zen-doc/db";
+﻿import { doctorWeeklyAvailability } from "@doca/db";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -104,3 +104,4 @@ export const getDoctorWeeklyAvailabilityRoute = protectedProcedure
 
     return { slots: filteredSlots };
   });
+

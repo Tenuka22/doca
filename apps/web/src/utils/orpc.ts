@@ -4,8 +4,8 @@ import { RPCLink as WebSocketRPCLink } from "@orpc/client/websocket";
 import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
-import type { AppRouter, WSAppRouter } from "@zen-doc/api/routers/index";
-import { env } from "@zen-doc/env/web";
+import type { AppRouter, WSAppRouter } from "@doca/api/routers/index";
+import { env } from "@doca/env/web";
 import { toast } from "sonner";
 
 import { getClerkAuthToken } from "@/utils/clerk-auth";
