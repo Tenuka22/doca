@@ -47,4 +47,3 @@ export const adminStatsRoute = protectedProcedure
       sessionsByDay: sessionsByDay.reverse(),
     };
   });
-

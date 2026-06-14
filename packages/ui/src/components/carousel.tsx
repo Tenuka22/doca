@@ -245,4 +245,3 @@ export {
   CarouselPrevious,
   useCarousel,
 };
-

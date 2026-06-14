@@ -1,5 +1,6 @@
 "use client";
 
+import { APP_DISPLAY_NAME } from "@doca/app-info";
 import {
   Sidebar,
   SidebarContent,
@@ -8,7 +9,6 @@ import {
   SidebarRail,
   useSidebar,
 } from "@doca/ui/components/sidebar";
-import { APP_DISPLAY_NAME } from "@doca/app-info";
 import {
   CalendarCheckIcon,
   ClockIcon,
@@ -38,7 +38,9 @@ export function DoctorSidebar() {
         ) : (
           <div className="flex flex-col gap-1">
             <span className="font-medium text-sm">Doctor Portal</span>
-            <span className="text-muted-foreground text-xs">{APP_DISPLAY_NAME}</span>
+            <span className="text-muted-foreground text-xs">
+              {APP_DISPLAY_NAME}
+            </span>
           </div>
         )}
       </SidebarHeader>

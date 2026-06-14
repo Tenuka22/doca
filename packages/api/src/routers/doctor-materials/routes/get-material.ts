@@ -26,4 +26,3 @@ export const getMaterialRoute = protectedProcedure
 
     return material;
   });
-

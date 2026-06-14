@@ -47,4 +47,3 @@ export const counterProposeSessionRoute = protectedProcedure
 
     return { ok: true };
   });
-

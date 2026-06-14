@@ -473,4 +473,3 @@ export const getRecentTransactionsRoute = protectedProcedure.handler(
     return transactions;
   }
 );
-

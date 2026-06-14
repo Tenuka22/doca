@@ -41,4 +41,3 @@ export const getPatientStressDataGuardianRoute = protectedProcedure
       fetchedAt: Date.now(),
     };
   });
-

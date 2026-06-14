@@ -49,4 +49,3 @@ export const acceptRequestRoute = protectedProcedure
 
     return { success: true };
   });
-

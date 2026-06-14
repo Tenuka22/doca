@@ -24,4 +24,3 @@ export const putPrivacyDataRoute = protectedProcedure
 
     return { success: true };
   });
-

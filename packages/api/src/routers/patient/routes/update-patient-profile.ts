@@ -71,4 +71,3 @@ export const updatePatientProfileRoute = protectedProcedure
 
     return { success: true, profile: updated };
   });
-

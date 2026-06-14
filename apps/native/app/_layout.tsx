@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
 import "../global.css";
 
 import { ClerkProvider, useAuth } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
-import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { env } from "@doca/env/native";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Redirect, Stack, usePathname } from "expo-router";
 import { hideAsync, preventAutoHideAsync } from "expo-splash-screen";

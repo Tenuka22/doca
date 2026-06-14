@@ -7,4 +7,3 @@ export const listDoctorFilesRoute = publicProcedure
   .handler(async ({ context, input }) =>
     listFilesForDoctor(context.db, input.doctorId)
   );
-

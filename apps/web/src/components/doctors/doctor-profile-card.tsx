@@ -1,6 +1,4 @@
 import { useUser } from "@clerk/tanstack-react-start";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   doctorConsultationModeValues,
   doctorFocusAreaValues,
@@ -45,6 +43,8 @@ import {
 } from "@doca/ui/components/tabs";
 import { Textarea } from "@doca/ui/components/textarea";
 import { cn } from "@doca/ui/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Award,
   Building,
@@ -279,7 +279,7 @@ export function DoctorProfileCard() {
                 <CardTitle className="font-medium text-sm">
                   {displayName}
                 </CardTitle>
-                <div className="flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 font-semibold text-primary text-xs px-2">
+                <div className="flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-2 font-semibold text-primary text-xs">
                   {statusBadge}
                 </div>
               </div>

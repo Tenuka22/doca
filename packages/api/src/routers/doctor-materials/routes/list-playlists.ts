@@ -16,4 +16,3 @@ export const listPlaylistsRoute = protectedProcedure
       .limit(input.pageSize)
       .offset((input.page - 1) * input.pageSize);
   });
-

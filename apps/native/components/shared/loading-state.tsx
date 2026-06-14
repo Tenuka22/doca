@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { ActivityIndicator, Text, View } from "react-native";
 

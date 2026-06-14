@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
 import { useAuth } from "@clerk/expo";
+import { APP_DISPLAY_NAME } from "@doca/app-info";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ScrollView, Text, View } from "react-native";
 import { z } from "zod";
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,6 @@ import { Screen } from "@/components/ui/screen";
 import { orpc, queryClient } from "@/utils/orpc";
 import { encryptData, generateUserSecret, storeSecret } from "@/utils/privacy";
 import { useErrorHandler } from "@/utils/use-error-handler";
-import { APP_DISPLAY_NAME } from "@doca/app-info";
 
 const patientSchema = z.object({
   alias: z.string().min(1, "Alias is required"),

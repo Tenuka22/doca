@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { Text, View } from "react-native";
 

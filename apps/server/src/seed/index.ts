@@ -8,8 +8,8 @@ import { seedSessions } from "./sessions";
 import { seedTenants } from "./tenants";
 
 export interface SeedEnv {
-  doctorMaterialsKv: KVNamespace;
   chatMessagesKv: KVNamespace;
+  doctorMaterialsKv: KVNamespace;
   modelFeaturesKv: KVNamespace;
 }
 

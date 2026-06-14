@@ -18,6 +18,10 @@ import {
 import { and, eq } from "drizzle-orm";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
+import {
+  generateDoctorEmbedding,
+  storeDoctorEmbedding,
+} from "../../chat/helpers/embeddings";
 
 export const saveDoctorProfileRoute = protectedProcedure
   .input(doctorProfileInputSchema)
@@ -82,6 +86,19 @@ export const saveDoctorProfileRoute = protectedProcedure
       set: profile,
     });
 
+    // Generate and store embedding
+    const profileText = `${profile.displayName} ${profile.headline} ${profile.bio} ${profile.specialties} ${profile.focusAreas} ${profile.approach}`;
+    const embedding = await generateDoctorEmbedding(
+      userId,
+      profileText,
+      context
+    );
+    await storeDoctorEmbedding(
+      userId,
+      { doctorId: userId, text: profileText, embedding },
+      context
+    );
+
     if (input.educationEntries) {
       await context.db
         .delete(doctorEducationEntries)
@@ -133,4 +150,3 @@ export const saveDoctorProfileRoute = protectedProcedure
 
     return { ok: true, role: nextRole, profile };
   });
-

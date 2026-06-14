@@ -44,4 +44,3 @@ export const createMaterialRoute = protectedProcedure
 
     return created;
   });
-

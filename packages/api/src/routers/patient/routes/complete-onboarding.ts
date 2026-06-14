@@ -34,4 +34,3 @@ export const completeOnboardingRoute = protectedProcedure
 
     return { success: true };
   });
-

@@ -1,5 +1,4 @@
 import { SignInButton, useUser } from "@clerk/tanstack-react-start";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
 import {
   Avatar,
   AvatarFallback,
@@ -14,6 +13,7 @@ import {
   CardTitle,
 } from "@doca/ui/components/card";
 import { Skeleton } from "@doca/ui/components/skeleton";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import {
   Award,
   Building,
@@ -142,7 +142,7 @@ function AdminDoctorDetailRoute() {
                   {profile.placeName ? (
                     <AvatarImage alt={displayName} src={profile.placeName} />
                   ) : null}
-                  <AvatarFallback className="bg-primary/10 text-lg font-semibold text-primary">
+                  <AvatarFallback className="bg-primary/10 font-semibold text-lg text-primary">
                     {displayName.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>

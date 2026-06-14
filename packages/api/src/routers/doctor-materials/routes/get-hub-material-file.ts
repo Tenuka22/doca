@@ -34,4 +34,3 @@ export const getHubMaterialFileRoute = publicProcedure
       type: material.mimeType ?? "application/octet-stream",
     });
   });
-

@@ -53,4 +53,3 @@ export const createDoctorFileRoute = protectedProcedure
       isVideo: created.mimeType.startsWith("video/"),
     };
   });
-

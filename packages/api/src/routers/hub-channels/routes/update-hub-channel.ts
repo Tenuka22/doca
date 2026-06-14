@@ -29,4 +29,3 @@ export const updateHubChannelRoute = protectedProcedure
 
     return result[0];
   });
-

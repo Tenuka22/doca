@@ -56,4 +56,3 @@ export const getDoctorRoute = publicProcedure
       education,
     };
   });
-

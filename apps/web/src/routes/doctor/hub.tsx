@@ -1,5 +1,4 @@
 import { useUser } from "@clerk/tanstack-react-start";
-import { createFileRoute } from "@tanstack/react-router";
 import {
   Avatar,
   AvatarFallback,
@@ -17,6 +16,7 @@ import {
 } from "@doca/ui/components/select";
 import { Skeleton } from "@doca/ui/components/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@doca/ui/components/tabs";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   FilmIcon,
   FilterIcon,
@@ -257,7 +257,7 @@ function DoctorHubPage() {
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 px-6 flex gap-4 flex-col">
+      <div className="flex flex-1 flex-col gap-4 px-6">
         {/* Toolbar */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex max-w-md flex-1 items-center gap-3">
@@ -366,7 +366,7 @@ function DoctorHubPage() {
             ))}
           </div>
         ) : sortedMaterials.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-center gap-4">
+          <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
             <div className="rounded-full bg-muted/40">
               {activeTab === "uploading" ? (
                 <UploadIcon className="size-8 text-muted-foreground" />

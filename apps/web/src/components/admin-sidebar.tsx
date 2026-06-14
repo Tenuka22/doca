@@ -1,5 +1,6 @@
 "use client";
 
+import { APP_DISPLAY_NAME } from "@doca/app-info";
 import {
   Sidebar,
   SidebarContent,
@@ -8,7 +9,6 @@ import {
   SidebarRail,
   useSidebar,
 } from "@doca/ui/components/sidebar";
-import { APP_DISPLAY_NAME } from "@doca/app-info";
 import {
   CalendarDaysIcon,
   DollarSignIcon,
@@ -37,7 +37,9 @@ export function AdminSidebar() {
         ) : (
           <div className="flex flex-col gap-1">
             <span className="font-medium text-sm">Admin Console</span>
-            <span className="text-muted-foreground text-xs">{APP_DISPLAY_NAME}</span>
+            <span className="text-muted-foreground text-xs">
+              {APP_DISPLAY_NAME}
+            </span>
           </div>
         )}
       </SidebarHeader>

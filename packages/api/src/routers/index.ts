@@ -37,7 +37,10 @@ export const appRouter = {
 };
 
 export const wsAppRouter = {
-  ...chatWsRouter,
+  chat: {
+    sendMessage: chatWsRouter.sendMessage,
+    subscribeMessages: chatWsRouter.subscribeMessages,
+  },
 };
 
 export type AppRouter = typeof appRouter;

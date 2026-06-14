@@ -59,4 +59,3 @@ export const markAllNotificationsReadRoute = protectedProcedure.handler(
     return { success: true };
   }
 );
-

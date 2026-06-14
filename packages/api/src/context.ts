@@ -10,6 +10,7 @@ export interface ClerkRequestContext {
   chatMessagesKv: KVNamespace;
   clerk: typeof clerkClient;
   db: ReturnType<typeof createDb>;
+  env: { AI: Ai };
   modelFeaturesKv: KVNamespace;
   session: null;
 }
@@ -47,10 +48,12 @@ import type { Context as HonoContext } from "hono";
 
 export interface CreateContextOptions {
   context: HonoContext;
+  token?: string;
 }
 
 export async function createContext({
   context,
+  token,
 }: CreateContextOptions): Promise<ClerkRequestContext> {
   const clerkAuth = await authenticateClerkRequest(context.req.raw);
   return {
@@ -60,8 +63,8 @@ export async function createContext({
     clerk: clerkClient,
     modelFeaturesKv: env.MODEL_FEATURES_KV,
     chatMessagesKv: env.CHAT_MESSAGES_KV,
+    env: { AI: context.env.AI },
   };
 }
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
-

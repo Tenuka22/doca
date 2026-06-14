@@ -31,4 +31,3 @@ export const adminPatientsRoute = protectedProcedure
       nextPage,
     };
   });
-

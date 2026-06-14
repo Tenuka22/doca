@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "@doca/pricing",
   "type": "module",
   "exports": {
@@ -11,4 +11,3 @@
     "typescript": "^6"
   }
 }
-

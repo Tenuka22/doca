@@ -20,26 +20,7 @@ export const createConnectAccountLinkRoute = protectedProcedure
     const stripe = getStripe();
     let stripeAccountId = profile.stripeAccountId;
 
-    if (!stripeAccountId?.startsWith("acct_")) {
-      try {
-        const account = await stripe.accounts.create({
-          type: "express",
-          capabilities: {
-            transfers: { requested: true },
-          },
-          metadata: { doctorId },
-        });
-        stripeAccountId = account.id;
-
-        await context.db
-          .update(doctorProfiles)
-          .set({ stripeAccountId, updatedAt: new Date().toISOString() })
-          .where(eq(doctorProfiles.userId, doctorId));
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        throw new Error(`Failed to create Stripe Connected Account: ${msg}`);
-      }
-    } else {
+    if (stripeAccountId?.startsWith("acct_")) {
       // Account already exists â€” sync its status from Stripe
       try {
         const account = await stripe.accounts.retrieve(stripeAccountId);
@@ -60,6 +41,25 @@ export const createConnectAccountLinkRoute = protectedProcedure
       } catch {
         // If retrieving fails, proceed to create a new onboarding link
       }
+    } else {
+      try {
+        const account = await stripe.accounts.create({
+          type: "express",
+          capabilities: {
+            transfers: { requested: true },
+          },
+          metadata: { doctorId },
+        });
+        stripeAccountId = account.id;
+
+        await context.db
+          .update(doctorProfiles)
+          .set({ stripeAccountId, updatedAt: new Date().toISOString() })
+          .where(eq(doctorProfiles.userId, doctorId));
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`Failed to create Stripe Connected Account: ${msg}`);
+      }
     }
 
     const accountLink = await stripe.accountLinks.create({
@@ -71,4 +71,3 @@ export const createConnectAccountLinkRoute = protectedProcedure
 
     return { url: accountLink.url, connected: false };
   });
-

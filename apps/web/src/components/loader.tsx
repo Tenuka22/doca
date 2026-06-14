@@ -2,7 +2,7 @@ import { Loader2 } from "lucide-react";
 
 export default function Loader() {
   return (
-    <div className="flex h-full items-center justify-center flex-row py-8 gap-2">
+    <div className="flex h-full flex-row items-center justify-center gap-2 py-8">
       <Loader2 className="animate-spin" />
       <span>Loading</span>
     </div>

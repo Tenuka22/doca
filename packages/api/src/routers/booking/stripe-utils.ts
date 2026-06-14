@@ -63,4 +63,3 @@ export function refundPaymentIntent(
     payment_intent: paymentIntentId,
   });
 }
-

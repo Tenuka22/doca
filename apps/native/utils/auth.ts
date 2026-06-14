@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import type { Href, useRouter } from "expo-router";
 import { Globe, MessageCircle, Monitor } from "lucide-react-native";

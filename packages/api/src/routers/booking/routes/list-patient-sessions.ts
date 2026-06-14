@@ -52,4 +52,3 @@ export const listPatientSessionsRoute = protectedProcedure.handler(
     return { sessions: enhancedSessions };
   }
 );
-

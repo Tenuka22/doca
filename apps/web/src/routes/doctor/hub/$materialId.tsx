@@ -1,5 +1,4 @@
 import { useUser } from "@clerk/tanstack-react-start";
-import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Avatar,
   AvatarFallback,
@@ -16,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@doca/ui/components/dropdown-menu";
 import { Separator } from "@doca/ui/components/separator";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
 import {
   ArrowLeftIcon,

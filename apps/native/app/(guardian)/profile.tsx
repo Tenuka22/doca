@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useClerk, useUser } from "@clerk/expo";
 import { useQuery } from "@tanstack/react-query";

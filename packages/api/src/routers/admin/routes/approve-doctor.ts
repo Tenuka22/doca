@@ -64,4 +64,3 @@ export const adminApproveDoctorRoute = protectedProcedure
 
     return { ok: true };
   });
-

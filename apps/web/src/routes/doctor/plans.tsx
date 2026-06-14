@@ -1,5 +1,3 @@
-import { useMutation } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
 import { Badge } from "@doca/ui/components/badge";
 import { Button } from "@doca/ui/components/button";
 import {
@@ -33,6 +31,8 @@ import { Input } from "@doca/ui/components/input";
 import { Label } from "@doca/ui/components/label";
 import { Separator } from "@doca/ui/components/separator";
 import { Textarea } from "@doca/ui/components/textarea";
+import { useMutation } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   CheckIcon,
   ClockIcon,
@@ -445,7 +445,7 @@ function DoctorPlansRoute() {
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium">
+                    <CardTitle className="font-medium text-sm">
                       {plan.name}
                     </CardTitle>
                     {plan.isDefault && (
@@ -469,7 +469,7 @@ function DoctorPlansRoute() {
                   <div className="flex items-center gap-4 border-border/50 border-y py-2">
                     <div className="flex items-center gap-1.5">
                       <CoinsIcon className="size-4 text-muted-foreground" />
-                      <span className="text-lg font-semibold">
+                      <span className="font-semibold text-lg">
                         {plan.creditCost}
                       </span>
                       <span className="text-muted-foreground text-xs">
@@ -479,7 +479,7 @@ function DoctorPlansRoute() {
 
                     <div className="flex items-center gap-1.5">
                       <ClockIcon className="size-4 text-muted-foreground" />
-                      <span className="text-lg font-semibold">
+                      <span className="font-semibold text-lg">
                         {plan.durationMinutes}
                       </span>
                       <span className="text-muted-foreground text-xs">min</span>

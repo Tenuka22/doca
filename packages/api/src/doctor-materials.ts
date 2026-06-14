@@ -20,4 +20,3 @@ export async function readDoctorMaterialFile(
     type: input.mimeType,
   });
 }
-

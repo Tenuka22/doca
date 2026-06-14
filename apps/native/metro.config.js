@@ -1,7 +1,9 @@
 const { getDefaultConfig } = require("expo/metro-config");
 const { withNativewind } = require("nativewind/metro");
 
-// DO NOT CHANGE
-const config = getDefaultConfig(__dirname);
+const projectRoot = __dirname;
+
+const config = getDefaultConfig(projectRoot);
+
 
 module.exports = withNativewind(config);

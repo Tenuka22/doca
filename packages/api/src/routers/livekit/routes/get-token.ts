@@ -77,4 +77,3 @@ export const getLiveKitTokenRoute = protectedProcedure
       },
     };
   });
-

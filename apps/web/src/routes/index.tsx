@@ -1,9 +1,9 @@
 import { UserButton, useUser } from "@clerk/tanstack-react-start";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { APP_DISPLAY_NAME } from "@doca/app-info";
 import { Badge } from "@doca/ui/components/badge";
 import { buttonVariants } from "@doca/ui/components/button";
 import { Card, CardContent } from "@doca/ui/components/card";
-import { APP_DISPLAY_NAME } from "@doca/app-info";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRightIcon, ShieldIcon, StethoscopeIcon } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -16,10 +16,12 @@ function HomeRoute() {
 
   return (
     <div className="mx-auto flex min-h-svh w-full max-w-6xl flex-col gap-8">
-      <header className="flex items-center justify-between rounded-b-2xl border bg-card/50 shadow-sm backdrop-blur-md h-14 px-6 py-1">
+      <header className="flex h-14 items-center justify-between rounded-b-2xl border bg-card/50 px-6 py-1 shadow-sm backdrop-blur-md">
         <div className="flex items-center gap-4">
-          <span className="font-semibold text-lg tracking-tight">{APP_DISPLAY_NAME}</span>
-          <nav className="hidden items-center sm:flex gap-2">
+          <span className="font-semibold text-lg tracking-tight">
+            {APP_DISPLAY_NAME}
+          </span>
+          <nav className="hidden items-center gap-2 sm:flex">
             <Link
               className="cursor-pointer rounded-lg text-muted-foreground text-sm transition-colors hover:bg-muted hover:text-foreground"
               search={{ page: 1 }}
@@ -74,7 +76,7 @@ function HomeRoute() {
       </header>
 
       <section className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
-        <div className="flex flex-col gap-4 items-center">
+        <div className="flex flex-col items-center gap-4">
           <Badge variant="secondary">Doctor Onboarding & Admin Platform</Badge>
           <h1 className="font-semibold text-lg tracking-tight">
             Welcome to {APP_DISPLAY_NAME}
@@ -117,7 +119,7 @@ function HomeRoute() {
         </div>
       </section>
 
-      <footer className="grid gap-4 md:grid-cols-2 pb-8">
+      <footer className="grid gap-4 pb-8 md:grid-cols-2">
         <Card className="cursor-pointer rounded-2xl border-border/60 transition-colors duration-200 hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-primary">
           <CardContent className="flex items-start gap-4">
             <div className="rounded-xl border bg-muted/40 p-2.5 text-muted-foreground">

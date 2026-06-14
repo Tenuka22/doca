@@ -1,7 +1,6 @@
 "use client";
 
 import { APP_DISPLAY_NAME } from "@doca/app-info";
-import { useParams } from "@tanstack/react-router";
 import {
   Sidebar,
   SidebarContent,
@@ -10,6 +9,7 @@ import {
   SidebarRail,
   useSidebar,
 } from "@doca/ui/components/sidebar";
+import { useParams } from "@tanstack/react-router";
 import {
   BuildingIcon,
   CalendarCheckIcon,
@@ -39,7 +39,9 @@ export function TenantSidebar() {
         ) : (
           <div className="flex flex-col gap-1">
             <span className="font-medium text-sm">Hospital Portal</span>
-            <span className="text-muted-foreground text-xs">{APP_DISPLAY_NAME}</span>
+            <span className="text-muted-foreground text-xs">
+              {APP_DISPLAY_NAME}
+            </span>
           </div>
         )}
       </SidebarHeader>

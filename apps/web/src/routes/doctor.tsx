@@ -1,12 +1,5 @@
 import { SignInButton as ClerkSignInButton } from "@clerk/tanstack-react-start";
 import {
-  createFileRoute,
-  Link,
-  Outlet,
-  redirect,
-  useMatches,
-} from "@tanstack/react-router";
-import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -27,6 +20,13 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@doca/ui/components/sidebar";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  redirect,
+  useMatches,
+} from "@tanstack/react-router";
 import { StethoscopeIcon } from "lucide-react";
 
 import { DoctorSidebar } from "@/components/doctor-sidebar";
@@ -134,7 +134,7 @@ function DoctorLayoutRoute() {
       <DoctorSidebar />
       <SidebarInset>
         <div className="flex min-h-svh flex-col">
-          <header className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60 h-12 px-3">
+          <header className="sticky top-0 z-10 flex h-12 items-center gap-3 border-b bg-background/80 px-3 backdrop-blur-md supports-backdrop-filter:bg-background/60">
             <SidebarTrigger />
             <Separator className="h-12" orientation="vertical" />
             <Breadcrumbs />

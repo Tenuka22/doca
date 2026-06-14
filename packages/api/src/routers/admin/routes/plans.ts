@@ -31,4 +31,3 @@ export const adminPlansRoute = protectedProcedure
       nextPage,
     };
   });
-

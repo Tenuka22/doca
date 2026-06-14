@@ -25,4 +25,3 @@ export const deleteHubChannelRoute = protectedProcedure
 
     return { success: true };
   });
-

@@ -51,4 +51,3 @@ export const getManagedPatientStressMetricsRoute = protectedProcedure
     const responseData = (await response.json()) as { results: number[] };
     return responseData.results;
   });
-

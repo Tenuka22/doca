@@ -1,11 +1,5 @@
 import { SignInButton as ClerkSignInButton } from "@clerk/tanstack-react-start";
 import {
-  createFileRoute,
-  Link,
-  Outlet,
-  useMatches,
-} from "@tanstack/react-router";
-import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -26,6 +20,12 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@doca/ui/components/sidebar";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useMatches,
+} from "@tanstack/react-router";
 import { BuildingIcon } from "lucide-react";
 
 import { TenantSidebar } from "@/components/tenant-sidebar";

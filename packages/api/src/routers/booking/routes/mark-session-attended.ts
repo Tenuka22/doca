@@ -43,4 +43,3 @@ export const markSessionAttendedRoute = protectedProcedure
 
     return { ok: true };
   });
-

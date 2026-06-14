@@ -1,6 +1,5 @@
 "use client";
 
-import { Link } from "@tanstack/react-router";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -9,6 +8,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@doca/ui/components/sidebar";
+import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 
 export interface SidebarNavItem {

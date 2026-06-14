@@ -16,4 +16,3 @@ export const getUserCreditsRoute = protectedProcedure.handler(
     return credits ?? { userId, balance: 0 };
   }
 );
-

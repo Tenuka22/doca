@@ -49,4 +49,3 @@ export const updateDoctorFileRoute = protectedProcedure
       isVideo: updated.mimeType.startsWith("video/"),
     };
   });
-

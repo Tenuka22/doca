@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "@doca/api",
   "type": "module",
   "exports": {
@@ -25,6 +25,8 @@
     "ai": "^6.0.200",
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.2",
+    "@langchain/core": "^1.1.48",
+    "@langchain/langgraph": "^1.4.1",
     "langsmith": "^0.7.6",
     "livekit-server-sdk": "^2.10.0",
     "onnxruntime-node": "^1.26.0",
@@ -37,4 +39,3 @@
     "typescript": "^6"
   }
 }
-

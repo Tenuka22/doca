@@ -45,4 +45,3 @@ export const recordSnapshotRoute = protectedProcedure
 
     return { ok: true };
   });
-

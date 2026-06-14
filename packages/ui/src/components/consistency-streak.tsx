@@ -68,4 +68,3 @@ function ConsistencyStreak({
 
 export type { ConsistencyStreakProps };
 export { ConsistencyStreak };
-

@@ -33,4 +33,3 @@ export async function listFilesForDoctor(db: Context["db"], doctorId: string) {
     isVideo: file.mimeType.startsWith("video/"),
   }));
 }
-

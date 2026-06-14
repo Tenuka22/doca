@@ -72,4 +72,3 @@ export const adminApprovedDoctorsRoute = protectedProcedure
       lastUserId: lastItem?.userId ?? null,
     };
   });
-

@@ -100,4 +100,3 @@ export const sessionStatsRoute = protectedProcedure
       recentSessions,
     };
   });
-

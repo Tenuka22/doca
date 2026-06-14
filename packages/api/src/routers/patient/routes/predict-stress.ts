@@ -35,4 +35,3 @@ export const predictStressRoute = publicProcedure
     const responseData = (await response.json()) as { results: number[] };
     return responseData.results;
   });
-

@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
+import type { AppRouterClient } from "@doca/api/routers/index";
+import { env } from "@doca/env/native";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
-import type { AppRouterClient } from "@doca/api/routers/index";
-import { env } from "@doca/env/native";
 
 import { getClerkAuthToken } from "@/utils/clerk-auth";
 

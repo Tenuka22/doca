@@ -1,8 +1,4 @@
-﻿import {
-  doctorCashoutRequests,
-  doctorCredits,
-  doctorProfiles,
-} from "@doca/db";
+﻿import { doctorCashoutRequests, doctorCredits, doctorProfiles } from "@doca/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
@@ -118,4 +114,3 @@ export const requestCashoutRoute = protectedProcedure
       throw new Error(`Cashout failed: ${msg}`);
     }
   });
-

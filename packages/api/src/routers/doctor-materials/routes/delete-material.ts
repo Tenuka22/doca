@@ -25,4 +25,3 @@ export const deleteMaterialRoute = protectedProcedure
 
     return { success: true };
   });
-

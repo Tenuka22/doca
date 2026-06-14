@@ -1,10 +1,10 @@
-import { faker } from "@faker-js/faker";
 import type { createDb } from "@doca/db";
 import {
   moonlightCreditTransactions,
   spriteStates,
   wellnessActions,
 } from "@doca/db";
+import { faker } from "@faker-js/faker";
 import { eq } from "drizzle-orm";
 
 const WELLNESS_ACTION_TYPES = [

@@ -1,11 +1,11 @@
-﻿import { ORPCError } from "@orpc/server";
-import type { DoctorProfile } from "@doca/db";
+﻿import type { DoctorProfile } from "@doca/db";
 import {
   doctorProfiles,
   parseJsonApproachSteps,
   parseJsonStringArray,
   tenantAdmins,
 } from "@doca/db";
+import { ORPCError } from "@orpc/server";
 import { and, eq } from "drizzle-orm";
 
 import type { Context } from "./context";
@@ -269,4 +269,3 @@ export async function requireTenantAdminOrDoctor(
     message: "Tenant admin or affiliated doctor access required",
   });
 }
-

@@ -14,4 +14,3 @@ export const getManagedPatientsRoute = protectedProcedure.handler(
     return managedPatients;
   }
 );
-

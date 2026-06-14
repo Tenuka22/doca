@@ -1,12 +1,12 @@
+import { createContext } from "@doca/api/context";
+import { appRouter, wsAppRouter } from "@doca/api/routers/index";
+import { env } from "@doca/env/server";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { RPCHandler as WebSocketRPCHandler } from "@orpc/server/websocket";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
-import { createContext } from "@doca/api/context";
-import { appRouter, wsAppRouter } from "@doca/api/routers/index";
-import { env } from "@doca/env/server";
 import { Hono } from "hono";
 import { upgradeWebSocket } from "hono/cloudflare-workers";
 import { cors } from "hono/cors";
@@ -53,6 +53,10 @@ export const wsRpcHandler = new WebSocketRPCHandler(wsAppRouter, {
   interceptors: [
     onError((error) => {
       console.error("WebSocket Error:", error);
+      if (error && typeof error === "object") {
+        console.error("WebSocket Error stack:", (error as Error).stack);
+        console.error("WebSocket Error cause:", (error as Error).cause);
+      }
     }),
   ],
 });
@@ -63,6 +67,7 @@ app.get(
   "/rpc-ws",
   upgradeWebSocket(async (c) => {
     const context = await createContext({ context: c });
+
 
     return {
       onMessage(event, ws) {

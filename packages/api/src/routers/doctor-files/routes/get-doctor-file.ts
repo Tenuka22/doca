@@ -29,4 +29,3 @@ export const getDoctorFileRoute = publicProcedure
 
     return doctorMaterialFile;
   });
-

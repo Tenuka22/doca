@@ -16,4 +16,3 @@ export const listDoctorSessionsRoute = protectedProcedure.handler(
     return { sessions };
   }
 );
-

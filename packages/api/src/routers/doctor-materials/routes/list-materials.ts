@@ -36,4 +36,3 @@ export const listMaterialsRoute = protectedProcedure
       metadata: m.metadata ? JSON.parse(m.metadata) : null,
     }));
   });
-

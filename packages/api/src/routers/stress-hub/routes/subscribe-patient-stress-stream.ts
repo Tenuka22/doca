@@ -61,4 +61,3 @@ export const subscribePatientStressStreamRoute = protectedProcedure
       await publisherIterator.return();
     }
   });
-

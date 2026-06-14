@@ -1,5 +1,4 @@
 import { SignInButton as ClerkSignInButton } from "@clerk/tanstack-react-start";
-import { createFileRoute, Outlet } from "@tanstack/react-router";
 import {
   Card,
   CardContent,
@@ -12,6 +11,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@doca/ui/components/sidebar";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { ShieldIcon } from "lucide-react";
 
 import { AdminSidebar } from "@/components/admin-sidebar";

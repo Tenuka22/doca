@@ -84,4 +84,3 @@ export const cancelSessionRoute = protectedProcedure
 
     return { ok: true };
   });
-

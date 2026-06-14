@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { type Room, RoomEvent, Track } from "livekit-client";
+import { type Room, RoomEvent } from "livekit-client";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { formatParticipantLabel } from "@/utils/format-participant";

@@ -109,4 +109,3 @@ function computeDoctorPresenceDuration(
 
   return totalMs;
 }
-

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import type { LucideIcon } from "lucide-react-native";
 import type { ReactNode } from "react";

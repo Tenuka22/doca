@@ -190,4 +190,3 @@ export const getDoctorAvailableSlotsRoute = publicProcedure
 
     return { slots };
   });
-

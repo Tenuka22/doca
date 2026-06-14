@@ -1,4 +1,3 @@
-import { faker } from "@faker-js/faker";
 import type { createDb } from "@doca/db";
 import {
   clinicAttendance,
@@ -12,6 +11,7 @@ import {
   tenantNotifications,
   tenants,
 } from "@doca/db";
+import { faker } from "@faker-js/faker";
 
 const HOSPITAL_TYPES = ["PRIVATE_HOSPITAL", "PUBLIC_HOSPITAL"] as const;
 
@@ -276,9 +276,7 @@ export async function seedTenants(
           "Affiliation updated",
         ]),
         message: faker.lorem.sentence(),
-        entityId: faker.helpers.arrayElement(
-          tenantRecords.map((t) => t.id)
-        ),
+        entityId: faker.helpers.arrayElement(tenantRecords.map((t) => t.id)),
         isRead: faker.datatype.boolean(0.3),
       });
     }

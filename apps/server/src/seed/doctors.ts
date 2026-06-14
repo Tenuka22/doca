@@ -1,4 +1,3 @@
-import { faker } from "@faker-js/faker";
 import type { createDb } from "@doca/db";
 import {
   doctorCredits,
@@ -9,6 +8,7 @@ import {
   doctorScheduleEntries,
   doctorWeeklyAvailability,
 } from "@doca/db";
+import { faker } from "@faker-js/faker";
 
 const SPECIALTIES = [
   "psychiatry",

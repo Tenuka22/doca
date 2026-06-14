@@ -27,4 +27,3 @@ export const deleteDoctorFileRoute = protectedProcedure
 
     return { ok: true };
   });
-

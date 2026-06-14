@@ -82,4 +82,3 @@ export const listDoctorsRoute = publicProcedure
       hasMore: offset + input.pageSize < filteredProfiles.length,
     };
   });
-

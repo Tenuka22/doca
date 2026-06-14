@@ -1,5 +1,6 @@
-'use client';
+"use client";
 
+import { NATIVE_APP_DISPLAY_NAME } from "@doca/app-info";
 import { useQuery } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { type Href, useRouter } from "expo-router";
@@ -38,13 +39,11 @@ import {
   View,
 } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
-
 import { SectionHeader } from "@/components/shared/section-header";
 import { Button } from "@/components/ui/button";
 import { SpriteAnimation } from "@/components/ui/sprite-animation";
 import { useSessionTiming } from "@/hooks/use-session-timing";
 import { orpc } from "@/utils/orpc";
-import { NATIVE_APP_DISPLAY_NAME } from "@doca/app-info";
 import {
   CLASS_COLORS,
   CLASS_LABELS,

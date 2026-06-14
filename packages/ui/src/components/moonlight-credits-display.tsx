@@ -60,4 +60,3 @@ function MoonlightCreditsDisplay({
 
 export type { MoonlightCreditsDisplayProps };
 export { MoonlightCreditsDisplay };
-

@@ -64,4 +64,3 @@ export const initHubUploadRoute = protectedProcedure
       fileKey,
     };
   });
-

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { APP_DISPLAY_NAME_SPACE } from "@doca/app-info";
 import {
   CREDIT_PRICE_CENTS,
   MONTHLY_PLAN_AMOUNT_CENTS,
@@ -8,6 +8,7 @@ import {
   MONTHLY_PLAN_TYPE,
   TAX_RATE,
 } from "@doca/pricing";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -17,7 +18,6 @@ import {
   Text,
   View,
 } from "react-native";
-import { APP_DISPLAY_NAME_SPACE } from "@doca/app-info";
 import { orpc } from "@/utils/orpc";
 import { usePaymentSheet } from "@/utils/stripe";
 import { Button } from "./button";

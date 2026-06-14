@@ -154,4 +154,3 @@ export const deleteDoctorPlanRoute = protectedProcedure
 
     return { ok: true };
   });
-

@@ -76,4 +76,3 @@ function AccordionContent({
 }
 
 export { Accordion, AccordionContent, AccordionItem, AccordionTrigger };
-

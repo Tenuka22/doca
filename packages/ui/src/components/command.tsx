@@ -7,10 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@doca/ui/components/dialog";
-import {
-  InputGroup,
-  InputGroupAddon,
-} from "@doca/ui/components/input-group";
+import { InputGroup, InputGroupAddon } from "@doca/ui/components/input-group";
 
 import { cn } from "@doca/ui/lib/utils";
 import { Command as CommandPrimitive } from "cmdk";
@@ -194,4 +191,3 @@ export {
   CommandSeparator,
   CommandShortcut,
 };
-

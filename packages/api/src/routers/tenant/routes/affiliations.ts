@@ -372,4 +372,3 @@ export const updateAffiliationWindowsRoute = protectedProcedure
 
     return { success: true };
   });
-

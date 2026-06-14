@@ -29,4 +29,3 @@ export const adminDoctorScheduleEntriesRoute = protectedProcedure
 
     return { items: items as DoctorScheduleEntry[] };
   });
-

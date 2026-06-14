@@ -68,4 +68,3 @@ export const acceptRescheduledSessionRoute = protectedProcedure
 
     return { ok: true };
   });
-

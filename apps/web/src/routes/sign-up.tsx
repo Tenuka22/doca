@@ -1,6 +1,6 @@
 import { SignUp } from "@clerk/tanstack-react-start";
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { APP_DISPLAY_NAME } from "@doca/app-info";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/sign-up")({
   component: SignUpPage,

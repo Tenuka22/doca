@@ -1,4 +1,4 @@
-﻿{
+{
   "extends": "@doca/config/tsconfig.base.json",
   "compilerOptions": {
     "declaration": true,
@@ -9,4 +9,3 @@
     "strictNullChecks": true
   }
 }
-

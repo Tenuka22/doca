@@ -1,4 +1,3 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
 import { Badge } from "@doca/ui/components/badge";
 import { buttonVariants } from "@doca/ui/components/button";
 import {
@@ -16,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@doca/ui/components/table";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { UserPlusIcon } from "lucide-react";
 
 import { useListTenantAffiliations } from "@/hooks/queries/tenant";

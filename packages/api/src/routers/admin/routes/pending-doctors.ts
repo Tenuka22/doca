@@ -71,4 +71,3 @@ export const adminPendingDoctorsRoute = protectedProcedure
       lastUserId: lastItem?.userId ?? null,
     };
   });
-

@@ -1,4 +1,8 @@
 import { ClerkProvider, useAuth } from "@clerk/tanstack-react-start";
+import { APP_DISPLAY_NAME, LOGO_PATH } from "@doca/app-info";
+import { env } from "@doca/env/web";
+import { Toaster } from "@doca/ui/components/sonner";
+import { TooltipProvider } from "@doca/ui/components/tooltip";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
@@ -8,14 +12,8 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import { env } from "@doca/env/web";
-import { Toaster } from "@doca/ui/components/sonner";
-import { TooltipProvider } from "@doca/ui/components/tooltip";
 import { useEffect } from "react";
-
 import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
-
-import { APP_DISPLAY_NAME, LOGO_PATH } from "@doca/app-info";
 
 import appCss from "../index.css?url";
 

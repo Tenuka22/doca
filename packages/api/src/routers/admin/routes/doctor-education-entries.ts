@@ -21,4 +21,3 @@ export const adminDoctorEducationEntriesRoute = protectedProcedure
 
     return { items: items as DoctorEducationEntry[] };
   });
-

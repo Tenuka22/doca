@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 export function vibrate(pattern: number | number[]) {
   if (typeof window !== "undefined" && "navigator" in window) {

@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "@doca/infra",
   "private": true,
   "type": "module",
@@ -21,4 +21,3 @@
     "typescript": "^6"
   }
 }
-

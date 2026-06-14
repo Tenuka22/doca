@@ -79,4 +79,3 @@ export const uploadHubChunkRoute = protectedProcedure
       isComplete: uploadedChunks.length >= session.totalChunks,
     };
   });
-

@@ -50,4 +50,3 @@ export const planStatsRoute = protectedProcedure
       defaultPlanName: defaultPlan?.name ?? null,
     };
   });
-

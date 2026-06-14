@@ -468,4 +468,3 @@ export const getClinicAttendanceRoute = protectedProcedure
 
     return { records: filtered, clinic };
   });
-

@@ -66,4 +66,3 @@ export const updateMaterialRoute = protectedProcedure
       metadata: updated.metadata ? JSON.parse(updated.metadata) : null,
     };
   });
-

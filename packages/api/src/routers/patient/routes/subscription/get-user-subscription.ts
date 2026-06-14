@@ -21,4 +21,3 @@ export const getUserSubscriptionRoute = protectedProcedure.handler(
     return subscription ?? null;
   }
 );
-

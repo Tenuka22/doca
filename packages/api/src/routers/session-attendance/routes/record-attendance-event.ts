@@ -44,4 +44,3 @@ export const recordAttendanceEventRoute = protectedProcedure
 
     return { ok: true };
   });
-

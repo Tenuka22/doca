@@ -1,4 +1,3 @@
-import { faker } from "@faker-js/faker";
 import type { createDb } from "@doca/db";
 import {
   creditTransactions,
@@ -8,6 +7,7 @@ import {
   sessionTaskAssignments,
   userCredits,
 } from "@doca/db";
+import { faker } from "@faker-js/faker";
 import { eq, sql } from "drizzle-orm";
 
 const SESSION_STATUSES = [

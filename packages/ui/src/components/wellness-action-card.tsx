@@ -80,4 +80,3 @@ function WellnessActionCard({
 
 export type { WellnessActionCardProps };
 export { WellnessActionCard };
-

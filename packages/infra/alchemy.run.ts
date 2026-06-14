@@ -56,7 +56,7 @@ export const server = await Worker("server", {
     CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
     UPSTASH_REDIS_REST_URL:
       // redis.endpoint,
-     "https://pure-goat-80264.upstash.io",
+      "https://pure-goat-80264.upstash.io",
     UPSTASH_REDIS_REST_TOKEN:
       // redis.restToken,
       "gQAAAAAAATmIAAIgcDI0ZGNjODgzNzc2ZmQ0MTA3YTgzNmQ2MTY1YmM4ZWE5OA",

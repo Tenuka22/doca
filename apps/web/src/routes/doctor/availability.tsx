@@ -1,5 +1,3 @@
-import { useMutation } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
 import { Badge } from "@doca/ui/components/badge";
 import { Button } from "@doca/ui/components/button";
 import {
@@ -23,6 +21,8 @@ import {
 } from "@doca/ui/components/select";
 import { Separator } from "@doca/ui/components/separator";
 import { Switch } from "@doca/ui/components/switch";
+import { useMutation } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   CalendarDaysIcon,
   Clock3Icon,

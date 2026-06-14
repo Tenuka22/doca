@@ -26,4 +26,3 @@ export const getHubChannelRoute = protectedProcedure
 
     return channel;
   });
-

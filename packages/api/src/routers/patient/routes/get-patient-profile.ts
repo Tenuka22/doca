@@ -14,4 +14,3 @@ export const getPatientProfileRoute = protectedProcedure.handler(
     return patient ?? null;
   }
 );
-

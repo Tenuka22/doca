@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { Stack } from "expo-router";
 import { Text, View } from "react-native";

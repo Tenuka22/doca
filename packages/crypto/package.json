@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "@doca/crypto",
   "type": "module",
   "exports": {
@@ -12,4 +12,3 @@
     "typescript": "^6"
   }
 }
-

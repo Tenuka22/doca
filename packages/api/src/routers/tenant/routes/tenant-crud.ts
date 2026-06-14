@@ -284,4 +284,3 @@ export const getTenantAuditLogRoute = protectedProcedure
       pageSize: input.pageSize,
     };
   });
-

@@ -1,10 +1,10 @@
-import { faker } from "@faker-js/faker";
 import type { createDb } from "@doca/db";
 import {
   doctorHubChannels,
   doctorHubMaterials,
   doctorPlaylists,
 } from "@doca/db";
+import { faker } from "@faker-js/faker";
 
 const CHANNEL_NAMES = [
   "Mental Wellness",
@@ -172,7 +172,9 @@ export async function seedHub(
       const titleIdx = materialCount % MATERIAL_TITLES_VIDEO.length;
       const title = isVideo
         ? (MATERIAL_TITLES_VIDEO[titleIdx] ?? "Untitled Video")
-        : (MATERIAL_TITLES_AUDIO[materialCount % MATERIAL_TITLES_AUDIO.length] ?? "Untitled Audio");
+        : (MATERIAL_TITLES_AUDIO[
+            materialCount % MATERIAL_TITLES_AUDIO.length
+          ] ?? "Untitled Audio");
       const channelId = faker.helpers.arrayElement(createdChannelIds);
       const fileKey = `hub-uploads/${doctorId}/${materialId}/${isVideo ? "video.mp4" : "audio.mp3"}`;
       const thumbnailKey = `hub-uploads/${doctorId}/${materialId}/thumbnail.jpg`;

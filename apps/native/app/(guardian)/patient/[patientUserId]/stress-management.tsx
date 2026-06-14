@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { consumeEventIterator } from "@orpc/client";
 import { useMutation } from "@tanstack/react-query";

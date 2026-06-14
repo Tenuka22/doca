@@ -1,4 +1,3 @@
-import { faker } from "@faker-js/faker";
 import type { createDb } from "@doca/db";
 import {
   guardianProfiles,
@@ -8,6 +7,7 @@ import {
   stressPredictions,
   userCredits,
 } from "@doca/db";
+import { faker } from "@faker-js/faker";
 
 export async function seedPatients(db: ReturnType<typeof createDb>) {
   const existing = await db
@@ -69,14 +69,12 @@ export async function seedPatients(db: ReturnType<typeof createDb>) {
       await db.insert(stressPredictions).values({
         id: crypto.randomUUID(),
         userId: patient.userId,
-        prediction: faker.helpers.arrayElement([
-          "low",
-          "moderate",
-          "high",
-        ]),
+        prediction: faker.helpers.arrayElement(["low", "moderate", "high"]),
         predictedClass: faker.helpers.arrayElement([0, 1, 2]).toString(),
         probabilities: JSON.stringify(
-          Array.from({ length: 3 }, () => faker.number.float({ min: 0, max: 1 }))
+          Array.from({ length: 3 }, () =>
+            faker.number.float({ min: 0, max: 1 })
+          )
         ),
         sampleCount: faker.number.int({ min: 100, max: 500 }),
         createdAt: faker.date.recent({ days: 30 }).toISOString(),

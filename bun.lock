@@ -195,6 +195,8 @@
         "@doca/db": "workspace:*",
         "@doca/env": "workspace:*",
         "@doca/pricing": "workspace:*",
+        "@langchain/core": "^1.1.48",
+        "@langchain/langgraph": "^1.4.1",
         "@orpc/client": "catalog:",
         "@orpc/openapi": "catalog:",
         "@orpc/server": "catalog:",

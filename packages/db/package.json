@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "@doca/db",
   "type": "module",
   "exports": {
@@ -36,4 +36,3 @@
     "typescript": "^6"
   }
 }
-

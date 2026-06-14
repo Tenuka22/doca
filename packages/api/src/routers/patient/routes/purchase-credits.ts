@@ -45,4 +45,3 @@ export const purchaseCreditsRoute = protectedProcedure
       credits: input.credits,
     };
   });
-

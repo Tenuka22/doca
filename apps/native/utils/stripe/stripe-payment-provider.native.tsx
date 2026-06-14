@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { StripeProvider, useStripe } from "@stripe/stripe-react-native";
 import { APP_DISPLAY_NAME_SPACE } from "@doca/app-info";
 import { env } from "@doca/env/native";
+import { StripeProvider, useStripe } from "@stripe/stripe-react-native";
 import {
   createContext,
   type PropsWithChildren,
@@ -45,7 +45,8 @@ function PaymentSheetProviderInner({ children }: PropsWithChildren) {
     }): Promise<PaymentSheetResult> => {
       const result = await stripe.initPaymentSheet({
         paymentIntentClientSecret: params.paymentIntentClientSecret,
-        merchantDisplayName: params.merchantDisplayName ?? APP_DISPLAY_NAME_SPACE,
+        merchantDisplayName:
+          params.merchantDisplayName ?? APP_DISPLAY_NAME_SPACE,
       });
       if (result.error) {
         return {

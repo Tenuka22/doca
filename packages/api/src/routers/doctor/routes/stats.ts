@@ -84,4 +84,3 @@ export const doctorStatsRoute = protectedProcedure
       monthlyEarnings,
     };
   });
-

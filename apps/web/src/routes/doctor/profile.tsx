@@ -1,9 +1,9 @@
 import { useUser } from "@clerk/tanstack-react-start";
-import { createFileRoute } from "@tanstack/react-router";
 import { Avatar, AvatarFallback } from "@doca/ui/components/avatar";
 import { Badge } from "@doca/ui/components/badge";
 import { Card, CardContent, CardHeader } from "@doca/ui/components/card";
 import { Separator } from "@doca/ui/components/separator";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   BadgeCheckIcon,
   BookOpenIcon,
