@@ -107,16 +107,16 @@ export const web = await TanStackStart("web", {
 export const mobileWeb = await Website("mobile-web", {
   cwd: "../../apps/native",
   build: {
-      command: "npx expo export --platform web",
+    command: "npx expo export --platform web",
     env: {
       ...(process.env.NODE_ENV === "production"
         ? { ENV_FILE: ".env.production" }
         : {}),
     },
   },
+  spa: true,
   assets: {
     directory: "dist",
-    not_found_handling: "single-page-application",
   },
   bindings: {},
 });
