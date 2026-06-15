@@ -114,12 +114,12 @@ function TenantLayoutRoute() {
       <TenantSidebar />
       <SidebarInset>
         <div className="flex min-h-svh flex-col">
-          <header className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60">
+          <header className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60 pl-3 h-14">
             <SidebarTrigger />
-            <Separator className="h-6" orientation="vertical" />
+            <Separator className="h-14" orientation="vertical" />
             <Breadcrumbs />
           </header>
-          <div className="flex-1">
+          <div className="flex-1 p-4">
             <Outlet />
           </div>
         </div>

@@ -152,7 +152,7 @@ function TenantInvitePage() {
             <div className="flex flex-col gap-2">
               {filteredInvitations.map((inv) => (
                 <div
-                  className="flex items-center justify-between rounded-lg border"
+                  className="flex p-3 items-center justify-between rounded-lg border"
                   key={inv.id}
                 >
                   <div>

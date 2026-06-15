@@ -196,7 +196,7 @@ function TenantCreatePage() {
                 onValueChange={handlePlaceSelect}
                 value={selectedPlace?.name}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a hospital..." />
                 </SelectTrigger>
                 <SelectContent>

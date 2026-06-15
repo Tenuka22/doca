@@ -17,7 +17,12 @@ import {
   EmptyTitle,
 } from "@doca/ui/components/empty";
 import { Separator } from "@doca/ui/components/separator";
-import { BuildingIcon, CheckIcon, ClockIcon, XIcon } from "lucide-react";
+import {
+  BuildingIcon,
+  CheckIcon,
+  ClockIcon,
+  XIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -114,7 +119,7 @@ export function DoctorHospitalAffiliations() {
             </p>
             {pendingInvitations.map((inv) => (
               <div
-                className="flex items-center justify-between rounded-xl border border-amber-500/20 bg-amber-500/5"
+                className="flex items-center justify-between rounded-xl border border-amber-500/20 bg-amber-500/5 p-3"
                 key={inv.id}
               >
                 <div>
@@ -156,7 +161,7 @@ export function DoctorHospitalAffiliations() {
         {affiliations.length > 0 ? (
           <div className="flex flex-col gap-3">
             {affiliations.map((aff) => (
-              <div className="rounded-xl border" key={aff.id}>
+              <div className="rounded-xl border p-3" key={aff.id}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <BuildingIcon className="size-4 text-primary" />

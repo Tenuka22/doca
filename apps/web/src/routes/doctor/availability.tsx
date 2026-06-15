@@ -24,6 +24,7 @@ import { Switch } from "@doca/ui/components/switch";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  BuildingIcon,
   CalendarDaysIcon,
   Clock3Icon,
   ClockIcon,
@@ -32,7 +33,7 @@ import {
   Trash2,
   TrendingUpIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -44,6 +45,10 @@ import {
 
 import { MetricCard, SectionHeader } from "@/components/dashboard-metrics";
 import { BodyText, PageTitle } from "@/components/typography";
+import {
+  useListDoctorAffiliations,
+  useUpdateAffiliationWindows,
+} from "@/hooks/queries/tenant";
 import { notify } from "@/lib/notify";
 import { orpc } from "@/utils/orpc";
 
@@ -97,27 +102,55 @@ export const Route = createFileRoute("/doctor/availability")({
 
 function DoctorAvailabilityRoute() {
   const { stats, availability } = Route.useLoaderData();
+  const { data: affiliationsData } = useListDoctorAffiliations();
+  const updateAffiliationWindows = useUpdateAffiliationWindows();
   const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const [selectedTenantId, setSelectedTenantId] = useState<string>("");
+
+  const affiliations = affiliationsData?.affiliations ?? [];
+
+  const currentAffiliation = useMemo(() => {
+    if (!selectedTenantId) return null;
+    return affiliations.find((a) => a.tenantId === selectedTenantId) ?? null;
+  }, [selectedTenantId, affiliations]);
+
+  const isTenantMode = !!selectedTenantId;
 
   useEffect(() => {
+    if (isTenantMode && currentAffiliation) {
+      const windows = currentAffiliation.availabilityWindows ?? [];
+      if (windows.length > 0) {
+        setSlots(
+          windows.map((w) => ({
+            dayOfWeek: w.dayOfWeek,
+            endTime: w.endTime,
+            isAvailable: true,
+            startTime: w.startTime,
+          }))
+        );
+        setHasChanges(false);
+        return;
+      }
+    }
+
     if (availability?.slots) {
       if (availability.slots.length > 0) {
         setSlots(availability.slots as AvailabilitySlot[]);
         setHasChanges(false);
         return;
       }
-
-      setSlots([
-        {
-          dayOfWeek: 1,
-          endTime: "17:00",
-          isAvailable: true,
-          startTime: "09:00",
-        },
-      ]);
     }
-  }, [availability]);
+
+    setSlots([
+      {
+        dayOfWeek: 1,
+        endTime: "17:00",
+        isAvailable: true,
+        startTime: "09:00",
+      },
+    ]);
+  }, [availability, isTenantMode, currentAffiliation]);
 
   const saveMutation = useMutation(
     orpc.saveWeeklyAvailability.mutationOptions({
@@ -130,6 +163,49 @@ function DoctorAvailabilityRoute() {
       },
     })
   );
+
+  const handleSave = () => {
+    if (isTenantMode && currentAffiliation) {
+      updateAffiliationWindows.mutate(
+        {
+          affiliationId: currentAffiliation.id,
+          availabilityWindows: slots
+            .filter((slot) => slot.isAvailable)
+            .map((slot) => ({
+              dayOfWeek: slot.dayOfWeek,
+              startTime: slot.startTime,
+              endTime: slot.endTime,
+            })),
+        },
+        {
+          onSuccess: () => {
+            notify.success("Tenant availability saved");
+            setHasChanges(false);
+          },
+          onError: (error: Error) => {
+            notify.error(error.message ?? "Failed to save tenant availability");
+          },
+        }
+      );
+      return;
+    }
+    saveMutation.mutate({ slots: slots.filter((slot) => slot.isAvailable) });
+  };
+
+  const isSaving = isTenantMode
+    ? updateAffiliationWindows.isPending
+    : saveMutation.isPending;
+
+  const handleTenantChange = (value: string | null) => {
+    if (hasChanges) {
+      const discard = window.confirm(
+        "You have unsaved changes. Switch anyway?"
+      );
+      if (!discard) return;
+    }
+    setSelectedTenantId(value ?? "");
+    setHasChanges(false);
+  };
 
   const addSlotForDay = (dayOfWeek: number) => {
     const daySlots = slots.filter((s) => s.dayOfWeek === dayOfWeek);
@@ -248,9 +324,26 @@ function DoctorAvailabilityRoute() {
     setHasChanges(true);
   };
 
-  const handleSave = () => {
-    saveMutation.mutate({ slots: slots.filter((slot) => slot.isAvailable) });
-  };
+  const tenantWindowsByDay = useMemo(() => {
+    if (isTenantMode || !affiliations.length) return [];
+    const result: Array<{
+      dayOfWeek: number;
+      tenantName: string;
+      startTime: string;
+      endTime: string;
+    }> = [];
+    for (const aff of affiliations) {
+      for (const w of aff.availabilityWindows ?? []) {
+        result.push({
+          dayOfWeek: w.dayOfWeek,
+          tenantName: aff.tenantName,
+          startTime: w.startTime,
+          endTime: w.endTime,
+        });
+      }
+    }
+    return result;
+  }, [affiliations, isTenantMode]);
 
   const availableDays = new Set(
     slots.filter((slot) => slot.isAvailable).map((slot) => slot.dayOfWeek)
@@ -274,17 +367,55 @@ function DoctorAvailabilityRoute() {
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline">Availability dashboard</Badge>
-              <Badge variant="secondary">Schedule overview</Badge>
+              {isTenantMode ? (
+                <Badge variant="secondary">
+                  {currentAffiliation?.tenantName ?? "Hospital"}
+                </Badge>
+              ) : (
+                <Badge variant="secondary">Schedule overview</Badge>
+              )}
             </div>
 
             <div className="flex flex-col gap-2">
-              <PageTitle>Weekly availability</PageTitle>
+              <PageTitle>
+                {isTenantMode
+                  ? `Availability at ${currentAffiliation?.tenantName ?? "Hospital"}`
+                  : "Weekly availability"}
+              </PageTitle>
 
               <BodyText className="max-w-2xl">
-                Set your weekly working hours so patients can book sessions that
-                fit your schedule. Days and slots can be individually toggled.
+                {isTenantMode
+                  ? `Set your working hours for ${currentAffiliation?.tenantName ?? "this hospital"} so the facility knows when you're available.`
+                  : "Set your weekly working hours so patients can book sessions that fit your schedule. Days and slots can be individually toggled."}
               </BodyText>
             </div>
+
+            {affiliations.length > 0 && (
+              <div className="flex items-center gap-2">
+                <BuildingIcon className="size-4 text-muted-foreground" />
+                <Select
+                  onValueChange={handleTenantChange}
+                  value={selectedTenantId}
+                >
+                  <SelectTrigger className="w-[260px]">
+                    <SelectValue placeholder="My general availability" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">
+                      My general availability
+                    </SelectItem>
+                    {affiliations.map((aff) => (
+                      <SelectItem
+                        key={aff.id}
+                        value={aff.tenantId}
+                      >
+                        {aff.tenantName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -409,17 +540,17 @@ function DoctorAvailabilityRoute() {
               <Button
                 className="text-xs"
                 disabled={
-                  saveMutation.isPending ||
+                  isSaving ||
                   slots.filter((slot) => slot.isAvailable).length === 0 ||
                   !hasChanges
                 }
                 onClick={handleSave}
                 size="sm"
               >
-                {saveMutation.isPending ? (
+                {isSaving ? (
                   <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                 ) : null}
-                Save Changes
+                {isTenantMode ? "Save Tenant Availability" : "Save Changes"}
               </Button>
             }
             description="Configure time windows for each day of the week"
@@ -612,6 +743,34 @@ function DoctorAvailabilityRoute() {
                         })}
                       </div>
                     )}
+                    {!isTenantMode &&
+                      tenantWindowsByDay.filter(
+                        (w) => w.dayOfWeek === dayOfWeek
+                      ).length > 0 && (
+                        <div className="flex flex-col gap-2 border-t border-border/40 pt-2">
+                          <p className="text-muted-foreground text-xs font-medium">
+                            Tenant reservations
+                          </p>
+                          {tenantWindowsByDay
+                            .filter((w) => w.dayOfWeek === dayOfWeek)
+                            .map((w, i) => (
+                              <div
+                                className="flex items-center gap-2 rounded-lg border border-border/50 bg-primary/5 px-3 py-2"
+                                key={i}
+                              >
+                                <Badge
+                                  className="text-[10px]"
+                                  variant="secondary"
+                                >
+                                  {w.tenantName}
+                                </Badge>
+                                <span className="font-mono text-xs text-muted-foreground">
+                                  {w.startTime}–{w.endTime}
+                                </span>
+                              </div>
+                            ))}
+                        </div>
+                      )}
                   </CardContent>
                 </Card>
               );
@@ -631,16 +790,16 @@ function DoctorAvailabilityRoute() {
             </div>
             <Button
               disabled={
-                saveMutation.isPending ||
+                isSaving ||
                 slots.filter((slot) => slot.isAvailable).length === 0 ||
                 !hasChanges
               }
               onClick={handleSave}
             >
-              {saveMutation.isPending ? (
+              {isSaving ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              Save Availability
+              {isTenantMode ? "Save Tenant Availability" : "Save Availability"}
             </Button>
           </div>
         </CardContent>

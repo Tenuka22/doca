@@ -335,6 +335,10 @@ export default function BookingScreen() {
     available: boolean;
   }>;
   const filteredSlots = slots.filter((slot) => {
+    if (!slot.available) {
+      return false;
+    }
+
     if (!selectedDate) {
       return true;
     }

@@ -1,12 +1,15 @@
 import { useUser } from "@clerk/tanstack-react-start";
 import { Avatar, AvatarFallback } from "@doca/ui/components/avatar";
 import { Badge } from "@doca/ui/components/badge";
+import { Button } from "@doca/ui/components/button";
 import { Card, CardContent, CardHeader } from "@doca/ui/components/card";
 import { Separator } from "@doca/ui/components/separator";
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import {
   BadgeCheckIcon,
   BookOpenIcon,
+  CopyIcon,
   FileIcon,
   GlobeIcon,
   LanguagesIcon,
@@ -34,8 +37,17 @@ function DoctorProfileRoute() {
   const user = useUser();
   const { stats, profileData } = Route.useLoaderData();
   const canManageFiles = profileData?.profile?.permanent ?? false;
+  const [copiedDoctorId, setCopiedDoctorId] = useState(false);
 
   const name = user.user?.fullName ?? user.user?.username ?? "Doctor";
+  const doctorId = user.user?.id ?? "";
+
+  const handleCopyDoctorId = () => {
+    navigator.clipboard.writeText(doctorId);
+    setCopiedDoctorId(true);
+    setTimeout(() => setCopiedDoctorId(false), 2000);
+  };
+
   const initials = name
     .split(" ")
     .map((part) => part[0])
@@ -88,6 +100,21 @@ function DoctorProfileRoute() {
                     credentials, and introductory materials. A complete profile
                     helps patients find and trust you.
                   </p>
+
+                  <div className="flex items-center gap-2">
+                    <code className="rounded-md bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground">
+                      ID: {doctorId}
+                    </code>
+                    <Button
+                      className="h-6 gap-1 px-2"
+                      onClick={handleCopyDoctorId}
+                      size="sm"
+                      variant="outline"
+                    >
+                      <CopyIcon className="size-3" />
+                      {copiedDoctorId ? "Copied" : "Copy ID"}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
