@@ -8,6 +8,7 @@ import {
   userCredits,
 } from "@doca/db";
 import { faker } from "@faker-js/faker";
+import { inArray } from "drizzle-orm";
 
 export async function seedPatients(db: ReturnType<typeof createDb>) {
   const existing = await db
@@ -50,50 +51,6 @@ export async function seedPatients(db: ReturnType<typeof createDb>) {
 
   await db.insert(patientProfiles).values(patients);
 
-  for (const patient of patients) {
-    await db.insert(userCredits).values({
-      userId: patient.userId,
-      balance: faker.number.int({ min: 0, max: 50 }),
-    });
-
-    await db.insert(moonlightCredits).values({
-      userId: patient.userId,
-      balance: faker.number.int({ min: 0, max: 100 }),
-      totalEarned: faker.number.int({ min: 50, max: 500 }),
-      consistencyScore: faker.number.int({ min: 0, max: 100 }),
-    });
-
-    // Stress predictions
-    const predictionCount = faker.number.int({ min: 1, max: 5 });
-    for (let p = 0; p < predictionCount; p++) {
-      await db.insert(stressPredictions).values({
-        id: crypto.randomUUID(),
-        userId: patient.userId,
-        prediction: faker.helpers.arrayElement(["low", "moderate", "high"]),
-        predictedClass: faker.helpers.arrayElement([0, 1, 2]).toString(),
-        probabilities: JSON.stringify(
-          Array.from({ length: 3 }, () =>
-            faker.number.float({ min: 0, max: 1 })
-          )
-        ),
-        sampleCount: faker.number.int({ min: 100, max: 500 }),
-        createdAt: faker.date.recent({ days: 30 }).toISOString(),
-        updatedAt: faker.date.recent({ days: 7 }).toISOString(),
-      });
-    }
-
-    // Stress download acknowledgment
-    if (faker.datatype.boolean(0.6)) {
-      await db.insert(stressDownloadAcknowledgments).values({
-        userId: patient.userId,
-        patientAcknowledgedAt: faker.date.recent({ days: 14 }).toISOString(),
-        guardianAcknowledgedAt: faker.datatype.boolean(0.3)
-          ? faker.date.recent({ days: 7 }).toISOString()
-          : null,
-      });
-    }
-  }
-
   // Guardian profiles
   for (let i = 0; i < 3; i++) {
     await db.insert(guardianProfiles).values({
@@ -108,6 +65,95 @@ export async function seedPatients(db: ReturnType<typeof createDb>) {
     existing: 0,
     userIds: patients.map((p) => p.userId),
   };
+}
+
+export async function seedPatientRelations(
+  db: ReturnType<typeof createDb>,
+  patientIds: string[],
+) {
+  if (patientIds.length === 0) {
+    return { credits: 0, moonlight: 0, stress: 0, acknowledgments: 0 };
+  }
+
+  const existingCreditUsers = await db
+    .select({ userId: userCredits.userId })
+    .from(userCredits)
+    .where(inArray(userCredits.userId, patientIds));
+  const existingMoonlightUsers = await db
+    .select({ userId: moonlightCredits.userId })
+    .from(moonlightCredits)
+    .where(inArray(moonlightCredits.userId, patientIds));
+  const existingStressPatients = await db
+    .select({ userId: stressPredictions.userId })
+    .from(stressPredictions)
+    .where(inArray(stressPredictions.userId, patientIds));
+
+  const existingCreditSet = new Set(existingCreditUsers.map((r) => r.userId));
+  const existingMoonlightSet = new Set(existingMoonlightUsers.map((r) => r.userId));
+  const existingStressSet = new Set(existingStressPatients.map((r) => r.userId));
+
+  let creditCount = 0;
+  let moonlightCount = 0;
+  let stressCount = 0;
+  let ackCount = 0;
+
+  for (const userId of patientIds) {
+    // User credits
+    if (!existingCreditSet.has(userId)) {
+      await db.insert(userCredits).values({
+        userId,
+        balance: faker.number.int({ min: 0, max: 50 }),
+      });
+      creditCount++;
+    }
+
+    // Moonlight credits
+    if (!existingMoonlightSet.has(userId)) {
+      await db.insert(moonlightCredits).values({
+        userId,
+        balance: faker.number.int({ min: 0, max: 100 }),
+        totalEarned: faker.number.int({ min: 50, max: 500 }),
+        consistencyScore: faker.number.int({ min: 0, max: 100 }),
+      });
+      moonlightCount++;
+    }
+
+    // Stress predictions
+    if (!existingStressSet.has(userId)) {
+      const predictionCount = faker.number.int({ min: 1, max: 5 });
+      for (let p = 0; p < predictionCount; p++) {
+        await db.insert(stressPredictions).values({
+          id: crypto.randomUUID(),
+          userId,
+          prediction: faker.helpers.arrayElement(["low", "moderate", "high"]),
+          predictedClass: faker.helpers.arrayElement([0, 1, 2]).toString(),
+          probabilities: JSON.stringify(
+            Array.from({ length: 3 }, () =>
+              faker.number.float({ min: 0, max: 1 })
+            )
+          ),
+          sampleCount: faker.number.int({ min: 100, max: 500 }),
+          createdAt: faker.date.recent({ days: 30 }).toISOString(),
+          updatedAt: faker.date.recent({ days: 7 }).toISOString(),
+        });
+      }
+      stressCount += predictionCount;
+    }
+
+    // Stress download acknowledgment
+    if (faker.datatype.boolean(0.6)) {
+      await db.insert(stressDownloadAcknowledgments).values({
+        userId,
+        patientAcknowledgedAt: faker.date.recent({ days: 14 }).toISOString(),
+        guardianAcknowledgedAt: faker.datatype.boolean(0.3)
+          ? faker.date.recent({ days: 7 }).toISOString()
+          : null,
+      });
+      ackCount++;
+    }
+  }
+
+  return { credits: creditCount, moonlight: moonlightCount, stress: stressCount, acknowledgments: ackCount };
 }
 
 export async function getPatientIds(db: ReturnType<typeof createDb>) {

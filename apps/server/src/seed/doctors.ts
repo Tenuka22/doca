@@ -9,6 +9,7 @@ import {
   doctorWeeklyAvailability,
 } from "@doca/db";
 import { faker } from "@faker-js/faker";
+import { inArray } from "drizzle-orm";
 
 const SPECIALTIES = [
   "psychiatry",
@@ -134,163 +135,232 @@ export async function seedDoctors(db: ReturnType<typeof createDb>) {
 
   await db.insert(doctorProfiles).values(doctors);
 
-  for (const doctor of doctors) {
-    const entries = [
-      {
-        doctorId: doctor.userId,
-        institution: faker.company.name(),
-        degree: "Ph.D. in Clinical Psychology",
-        year: faker.number.int({ min: 2000, max: 2015 }),
-      },
-      {
-        doctorId: doctor.userId,
-        institution: faker.company.name(),
-        degree: "M.A. in Psychology",
-        year: faker.number.int({ min: 1995, max: 2010 }),
-      },
-    ];
-
-    await db.insert(doctorEducationEntries).values(
-      entries.map((e) => ({
-        id: crypto.randomUUID(),
-        doctorId: e.doctorId,
-        institution: e.institution,
-        degree: e.degree,
-        year: e.year,
-      }))
-    );
-  }
-
-  for (const doctor of doctors) {
-    const plans = [
-      {
-        doctorId: doctor.userId,
-        name: "Initial Consultation",
-        description: "Comprehensive initial assessment and treatment planning",
-        creditCost: 1,
-        durationMinutes: 30,
-        features: JSON.stringify(["assessment", "treatment plan"]),
-        isActive: true,
-        isDefault: false,
-        sortOrder: 0,
-      },
-      {
-        doctorId: doctor.userId,
-        name: "Standard Session",
-        description: "Regular therapy session",
-        creditCost: 2,
-        durationMinutes: 50,
-        features: JSON.stringify(["therapy", "progress review"]),
-        isActive: true,
-        isDefault: true,
-        sortOrder: 1,
-      },
-      {
-        doctorId: doctor.userId,
-        name: "Extended Session",
-        description: "Extended therapy session for deeper work",
-        creditCost: 3,
-        durationMinutes: 80,
-        features: JSON.stringify(["deep therapy", "crisis support"]),
-        isActive: true,
-        isDefault: false,
-        sortOrder: 2,
-      },
-    ];
-
-    await db.insert(doctorPlans).values(
-      plans.map((p) => ({
-        id: crypto.randomUUID(),
-        doctorId: p.doctorId,
-        name: p.name,
-        description: p.description,
-        creditCost: p.creditCost,
-        durationMinutes: p.durationMinutes,
-        features: p.features,
-        isActive: p.isActive,
-        isDefault: p.isDefault,
-        sortOrder: p.sortOrder,
-      }))
-    );
-
-    await db.insert(doctorCredits).values({
-      doctorId: doctor.userId,
-      balanceCents: faker.number.int({ min: 0, max: 50_000 }),
-      totalEarnedCents: faker.number.int({ min: 10_000, max: 200_000 }),
-      totalCashedOutCents: faker.number.int({ min: 0, max: 100_000 }),
-    });
-
-    // Weekly availability
-    const days = [0, 1, 2, 3, 4, 5, 6];
-    for (const dayOfWeek of days) {
-      if (dayOfWeek === 0 || dayOfWeek === 6) {
-        // Weekend — shorter or off
-        if (faker.datatype.boolean(0.3)) {
-          await db.insert(doctorWeeklyAvailability).values({
-            id: crypto.randomUUID(),
-            doctorId: doctor.userId,
-            dayOfWeek,
-            startTime: "10:00",
-            endTime: "14:00",
-            isAvailable: true,
-          });
-        }
-      } else {
-        await db.insert(doctorWeeklyAvailability).values({
-          id: crypto.randomUUID(),
-          doctorId: doctor.userId,
-          dayOfWeek,
-          startTime: "09:00",
-          endTime: "17:00",
-          isAvailable: true,
-        });
-      }
-    }
-
-    // Schedule entries (a few upcoming blocks)
-    for (let s = 0; s < 3; s++) {
-      const startDate = faker.date.soon({ days: 14 });
-      const endDate = new Date(startDate);
-      endDate.setHours(endDate.getHours() + 1);
-      await db.insert(doctorScheduleEntries).values({
-        id: crypto.randomUUID(),
-        doctorId: doctor.userId,
-        kind: "open",
-        startAt: startDate.toISOString(),
-        endAt: endDate.toISOString(),
-      });
-    }
-
-    // Doctor files (portrait + qualification)
-    await db.insert(doctorFiles).values({
-      id: crypto.randomUUID(),
-      doctorId: doctor.userId,
-      fileKey: `doctor-files/${doctor.userId}/portrait.jpg`,
-      fileName: "portrait.jpg",
-      mimeType: "image/jpeg",
-      fileKind: "portrait",
-      caption: "Professional portrait",
-      size: faker.number.int({ min: 50_000, max: 500_000 }),
-      width: 400,
-      height: 400,
-    });
-    await db.insert(doctorFiles).values({
-      id: crypto.randomUUID(),
-      doctorId: doctor.userId,
-      fileKey: `doctor-files/${doctor.userId}/qualification.pdf`,
-      fileName: "license.pdf",
-      mimeType: "application/pdf",
-      fileKind: "qualification",
-      caption: "Medical license",
-      size: faker.number.int({ min: 100_000, max: 1_000_000 }),
-    });
-  }
-
   return {
     created: doctors.length,
     existing: 0,
     userIds: doctors.map((d) => d.userId),
   };
+}
+
+export async function seedDoctorRelations(
+  db: ReturnType<typeof createDb>,
+  doctorIds: string[],
+) {
+  if (doctorIds.length === 0) {
+    return { education: 0, plans: 0, credits: 0, availability: 0, schedule: 0, files: 0 };
+  }
+
+  const existingEducation = await db
+    .select({ doctorId: doctorEducationEntries.doctorId })
+    .from(doctorEducationEntries)
+    .where(inArray(doctorEducationEntries.doctorId, doctorIds));
+  const existingPlanDoctors = await db
+    .select({ doctorId: doctorPlans.doctorId })
+    .from(doctorPlans)
+    .where(inArray(doctorPlans.doctorId, doctorIds));
+  const existingCreditDoctors = await db
+    .select({ doctorId: doctorCredits.doctorId })
+    .from(doctorCredits)
+    .where(inArray(doctorCredits.doctorId, doctorIds));
+  const existingAvailDoctors = await db
+    .select({ doctorId: doctorWeeklyAvailability.doctorId })
+    .from(doctorWeeklyAvailability)
+    .where(inArray(doctorWeeklyAvailability.doctorId, doctorIds));
+  const existingScheduleDoctors = await db
+    .select({ doctorId: doctorScheduleEntries.doctorId })
+    .from(doctorScheduleEntries)
+    .where(inArray(doctorScheduleEntries.doctorId, doctorIds));
+  const existingFileDoctors = await db
+    .select({ doctorId: doctorFiles.doctorId })
+    .from(doctorFiles)
+    .where(inArray(doctorFiles.doctorId, doctorIds));
+
+  const existingEducationSet = new Set(existingEducation.map((r) => r.doctorId));
+  const existingPlanSet = new Set(existingPlanDoctors.map((r) => r.doctorId));
+  const existingCreditSet = new Set(existingCreditDoctors.map((r) => r.doctorId));
+  const existingAvailSet = new Set(existingAvailDoctors.map((r) => r.doctorId));
+  const existingScheduleSet = new Set(existingScheduleDoctors.map((r) => r.doctorId));
+  const existingFileSet = new Set(existingFileDoctors.map((r) => r.doctorId));
+
+  let educationCount = 0;
+  let planCount = 0;
+  let creditCount = 0;
+  let availCount = 0;
+  let scheduleCount = 0;
+  let fileCount = 0;
+
+  for (const doctorId of doctorIds) {
+    // Education entries
+    if (!existingEducationSet.has(doctorId)) {
+      const entries = [
+        {
+          doctorId,
+          institution: faker.company.name(),
+          degree: "Ph.D. in Clinical Psychology",
+          year: faker.number.int({ min: 2000, max: 2015 }),
+        },
+        {
+          doctorId,
+          institution: faker.company.name(),
+          degree: "M.A. in Psychology",
+          year: faker.number.int({ min: 1995, max: 2010 }),
+        },
+      ];
+
+      await db.insert(doctorEducationEntries).values(
+        entries.map((e) => ({
+          id: crypto.randomUUID(),
+          doctorId: e.doctorId,
+          institution: e.institution,
+          degree: e.degree,
+          year: e.year,
+        }))
+      );
+      educationCount += entries.length;
+    }
+
+    // Plans
+    if (!existingPlanSet.has(doctorId)) {
+      const plans = [
+        {
+          doctorId,
+          name: "Initial Consultation",
+          description: "Comprehensive initial assessment and treatment planning",
+          creditCost: 1,
+          durationMinutes: 30,
+          features: JSON.stringify(["assessment", "treatment plan"]),
+          isActive: true,
+          isDefault: false,
+          sortOrder: 0,
+        },
+        {
+          doctorId,
+          name: "Standard Session",
+          description: "Regular therapy session",
+          creditCost: 2,
+          durationMinutes: 50,
+          features: JSON.stringify(["therapy", "progress review"]),
+          isActive: true,
+          isDefault: true,
+          sortOrder: 1,
+        },
+        {
+          doctorId,
+          name: "Extended Session",
+          description: "Extended therapy session for deeper work",
+          creditCost: 3,
+          durationMinutes: 80,
+          features: JSON.stringify(["deep therapy", "crisis support"]),
+          isActive: true,
+          isDefault: false,
+          sortOrder: 2,
+        },
+      ];
+
+      await db.insert(doctorPlans).values(
+        plans.map((p) => ({
+          id: crypto.randomUUID(),
+          doctorId: p.doctorId,
+          name: p.name,
+          description: p.description,
+          creditCost: p.creditCost,
+          durationMinutes: p.durationMinutes,
+          features: p.features,
+          isActive: p.isActive,
+          isDefault: p.isDefault,
+          sortOrder: p.sortOrder,
+        }))
+      );
+      planCount += plans.length;
+    }
+
+    // Credits
+    if (!existingCreditSet.has(doctorId)) {
+      await db.insert(doctorCredits).values({
+        doctorId,
+        balanceCents: faker.number.int({ min: 0, max: 50_000 }),
+        totalEarnedCents: faker.number.int({ min: 10_000, max: 200_000 }),
+        totalCashedOutCents: faker.number.int({ min: 0, max: 100_000 }),
+      });
+      creditCount++;
+    }
+
+    // Weekly availability
+    if (!existingAvailSet.has(doctorId)) {
+      const days = [0, 1, 2, 3, 4, 5, 6];
+      for (const dayOfWeek of days) {
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+          if (faker.datatype.boolean(0.3)) {
+            await db.insert(doctorWeeklyAvailability).values({
+              id: crypto.randomUUID(),
+              doctorId,
+              dayOfWeek,
+              startTime: "10:00",
+              endTime: "14:00",
+              isAvailable: true,
+            });
+            availCount++;
+          }
+        } else {
+          await db.insert(doctorWeeklyAvailability).values({
+            id: crypto.randomUUID(),
+            doctorId,
+            dayOfWeek,
+            startTime: "09:00",
+            endTime: "17:00",
+            isAvailable: true,
+          });
+          availCount++;
+        }
+      }
+    }
+
+    // Schedule entries
+    if (!existingScheduleSet.has(doctorId)) {
+      for (let s = 0; s < 3; s++) {
+        const startDate = faker.date.soon({ days: 14 });
+        const endDate = new Date(startDate);
+        endDate.setHours(endDate.getHours() + 1);
+        await db.insert(doctorScheduleEntries).values({
+          id: crypto.randomUUID(),
+          doctorId,
+          kind: "open",
+          startAt: startDate.toISOString(),
+          endAt: endDate.toISOString(),
+        });
+        scheduleCount++;
+      }
+    }
+
+    // Doctor files
+    if (!existingFileSet.has(doctorId)) {
+      await db.insert(doctorFiles).values({
+        id: crypto.randomUUID(),
+        doctorId,
+        fileKey: `doctor-files/${doctorId}/portrait.jpg`,
+        fileName: "portrait.jpg",
+        mimeType: "image/jpeg",
+        fileKind: "portrait",
+        caption: "Professional portrait",
+        size: faker.number.int({ min: 50_000, max: 500_000 }),
+        width: 400,
+        height: 400,
+      });
+      await db.insert(doctorFiles).values({
+        id: crypto.randomUUID(),
+        doctorId,
+        fileKey: `doctor-files/${doctorId}/qualification.pdf`,
+        fileName: "license.pdf",
+        mimeType: "application/pdf",
+        fileKind: "qualification",
+        caption: "Medical license",
+        size: faker.number.int({ min: 100_000, max: 1_000_000 }),
+      });
+      fileCount += 2;
+    }
+  }
+
+  return { education: educationCount, plans: planCount, credits: creditCount, availability: availCount, schedule: scheduleCount, files: fileCount };
 }
 
 export async function getDoctorIds(db: ReturnType<typeof createDb>) {
