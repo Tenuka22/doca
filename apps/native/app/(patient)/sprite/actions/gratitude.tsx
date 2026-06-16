@@ -2,9 +2,23 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { ArrowLeft, Heart, Sparkles, CheckCircle2, Zap } from "lucide-react-native";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Heart,
+  Sparkles,
+  Zap,
+} from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Easing, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import {
+  Animated,
+  Easing,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
@@ -60,7 +74,7 @@ export default function GratitudeActionScreen() {
   const options = isMorning
     ? GRATITUDE_OPTIONS.morning
     : GRATITUDE_OPTIONS.evening;
-  
+
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [customEntries, setCustomEntries] = useState<string[]>(["", "", ""]);
   const [completed, setCompleted] = useState(false);
@@ -70,8 +84,18 @@ export default function GratitudeActionScreen() {
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(heartScale, { toValue: 1.15, duration: 1500, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        Animated.timing(heartScale, { toValue: 1, duration: 1500, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(heartScale, {
+          toValue: 1.15,
+          duration: 1500,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(heartScale, {
+          toValue: 1,
+          duration: 1500,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
       ])
     ).start();
   }, []);
@@ -80,7 +104,9 @@ export default function GratitudeActionScreen() {
     orpc.completeWellnessAction.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: orpc.getSpriteState.key() });
-        queryClient.invalidateQueries({ queryKey: orpc.getMoonlightCredits.key() });
+        queryClient.invalidateQueries({
+          queryKey: orpc.getMoonlightCredits.key(),
+        });
         queryClient.invalidateQueries({ queryKey: orpc.getTodayTasks.key() });
         setCompleted(true);
         playToneSequence();
@@ -89,7 +115,9 @@ export default function GratitudeActionScreen() {
   );
 
   const handleComplete = useCallback(() => {
-    if (!actionType) return;
+    if (!actionType) {
+      return;
+    }
 
     const allEntries = [...selectedOptions.filter((o) => o !== "Custom...")];
     for (const entry of customEntries) {
@@ -98,7 +126,9 @@ export default function GratitudeActionScreen() {
       }
     }
 
-    if (allEntries.length < 1) return;
+    if (allEntries.length < 1) {
+      return;
+    }
 
     vibrate(30);
     completeMutation.mutate({
@@ -141,55 +171,66 @@ export default function GratitudeActionScreen() {
           {/* Header */}
           <View className="items-center gap-2">
             <View className="flex-row items-center gap-2 rounded-full bg-destructive/10 px-4 py-1.5">
-               <Heart color={colors.destructive} size={14} />
-               <Text className="font-bold font-sans text-destructive text-[10px] uppercase tracking-widest">
-                 {isMorning ? "Morning" : "Evening"} Gratitude
-               </Text>
+              <Heart color={colors.destructive} size={14} />
+              <Text className="font-bold font-sans text-[10px] text-destructive uppercase tracking-widest">
+                {isMorning ? "Morning" : "Evening"} Gratitude
+              </Text>
             </View>
-            <Text className="font-black font-sans text-4xl text-foreground text-center">
+            <Text className="text-center font-black font-sans text-4xl text-foreground">
               Heart Space
             </Text>
-            <Text className="text-center font-medium font-sans text-muted-foreground text-sm max-w-[250px]">
+            <Text className="max-w-[250px] text-center font-medium font-sans text-muted-foreground text-sm">
               What small joy brought light to your day?
             </Text>
           </View>
 
           {/* Visualizer Area */}
-          <View className="items-center justify-center py-4 relative">
-             <View className="absolute h-48 w-48 rounded-full bg-destructive/5 blur-3xl" />
-             <Animated.View style={{ transform: [{ scale: heartScale }] }}>
-                <View className="h-32 w-32 items-center justify-center rounded-full bg-destructive/10 border-4 border-destructive/20 shadow-2xl shadow-destructive/20">
-                   <Heart color={colors.destructive} size={48} fill={colors.destructive} opacity={0.8} />
-                </View>
-             </Animated.View>
-             
-             {/* Sparkle effects based on filledCount */}
-             {filledCount > 0 && (
-               <View className="absolute top-0 right-1/4">
-                  <Sparkles color={colors.warning} size={20} />
-               </View>
-             )}
+          <View className="relative items-center justify-center py-4">
+            <View className="absolute h-48 w-48 rounded-full bg-destructive/5 blur-3xl" />
+            <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+              <View className="h-32 w-32 items-center justify-center rounded-full border-4 border-destructive/20 bg-destructive/10 shadow-2xl shadow-destructive/20">
+                <Heart
+                  color={colors.destructive}
+                  fill={colors.destructive}
+                  opacity={0.8}
+                  size={48}
+                />
+              </View>
+            </Animated.View>
+
+            {/* Sparkle effects based on filledCount */}
+            {filledCount > 0 && (
+              <View className="absolute top-0 right-1/4">
+                <Sparkles color={colors.warning} size={20} />
+              </View>
+            )}
           </View>
 
           {completed ? (
-            <View className="items-center gap-4 bg-success/10 border-2 border-success/30 rounded-card p-6">
+            <View className="items-center gap-4 rounded-card border-2 border-success/30 bg-success/10 p-6">
               <View className="h-12 w-12 items-center justify-center rounded-full bg-success/20">
-                 <Zap color={colors.success} size={24} />
+                <Zap color={colors.success} size={24} />
               </View>
               <View className="items-center">
-                 <Text className="font-black font-sans text-success text-xl">Gratitude Recorded!</Text>
-                 <Text className="font-bold font-sans text-success/80 text-xs text-center">
-                   A grateful heart is a healthy heart. You earned +10 Credits.
-                 </Text>
+                <Text className="font-black font-sans text-success text-xl">
+                  Gratitude Recorded!
+                </Text>
+                <Text className="text-center font-bold font-sans text-success/80 text-xs">
+                  A grateful heart is a healthy heart. You earned +10 Credits.
+                </Text>
               </View>
-              <Button className="w-full mt-2" href="/sprite" variant="secondary">
+              <Button
+                className="mt-2 w-full"
+                href="/sprite"
+                variant="secondary"
+              >
                 Back to Mission Hub
               </Button>
             </View>
           ) : (
             <View className="gap-6">
               <View className="rounded-card border-2 border-border bg-card p-5 shadow-sm">
-                <Text className="mb-4 font-black font-sans text-foreground text-xs uppercase tracking-widest text-center">
+                <Text className="mb-4 text-center font-black font-sans text-foreground text-xs uppercase tracking-widest">
                   Reflections
                 </Text>
                 <View className="flex-row flex-wrap justify-center gap-2">
@@ -220,12 +261,12 @@ export default function GratitudeActionScreen() {
 
               {hasCustomSelected && (
                 <View className="gap-3 rounded-card border-2 border-destructive/20 bg-destructive/5 p-5">
-                  <Text className="font-black font-sans text-destructive text-[10px] uppercase tracking-widest">
+                  <Text className="font-black font-sans text-[10px] text-destructive uppercase tracking-widest">
                     Your Words
                   </Text>
                   {customEntries.map((entry, index) => (
                     <TextInput
-                      className="rounded-xl border-2 border-border bg-background px-4 py-3 font-medium font-sans text-sm text-foreground"
+                      className="rounded-xl border-2 border-border bg-background px-4 py-3 font-medium font-sans text-foreground text-sm"
                       key={index}
                       multiline
                       onChangeText={(value) => updateCustomEntry(index, value)}
@@ -242,25 +283,33 @@ export default function GratitudeActionScreen() {
       </Screen>
 
       <ScreenBottomBar>
-        {!completed ? (
+        {completed ? (
+          <View className="flex-1" />
+        ) : (
           <>
-            <View className="h-12 flex-[1.2] flex-row items-center justify-center gap-3 rounded-control border-2 border-border bg-background px-3 py-2 mr-2">
+            <View className="mr-2 h-12 flex-[1.2] flex-row items-center justify-center gap-3 rounded-control border-2 border-border bg-background px-3 py-2">
               <CheckCircle2 color={colors.success} size={14} />
               <View className="flex-1 gap-1">
-                 <View className="flex-row items-center justify-between">
-                    <Text className="font-bold font-sans text-muted-foreground text-[8px] uppercase">Focus Progress</Text>
-                    <Text className="font-black font-sans text-foreground text-[10px]">{filledCount}/3</Text>
-                 </View>
-                 <View className="h-1 overflow-hidden rounded-full bg-muted">
-                    <View
-                      className="h-full rounded-full bg-destructive"
-                      style={{ width: `${Math.min(100, (filledCount / 3) * 100)}%` }}
-                    />
-                 </View>
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-bold font-sans text-[8px] text-muted-foreground uppercase">
+                    Focus Progress
+                  </Text>
+                  <Text className="font-black font-sans text-[10px] text-foreground">
+                    {filledCount}/3
+                  </Text>
+                </View>
+                <View className="h-1 overflow-hidden rounded-full bg-muted">
+                  <View
+                    className="h-full rounded-full bg-destructive"
+                    style={{
+                      width: `${Math.min(100, (filledCount / 3) * 100)}%`,
+                    }}
+                  />
+                </View>
               </View>
             </View>
             <Button
-              className="h-12 flex-1 shadow-lg shadow-destructive/20"
+              className="h-12 flex-1 shadow-destructive/20 shadow-lg"
               disabled={!canComplete || completeMutation.isPending}
               onPress={handleComplete}
               variant="primary"
@@ -268,16 +317,17 @@ export default function GratitudeActionScreen() {
               Log Session
             </Button>
           </>
-        ) : (
-          <View className="flex-1" />
         )}
         <IconButton
           icon={ArrowLeft}
           iconSize={16}
           onPress={() => {
             vibrate(15);
-            if (router.canGoBack()) router.back();
-            else router.replace("/");
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/");
+            }
           }}
         />
       </ScreenBottomBar>

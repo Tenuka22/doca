@@ -29,12 +29,7 @@ export interface UserAccount {
   image_url?: string;
   name?: string;
   phone?: string;
-  role:
-    | "admin"
-    | "user"
-    | "doctor"
-    | "pending-doctor"
-    | "tenant-admin";
+  role: "admin" | "user" | "doctor" | "pending-doctor" | "tenant-admin";
 }
 
 export const getServerSession = createServerFn({ method: "GET" }).handler(

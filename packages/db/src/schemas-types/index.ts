@@ -105,7 +105,6 @@ export const completeOnboardingSchema = z.object({
 export const updatePatientProfileSchema = z.object({
   alias: z.string().min(1).max(100).optional(),
   _securedData: z.string().optional(),
-
 });
 
 export const cancelSessionSchema = z.object({

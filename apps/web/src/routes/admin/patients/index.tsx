@@ -107,7 +107,6 @@ function AdminPatientsRoute() {
 
                       <div className="flex flex-col gap-1">
                         <p className="font-medium text-sm">{patient.alias}</p>
-
                       </div>
                     </div>
 

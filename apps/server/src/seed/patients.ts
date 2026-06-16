@@ -49,8 +49,6 @@ export async function seedPatients(db: ReturnType<typeof createDb>) {
 
   await db.insert(patientProfiles).values(patients);
 
-
-
   return {
     created: patients.length,
     existing: 0,
@@ -125,7 +123,6 @@ export async function seedPatientRelations(
       await db.insert(stressDownloadAcknowledgments).values({
         userId,
         patientAcknowledgedAt: faker.date.recent({ days: 14 }).toISOString(),
-
       });
       ackCount++;
     }

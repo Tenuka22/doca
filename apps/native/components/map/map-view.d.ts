@@ -4,6 +4,8 @@ import type { Hospital } from "@/data/hospitals";
 interface MapViewProps {
   filteredHospitals: Hospital[];
   onMarkerPress: (hospital: Hospital) => void;
+  platformHospitalNames?: string[];
+  selectedHospitalId?: string;
   userLocation?: { lat: number; lng: number } | null;
 }
 

@@ -95,7 +95,8 @@ export async function seedSessions(
       status,
       creditCost: 0,
       amountCents,
-      paymentIntentId: status === "attended" ? `pi_${faker.string.alphanumeric(24)}` : null,
+      paymentIntentId:
+        status === "attended" ? `pi_${faker.string.alphanumeric(24)}` : null,
     });
   }
 

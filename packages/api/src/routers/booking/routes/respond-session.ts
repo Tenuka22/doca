@@ -3,10 +3,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
-import {
-  cancelPaymentIntent,
-  capturePaymentIntent,
-} from "../stripe-utils";
+import { cancelPaymentIntent, capturePaymentIntent } from "../stripe-utils";
 
 export const respondSessionRoute = protectedProcedure
   .input(
@@ -47,7 +44,10 @@ export const respondSessionRoute = protectedProcedure
 
     if (input.action === "approve") {
       // Capture the held payment now that the doctor has approved
-      if (session.paymentIntentId && session.paymentIntentId.startsWith("pi_")) {
+      if (
+        session.paymentIntentId &&
+        session.paymentIntentId.startsWith("pi_")
+      ) {
         await capturePaymentIntent(session.paymentIntentId);
       }
 
@@ -77,7 +77,10 @@ export const respondSessionRoute = protectedProcedure
         .where(eq(doctorSessions.id, input.sessionId));
     } else {
       // Cancel the held payment on rejection
-      if (session.paymentIntentId && session.paymentIntentId.startsWith("pi_")) {
+      if (
+        session.paymentIntentId &&
+        session.paymentIntentId.startsWith("pi_")
+      ) {
         await cancelPaymentIntent(session.paymentIntentId);
       }
 

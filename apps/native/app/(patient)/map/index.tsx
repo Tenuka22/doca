@@ -1,11 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Stack, useRouter } from "expo-router";
+import { type Href, Stack, useRouter } from "expo-router";
 import {
   ArrowLeft,
   Building2,
-  ChevronDown,
   ChevronRight,
   Clock,
   Globe,
@@ -41,7 +40,28 @@ import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
 import { Tag } from "@/components/ui/tag";
-import { type CATEGORIES, type Hospital, hospitals } from "@/data/hospitals";
+import {
+  type CATEGORIES,
+  hospitals as staticHospitals,
+} from "@/data/hospitals";
+
+interface TenantListItem {
+  address: string;
+  clinicCount: number;
+  contactInfo: string | null;
+  doctorCount: number;
+  id: string;
+  latitude: string | null;
+  logo: string | null;
+  longitude: string | null;
+  name: string;
+  phone: string | null;
+  services: string[];
+  status: string;
+  type: "PRIVATE_HOSPITAL" | "PUBLIC_HOSPITAL";
+  website: string | null;
+}
+
 import { orpc } from "@/utils/orpc";
 import { useThemeColor } from "@/utils/theme";
 import { useUserLocation } from "@/utils/use-user-location";
@@ -55,7 +75,7 @@ const FILTER_ACTIONS = [
   { icon: Stethoscope, label: "Medical", value: "Medical Center" },
 ] as const;
 
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
 export default function MapScreen() {
   const colors = useThemeColor();
@@ -84,11 +104,14 @@ export default function MapScreen() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([
     "All",
   ]);
-  const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(
-    null
-  );
+  const [selectedHospital, setSelectedHospital] = useState<
+    (typeof staticHospitals)[number] | null
+  >(null);
   const [showPanel, setShowPanel] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedDoctorTenantIds, setSelectedDoctorTenantIds] = useState<
+    string[] | null
+  >(null);
   const panelAnim = useRef(new Animated.Value(0)).current;
   const searchInputRef = useRef<TextInput>(null);
 
@@ -98,31 +121,87 @@ export default function MapScreen() {
     })
   );
 
-  const filteredHospitals = useMemo(() => {
-    if (selectedCategories.includes("All")) {
-      return hospitals;
-    }
-    return hospitals.filter((h) => selectedCategories.includes(h.category));
-  }, [selectedCategories]);
+  const tenantsQuery = useQuery(
+    orpc.listTenants.queryOptions({
+      input: selectedDoctorTenantIds
+        ? { tenantIds: selectedDoctorTenantIds }
+        : undefined,
+    })
+  );
 
-  const handleMarkerPress = useCallback((hospital: Hospital) => {
-    setSelectedHospital(hospital);
-    setShowDetailModal(false);
-    mapRef.current?.animateToRegion(
-      {
-        latitude: hospital.latitude,
-        longitude: hospital.longitude,
-        latitudeDelta: 0.02,
-        longitudeDelta: 0.02,
-      },
-      400
-    );
-  }, []);
+  const filteredTenants = useMemo(() => {
+    const allTenants = (tenantsQuery.data?.tenants ??
+      []) as unknown as TenantListItem[];
+    if (selectedCategories.includes("All")) {
+      return allTenants;
+    }
+    return allTenants.filter((t) => {
+      const typeLabel =
+        t.type === "PRIVATE_HOSPITAL"
+          ? "Private hospital"
+          : t.type === "PUBLIC_HOSPITAL"
+            ? "Government hospital"
+            : "Hospital";
+      return selectedCategories.includes(typeLabel);
+    });
+  }, [tenantsQuery.data, selectedCategories]);
+
+  const platformHospitalNames = useMemo(
+    () => filteredTenants.map((t) => t.name),
+    [filteredTenants]
+  );
+
+  const allMapHospitals = useMemo(() => {
+    const platformNames = new Set(platformHospitalNames);
+    const merged = [...staticHospitals];
+    for (const t of filteredTenants) {
+      if (!platformNames.has(t.name)) {
+        merged.push({
+          name: t.name,
+          address: t.address,
+          rating: 4.0,
+          reviewCount: 0,
+          latitude: Number.parseFloat(t.latitude ?? "0"),
+          longitude: Number.parseFloat(t.longitude ?? "0"),
+          phone: t.phone,
+          website: t.website,
+          category:
+            t.type === "PRIVATE_HOSPITAL"
+              ? "Private hospital"
+              : t.type === "PUBLIC_HOSPITAL"
+                ? "Government hospital"
+                : "Hospital",
+          hours: null,
+        });
+      }
+    }
+    if (selectedCategories.includes("All")) {
+      return merged;
+    }
+    return merged.filter((h) => selectedCategories.includes(h.category));
+  }, [filteredTenants, selectedCategories, platformHospitalNames]);
+
+  const handleMarkerPress = useCallback(
+    (hospital: (typeof staticHospitals)[number]) => {
+      setSelectedHospital(hospital);
+      setShowDetailModal(false);
+      mapRef.current?.animateToRegion(
+        {
+          latitude: hospital.latitude,
+          longitude: hospital.longitude,
+          latitudeDelta: 0.02,
+          longitudeDelta: 0.02,
+        },
+        400
+      );
+    },
+    []
+  );
 
   const doctors = doctorsQuery.data?.doctors ?? [];
 
   const openMapsNavigation = useCallback(
-    (hospital: Hospital) => {
+    (hospital: (typeof staticHospitals)[number]) => {
       const googleUrl = `https://www.google.com/maps/dir/?api=1&destination=${hospital.latitude},${hospital.longitude}`;
       const appleUrl = `https://maps.apple.com/?daddr=${hospital.latitude},${hospital.longitude}`;
       Linking.openURL(userLocation ? googleUrl : appleUrl);
@@ -159,9 +238,14 @@ export default function MapScreen() {
     outputRange: [panelWidth, 0],
   });
 
-  const detailHospital = showDetailModal
-    ? (selectedHospital ?? hospitals[0])
-    : null;
+  const detailTenant =
+    showDetailModal && selectedHospital
+      ? filteredTenants.find(
+          (t) =>
+            t.name === selectedHospital.name ||
+            t.phone === selectedHospital.phone
+        )
+      : null;
 
   return (
     <>
@@ -169,9 +253,46 @@ export default function MapScreen() {
 
       <View className="flex-1 bg-background">
         <MapComponent
-          filteredHospitals={filteredHospitals}
-          onMarkerPress={handleMarkerPress}
+          filteredHospitals={allMapHospitals}
+          onMarkerPress={(hospital) => {
+            const tenant = filteredTenants.find(
+              (t) => t.name === hospital.name && t.address === hospital.address
+            );
+            if (tenant) {
+              setSelectedHospital({
+                name: tenant.name,
+                address: tenant.address,
+                rating: 4.0,
+                reviewCount: 0,
+                latitude: Number.parseFloat(tenant.latitude ?? "0"),
+                longitude: Number.parseFloat(tenant.longitude ?? "0"),
+                phone: tenant.phone,
+                website: tenant.website,
+                category:
+                  tenant.type === "PRIVATE_HOSPITAL"
+                    ? "Private hospital"
+                    : tenant.type === "PUBLIC_HOSPITAL"
+                      ? "Government hospital"
+                      : "Hospital",
+                hours: null,
+              });
+              setShowDetailModal(false);
+              mapRef.current?.animateToRegion(
+                {
+                  latitude: Number.parseFloat(tenant.latitude ?? "0"),
+                  longitude: Number.parseFloat(tenant.longitude ?? "0"),
+                  latitudeDelta: 0.02,
+                  longitudeDelta: 0.02,
+                },
+                400
+              );
+            } else {
+              handleMarkerPress(hospital);
+            }
+          }}
+          platformHospitalNames={platformHospitalNames}
           ref={mapRef}
+          selectedHospitalId={selectedHospital?.name}
           userLocation={userLocation}
         />
 
@@ -200,6 +321,7 @@ export default function MapScreen() {
                   onPress={() => {
                     setSearch("");
                     setShowDropdown(false);
+                    setSelectedDoctorTenantIds(null);
                   }}
                 >
                   <X
@@ -236,7 +358,10 @@ export default function MapScreen() {
                         onPress={() => {
                           setShowDropdown(false);
                           searchInputRef.current?.blur();
-                          router.push(`/doctors/${profile.userId}`);
+                          const tenantIds = affiliations.map((a) => a.tenantId);
+                          if (tenantIds.length > 0) {
+                            setSelectedDoctorTenantIds(tenantIds);
+                          }
                         }}
                       >
                         <View className="mt-1 h-9 w-9 items-center justify-center rounded-full bg-secondary">
@@ -307,9 +432,16 @@ export default function MapScreen() {
           }}
         >
           <View className="flex-row items-center justify-between border-border border-b px-4 py-3">
-            <Text className="font-black font-sans text-foreground text-sm uppercase tracking-tight">
-              Hospitals
-            </Text>
+            <View className="flex-1 flex-row items-center gap-2">
+              <Text className="font-black font-sans text-foreground text-sm uppercase tracking-tight">
+                Hospitals
+              </Text>
+              {selectedDoctorTenantIds && (
+                <Tag size="sm" variant="primary">
+                  Filtered by doctor
+                </Tag>
+              )}
+            </View>
             <Pressable
               className="h-8 w-8 items-center justify-center rounded-full bg-secondary"
               onPress={togglePanel}
@@ -318,56 +450,105 @@ export default function MapScreen() {
             </Pressable>
           </View>
 
-          <ScrollView className="flex-1">
-            {filteredHospitals.map((hospital) => {
-              const isSelected = selectedHospital?.name === hospital.name;
-              return (
-                <Pressable
-                  className={`flex-row items-center gap-3 border-border border-b px-4 py-3 ${isSelected ? "bg-primary/10" : ""}`}
-                  key={hospital.name}
-                  onPress={() => {
-                    handleMarkerPress(hospital);
-                  }}
-                >
-                  <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/15">
-                    <HospitalIcon
-                      color={colors.primary}
-                      size={16}
-                      strokeWidth={2}
-                    />
-                  </View>
-                  <View className="flex-1 gap-0.5">
-                    <Text
-                      className="font-bold font-sans text-foreground text-xs uppercase tracking-tight"
-                      numberOfLines={1}
-                    >
-                      {hospital.name}
-                    </Text>
-                    <View className="flex-row items-center gap-1.5">
-                      <Star
-                        color={colors.warning}
-                        fill={colors.warning}
-                        size={10}
+          {tenantsQuery.isPending && (
+            <View className="flex-1 items-center justify-center">
+              <ActivityIndicator color={colors.primary} size="small" />
+            </View>
+          )}
+
+          {!tenantsQuery.isPending && filteredTenants.length === 0 && (
+            <View className="flex-1 items-center justify-center px-4">
+              <Text className="text-center font-medium font-sans text-muted-foreground text-xs uppercase tracking-wider">
+                {selectedDoctorTenantIds
+                  ? "This doctor has no affiliated hospitals"
+                  : "No hospitals found"}
+              </Text>
+            </View>
+          )}
+
+          {!tenantsQuery.isPending && filteredTenants.length > 0 && (
+            <ScrollView className="flex-1">
+              {filteredTenants.map((tenant) => {
+                const isSelected = selectedHospital?.name === tenant.name;
+                return (
+                  <Pressable
+                    className={`flex-row items-center gap-3 border-border border-b px-4 py-3 ${isSelected ? "bg-primary/10" : ""}`}
+                    key={tenant.id}
+                    onPress={() => {
+                      setSelectedDoctorTenantIds(null);
+                      setSelectedHospital({
+                        name: tenant.name,
+                        address: tenant.address,
+                        rating: 4.0,
+                        reviewCount: 0,
+                        latitude: Number.parseFloat(tenant.latitude ?? "0"),
+                        longitude: Number.parseFloat(tenant.longitude ?? "0"),
+                        phone: tenant.phone,
+                        website: tenant.website,
+                        category:
+                          tenant.type === "PRIVATE_HOSPITAL"
+                            ? "Private hospital"
+                            : tenant.type === "PUBLIC_HOSPITAL"
+                              ? "Government hospital"
+                              : "Hospital",
+                        hours: null,
+                      });
+                      setShowDetailModal(false);
+                      mapRef.current?.animateToRegion(
+                        {
+                          latitude: Number.parseFloat(tenant.latitude ?? "0"),
+                          longitude: Number.parseFloat(tenant.longitude ?? "0"),
+                          latitudeDelta: 0.02,
+                          longitudeDelta: 0.02,
+                        },
+                        400
+                      );
+                    }}
+                  >
+                    <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/15">
+                      <HospitalIcon
+                        color={colors.primary}
+                        size={16}
                         strokeWidth={2}
                       />
-                      <Text className="font-medium font-sans text-[10px] text-muted-foreground">
-                        {hospital.rating}
-                      </Text>
-                      <Tag size="sm" variant="muted">
-                        {hospital.category}
-                      </Tag>
                     </View>
-                  </View>
-                  <ChevronDown
-                    color={colors.mutedForeground}
-                    size={14}
-                    strokeWidth={2.5}
-                    style={{ transform: [{ rotate: "-90deg" }] }}
-                  />
-                </Pressable>
-              );
-            })}
-          </ScrollView>
+                    <View className="flex-1 gap-0.5">
+                      <Text
+                        className="font-bold font-sans text-foreground text-xs uppercase tracking-tight"
+                        numberOfLines={1}
+                      >
+                        {tenant.name}
+                      </Text>
+                      <View className="flex-row items-center gap-1.5">
+                        <Star
+                          color={colors.warning}
+                          fill={colors.warning}
+                          size={10}
+                          strokeWidth={2}
+                        />
+                        <Text className="font-medium font-sans text-[10px] text-muted-foreground">
+                          {tenant.doctorCount} doctors
+                        </Text>
+                        <Tag size="sm" variant="muted">
+                          {tenant.type === "PRIVATE_HOSPITAL"
+                            ? "Private"
+                            : "Government"}
+                        </Tag>
+                        <Tag size="sm" variant="secondary">
+                          {tenant.clinicCount} clinics
+                        </Tag>
+                      </View>
+                    </View>
+                    <ChevronRight
+                      color={colors.mutedForeground}
+                      size={14}
+                      strokeWidth={2.5}
+                    />
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          )}
         </Animated.View>
 
         {selectedHospital && !showDetailModal && (
@@ -390,9 +571,6 @@ export default function MapScreen() {
                         {selectedHospital.rating}
                       </Text>
                     </View>
-                    <Text className="font-medium font-sans text-[10px] text-muted-foreground">
-                      ({selectedHospital.reviewCount} reviews)
-                    </Text>
                     <Tag size="sm" variant="secondary">
                       {selectedHospital.category}
                     </Tag>
@@ -413,7 +591,10 @@ export default function MapScreen() {
                 </View>
                 <Pressable
                   className="h-8 w-8 items-center justify-center rounded-full bg-secondary"
-                  onPress={() => setSelectedHospital(null)}
+                  onPress={() => {
+                    setSelectedHospital(null);
+                    setSelectedDoctorTenantIds(null);
+                  }}
                 >
                   <X
                     color={colors.mutedForeground}
@@ -481,7 +662,17 @@ export default function MapScreen() {
 
               <Pressable
                 className="flex-row items-center justify-center gap-2 rounded-lg border-2 border-border bg-secondary/50 px-4 py-2.5"
-                onPress={() => setShowDetailModal(true)}
+                onPress={() => {
+                  const selectedTenant = filteredTenants.find(
+                    (t) =>
+                      t.name === selectedHospital.name &&
+                      t.phone === selectedHospital.phone
+                  );
+                  if (selectedTenant) {
+                    setSelectedHospital(null);
+                    router.push(`/hospitals/${selectedTenant.id}` as Href);
+                  }
+                }}
               >
                 <Info
                   color={colors.mutedForeground}
@@ -489,7 +680,7 @@ export default function MapScreen() {
                   strokeWidth={2}
                 />
                 <Text className="font-bold font-sans text-[10px] text-muted-foreground uppercase tracking-wider">
-                  View details & clinics
+                  View hospital details
                 </Text>
                 <ChevronRight
                   color={colors.mutedForeground}
@@ -515,7 +706,7 @@ export default function MapScreen() {
                 className="flex-1 font-black font-sans text-foreground text-lg uppercase tracking-tight"
                 numberOfLines={1}
               >
-                {detailHospital?.name}
+                {detailTenant?.name ?? selectedHospital?.name}
               </Text>
               <Pressable
                 className="h-8 w-8 items-center justify-center rounded-full bg-secondary"
@@ -530,63 +721,102 @@ export default function MapScreen() {
               contentContainerClassName="gap-5 pb-8"
             >
               <View className="gap-3">
-                <View className="flex-row items-center gap-2">
-                  <Star
-                    color={colors.warning}
-                    fill={colors.warning}
-                    size={14}
-                    strokeWidth={2.5}
-                  />
-                  <Text className="font-bold font-sans text-foreground text-sm">
-                    {detailHospital?.rating}
-                  </Text>
-                  <Text className="font-medium font-sans text-muted-foreground text-xs">
-                    ({detailHospital?.reviewCount} reviews)
-                  </Text>
-                  <Tag size="sm" variant="secondary">
-                    {detailHospital?.category}
-                  </Tag>
-                </View>
+                {selectedHospital && (
+                  <>
+                    <View className="flex-row items-center gap-2">
+                      <Star
+                        color={colors.warning}
+                        fill={colors.warning}
+                        size={14}
+                        strokeWidth={2.5}
+                      />
+                      <Text className="font-bold font-sans text-foreground text-sm">
+                        {selectedHospital.rating}
+                      </Text>
+                      <Tag size="sm" variant="secondary">
+                        {selectedHospital.category}
+                      </Tag>
+                    </View>
 
-                <View className="flex-row items-start gap-2">
-                  <MapPin
+                    <View className="flex-row items-start gap-2">
+                      <MapPin
+                        color={colors.mutedForeground}
+                        size={14}
+                        strokeWidth={2}
+                      />
+                      <Text className="flex-1 font-medium font-sans text-muted-foreground text-sm leading-snug">
+                        {selectedHospital.address}
+                      </Text>
+                    </View>
+
+                    {selectedHospital.phone && (
+                      <Pressable
+                        className="flex-row items-center gap-2"
+                        onPress={() =>
+                          Linking.openURL(`tel:${selectedHospital.phone}`)
+                        }
+                      >
+                        <Phone
+                          color={colors.primary}
+                          size={14}
+                          strokeWidth={2}
+                        />
+                        <Text className="font-medium font-sans text-primary text-sm">
+                          {selectedHospital.phone}
+                        </Text>
+                      </Pressable>
+                    )}
+
+                    {selectedHospital.website && (
+                      <Pressable
+                        className="flex-row items-center gap-2"
+                        onPress={() =>
+                          Linking.openURL(selectedHospital.website!)
+                        }
+                      >
+                        <Globe
+                          color={colors.primary}
+                          size={14}
+                          strokeWidth={2}
+                        />
+                        <Text
+                          className="flex-1 font-medium font-sans text-primary text-sm"
+                          numberOfLines={1}
+                        >
+                          {selectedHospital.website}
+                        </Text>
+                      </Pressable>
+                    )}
+                  </>
+                )}
+              </View>
+
+              <View className="gap-3">
+                <View className="flex-row items-center gap-2">
+                  <HospitalIcon
                     color={colors.mutedForeground}
                     size={14}
                     strokeWidth={2}
                   />
-                  <Text className="flex-1 font-medium font-sans text-muted-foreground text-sm leading-snug">
-                    {detailHospital?.address}
+                  <Text className="font-bold font-sans text-foreground text-xs uppercase tracking-wider">
+                    Clinics & Services
                   </Text>
                 </View>
-
-                {detailHospital?.phone && (
-                  <Pressable
-                    className="flex-row items-center gap-2"
-                    onPress={() =>
-                      Linking.openURL(`tel:${detailHospital!.phone}`)
-                    }
-                  >
-                    <Phone color={colors.primary} size={14} strokeWidth={2} />
-                    <Text className="font-medium font-sans text-primary text-sm">
-                      {detailHospital?.phone}
+                <View className="rounded-xl border-2 border-border bg-background p-4">
+                  {detailTenant && detailTenant.services.length > 0 ? (
+                    <View className="flex-row flex-wrap gap-1.5">
+                      {detailTenant.services.map((service) => (
+                        <Tag key={service} size="sm" variant="secondary">
+                          {service}
+                        </Tag>
+                      ))}
+                    </View>
+                  ) : (
+                    <Text className="text-center font-medium font-sans text-muted-foreground text-xs leading-relaxed">
+                      No services information available yet
                     </Text>
-                  </Pressable>
-                )}
-
-                {detailHospital?.website && (
-                  <Pressable
-                    className="flex-row items-center gap-2"
-                    onPress={() => Linking.openURL(detailHospital!.website!)}
-                  >
-                    <Globe color={colors.primary} size={14} strokeWidth={2} />
-                    <Text
-                      className="flex-1 font-medium font-sans text-primary text-sm"
-                      numberOfLines={1}
-                    >
-                      {detailHospital?.website}
-                    </Text>
-                  </Pressable>
-                )}
+                  )}
+                </View>
               </View>
 
               <View className="gap-3">
@@ -601,12 +831,9 @@ export default function MapScreen() {
                   </Text>
                 </View>
                 <View className="rounded-xl border-2 border-border bg-background p-3">
-                  {detailHospital?.hours ? (
+                  {selectedHospital?.hours ? (
                     DAYS.map((day) => {
-                      const hours =
-                        detailHospital.hours?.[
-                          day as keyof typeof detailHospital.hours
-                        ];
+                      const hours = selectedHospital.hours?.[day];
                       return (
                         <View
                           className="flex-row items-center justify-between py-1.5"
@@ -631,80 +858,30 @@ export default function MapScreen() {
                 </View>
               </View>
 
-              <View className="gap-3">
-                <View className="flex-row items-center gap-2">
+              {detailTenant && (
+                <Pressable
+                  className="flex-row items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary/10 px-4 py-3"
+                  onPress={() => {
+                    setShowDetailModal(false);
+                    setSelectedHospital(null);
+                    router.push(`/hospitals/${detailTenant.id}` as Href);
+                  }}
+                >
                   <HospitalIcon
-                    color={colors.mutedForeground}
-                    size={14}
+                    color={colors.primary}
+                    size={16}
                     strokeWidth={2}
                   />
-                  <Text className="font-bold font-sans text-foreground text-xs uppercase tracking-wider">
-                    Clinics & Specializations
+                  <Text className="font-bold font-sans text-primary text-xs uppercase tracking-wider">
+                    View full hospital page
                   </Text>
-                </View>
-                <View className="rounded-xl border-2 border-border bg-background p-4">
-                  <Text className="text-center font-medium font-sans text-muted-foreground text-xs leading-relaxed">
-                    Clinic information will be available once the hospital is
-                    registered on our platform.
-                  </Text>
-                </View>
-              </View>
-
-              <View className="flex-row gap-3">
-                {detailHospital?.phone && (
-                  <Button
-                    className="flex-1"
-                    onPress={() =>
-                      Linking.openURL(`tel:${detailHospital!.phone}`)
-                    }
-                    size="sm"
-                    variant="primary"
-                  >
-                    <View className="flex-row items-center gap-1.5">
-                      <Phone color="white" size={14} strokeWidth={2.5} />
-                      <Text className="font-bold font-sans text-[10px] text-primary-foreground uppercase">
-                        Call
-                      </Text>
-                    </View>
-                  </Button>
-                )}
-                {detailHospital?.website && (
-                  <Button
-                    className="flex-1"
-                    onPress={() => Linking.openURL(detailHospital!.website!)}
-                    size="sm"
-                    variant="secondary"
-                  >
-                    <View className="flex-row items-center gap-1.5">
-                      <Globe
-                        color={colors.foreground}
-                        size={14}
-                        strokeWidth={2.5}
-                      />
-                      <Text className="font-bold font-sans text-[10px] text-foreground uppercase">
-                        Website
-                      </Text>
-                    </View>
-                  </Button>
-                )}
-                <Button
-                  className="flex-1"
-                  onPress={() => openMapsNavigation(detailHospital!)}
-                  size="sm"
-                  variant="outline"
-                >
-                  <View className="flex-row items-center gap-1.5">
-                    <Navigation
-                      color={colors.foreground}
-                      size={14}
-                      strokeWidth={2.5}
-                    />
-                    <Text className="font-bold font-sans text-[10px] text-foreground uppercase">
-                      Navigate
-                    </Text>
-                  </View>
-                </Button>
-              </View>
+                  <ChevronRight
+                    color={colors.primary}
+                    size={16}
+                    strokeWidth={2.5}
+                  />
+                </Pressable>
+              )}
             </ScrollView>
           </View>
         </View>

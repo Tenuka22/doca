@@ -158,8 +158,6 @@ export const doctorEducationEntries = sqliteTable("doctor_education_entries", {
   updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
 });
 
-
-
 export const userCredits = sqliteTable("user_credits", {
   userId: text("user_id").primaryKey(),
   balance: integer("balance").notNull().default(0),

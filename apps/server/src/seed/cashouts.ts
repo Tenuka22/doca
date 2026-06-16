@@ -1,7 +1,7 @@
 import type { createDb } from "@doca/db";
 import { doctorCashoutRequests, doctorSessions } from "@doca/db";
 import { faker } from "@faker-js/faker";
-import { eq, inArray, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
 const CASHOUT_STATUSES = ["pending", "completed", "failed"] as const;
 
@@ -44,7 +44,9 @@ export async function seedCashouts(
 
   for (const earning of earnings) {
     const totalCents = Number(earning.totalCents);
-    if (totalCents <= 0) continue;
+    if (totalCents <= 0) {
+      continue;
+    }
 
     const requestCount = faker.number.int({ min: 0, max: 3 });
     for (let i = 0; i < requestCount; i++) {

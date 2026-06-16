@@ -80,7 +80,6 @@ export function AdminSidebar() {
               to: "/admin/plans",
               search: { page: 1 },
             },
-
           ]}
           label="Secondary"
         />

@@ -5,6 +5,7 @@ import { Stack, useRouter } from "expo-router";
 import {
   ArrowLeft,
   Check,
+  CheckCircle2,
   ClipboardList,
   Lightbulb,
   MessageSquare,
@@ -12,16 +13,22 @@ import {
   Smartphone,
   Wind,
   Zap,
-  CheckCircle2
 } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Animated, Easing, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  Animated,
+  Easing,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { Screen } from "@/components/ui/screen";
 import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
-import { playSoftChime, playToneSequence } from "@/utils/audio";
+import { playToneSequence } from "@/utils/audio";
 import { vibrate } from "@/utils/haptics";
 import { orpc, queryClient } from "@/utils/orpc";
 import { useThemeColor } from "@/utils/theme";
@@ -49,8 +56,18 @@ export default function SleepPrepActionScreen() {
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(moonScale, { toValue: 1.1, duration: 3000, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
-        Animated.timing(moonScale, { toValue: 1, duration: 3000, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(moonScale, {
+          toValue: 1.1,
+          duration: 3000,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(moonScale, {
+          toValue: 1,
+          duration: 3000,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
       ])
     ).start();
   }, []);
@@ -59,7 +76,9 @@ export default function SleepPrepActionScreen() {
     orpc.completeWellnessAction.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: orpc.getSpriteState.key() });
-        queryClient.invalidateQueries({ queryKey: orpc.getMoonlightCredits.key() });
+        queryClient.invalidateQueries({
+          queryKey: orpc.getMoonlightCredits.key(),
+        });
         queryClient.invalidateQueries({ queryKey: orpc.getTodayTasks.key() });
         setCompleted(true);
         playToneSequence();
@@ -105,41 +124,53 @@ export default function SleepPrepActionScreen() {
           {/* Header */}
           <View className="items-center gap-2">
             <View className="flex-row items-center gap-2 rounded-full bg-accent/10 px-4 py-1.5">
-               <Moon color={colors.accent} size={14} />
-               <Text className="font-bold font-sans text-accent text-[10px] uppercase tracking-widest">
-                 Dusk Ritual
-               </Text>
+              <Moon color={colors.accent} size={14} />
+              <Text className="font-bold font-sans text-[10px] text-accent uppercase tracking-widest">
+                Dusk Ritual
+              </Text>
             </View>
-            <Text className="font-black font-sans text-4xl text-foreground text-center">
+            <Text className="text-center font-black font-sans text-4xl text-foreground">
               Sleep Prep
             </Text>
-            <Text className="text-center font-medium font-sans text-muted-foreground text-sm max-w-[250px]">
+            <Text className="max-w-[250px] text-center font-medium font-sans text-muted-foreground text-sm">
               Wind down for deep restoration and sweet dreams.
             </Text>
           </View>
 
           {/* Visualizer Area */}
-          <View className="items-center justify-center py-4 relative">
-             <View className="absolute h-48 w-48 rounded-full bg-accent/5 blur-3xl" />
-             <Animated.View style={{ transform: [{ scale: moonScale }] }}>
-                <View className="h-32 w-32 items-center justify-center rounded-full bg-accent/10 border-4 border-accent/20 shadow-2xl shadow-accent/20">
-                   <Moon color={colors.accent} size={48} fill={colors.accent} opacity={0.6} />
-                </View>
-             </Animated.View>
+          <View className="relative items-center justify-center py-4">
+            <View className="absolute h-48 w-48 rounded-full bg-accent/5 blur-3xl" />
+            <Animated.View style={{ transform: [{ scale: moonScale }] }}>
+              <View className="h-32 w-32 items-center justify-center rounded-full border-4 border-accent/20 bg-accent/10 shadow-2xl shadow-accent/20">
+                <Moon
+                  color={colors.accent}
+                  fill={colors.accent}
+                  opacity={0.6}
+                  size={48}
+                />
+              </View>
+            </Animated.View>
           </View>
 
           {completed ? (
-            <View className="items-center gap-4 bg-success/10 border-2 border-success/30 rounded-card p-6">
+            <View className="items-center gap-4 rounded-card border-2 border-success/30 bg-success/10 p-6">
               <View className="h-12 w-12 items-center justify-center rounded-full bg-success/20">
-                 <Zap color={colors.success} size={24} />
+                <Zap color={colors.success} size={24} />
               </View>
               <View className="items-center">
-                 <Text className="font-black font-sans text-success text-xl">Rest Ready!</Text>
-                 <Text className="font-bold font-sans text-success/80 text-xs text-center">
-                   Your preparation is complete. You earned +10 Moonlight Credits.
-                 </Text>
+                <Text className="font-black font-sans text-success text-xl">
+                  Rest Ready!
+                </Text>
+                <Text className="text-center font-bold font-sans text-success/80 text-xs">
+                  Your preparation is complete. You earned +10 Moonlight
+                  Credits.
+                </Text>
               </View>
-              <Button className="w-full mt-2" href="/sprite" variant="secondary">
+              <Button
+                className="mt-2 w-full"
+                href="/sprite"
+                variant="secondary"
+              >
                 Back to Mission Hub
               </Button>
             </View>
@@ -147,7 +178,7 @@ export default function SleepPrepActionScreen() {
             <View className="gap-6">
               {/* Checklist Card */}
               <View className="rounded-card border-2 border-border bg-card p-5 shadow-sm">
-                <Text className="mb-4 font-black font-sans text-foreground text-xs uppercase tracking-widest text-center">
+                <Text className="mb-4 text-center font-black font-sans text-foreground text-xs uppercase tracking-widest">
                   Wind-Down Checklist
                 </Text>
                 <View className="gap-3">
@@ -174,12 +205,16 @@ export default function SleepPrepActionScreen() {
                           {isChecked && <Check color="#ffffff" size={12} />}
                         </View>
                         <Icon
-                          color={isChecked ? colors.accent : colors.mutedForeground}
+                          color={
+                            isChecked ? colors.accent : colors.mutedForeground
+                          }
                           size={18}
                         />
                         <Text
                           className={`flex-1 font-bold font-sans text-sm ${
-                            isChecked ? "text-foreground" : "text-muted-foreground"
+                            isChecked
+                              ? "text-foreground"
+                              : "text-muted-foreground"
                           }`}
                         >
                           {task.label}
@@ -195,25 +230,31 @@ export default function SleepPrepActionScreen() {
       </Screen>
 
       <ScreenBottomBar>
-        {!completed ? (
+        {completed ? (
+          <View className="flex-1" />
+        ) : (
           <>
-            <View className="h-12 flex-[1.2] flex-row items-center justify-center gap-3 rounded-control border-2 border-border bg-background px-3 py-2 mr-2">
+            <View className="mr-2 h-12 flex-[1.2] flex-row items-center justify-center gap-3 rounded-control border-2 border-border bg-background px-3 py-2">
               <CheckCircle2 color={colors.success} size={14} />
               <View className="flex-1 gap-1">
-                 <View className="flex-row items-center justify-between">
-                    <Text className="font-bold font-sans text-muted-foreground text-[8px] uppercase">Readiness</Text>
-                    <Text className="font-black font-sans text-foreground text-[10px]">{completedCount}/{SLEEP_TASKS.length}</Text>
-                 </View>
-                 <View className="h-1 overflow-hidden rounded-full bg-muted">
-                    <View
-                      className="h-full rounded-full bg-accent"
-                      style={{ width: `${progress * 100}%` }}
-                    />
-                 </View>
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-bold font-sans text-[8px] text-muted-foreground uppercase">
+                    Readiness
+                  </Text>
+                  <Text className="font-black font-sans text-[10px] text-foreground">
+                    {completedCount}/{SLEEP_TASKS.length}
+                  </Text>
+                </View>
+                <View className="h-1 overflow-hidden rounded-full bg-muted">
+                  <View
+                    className="h-full rounded-full bg-accent"
+                    style={{ width: `${progress * 100}%` }}
+                  />
+                </View>
               </View>
             </View>
             <Button
-              className="h-12 flex-1 shadow-lg shadow-accent/20"
+              className="h-12 flex-1 shadow-accent/20 shadow-lg"
               disabled={completedCount === 0 || completeMutation.isPending}
               onPress={handleComplete}
               variant="primary"
@@ -221,16 +262,17 @@ export default function SleepPrepActionScreen() {
               Log Session
             </Button>
           </>
-        ) : (
-          <View className="flex-1" />
         )}
         <IconButton
           icon={ArrowLeft}
           iconSize={16}
           onPress={() => {
             vibrate(15);
-            if (router.canGoBack()) router.back();
-            else router.replace("/");
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/");
+            }
           }}
         />
       </ScreenBottomBar>

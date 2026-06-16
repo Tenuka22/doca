@@ -222,7 +222,12 @@ const TASK_POOL: TaskTemplate[] = [
   {
     actionType: "journaling",
     timeSlot: "night",
-    titles: ["Daily Reflection", "Journal Entry", "Mindful Writing", "Day's End"],
+    titles: [
+      "Daily Reflection",
+      "Journal Entry",
+      "Mindful Writing",
+      "Day's End",
+    ],
     descriptions: [
       "Write down your thoughts and experiences from today.",
       "A moment to reflect on your journey and growth.",
@@ -235,7 +240,12 @@ const TASK_POOL: TaskTemplate[] = [
   {
     actionType: "nutrition",
     timeSlot: "afternoon",
-    titles: ["Balanced Meal", "Healthy Fuel", "Nutrition Log", "Mindful Eating"],
+    titles: [
+      "Balanced Meal",
+      "Healthy Fuel",
+      "Nutrition Log",
+      "Mindful Eating",
+    ],
     descriptions: [
       "Fuel your body with wholesome, balanced food.",
       "Log your nutritious meals for the day.",
@@ -634,7 +644,8 @@ export const getLeaderboardRoute = protectedProcedure.handler(
       .orderBy(desc(moonlightCredits.totalEarned))
       .limit(10);
 
-    const currentUserRank = topCredits.findIndex(c => c.userId === userId) + 1;
+    const currentUserRank =
+      topCredits.findIndex((c) => c.userId === userId) + 1;
 
     return {
       leaderboard: topCredits,
@@ -644,7 +655,9 @@ export const getLeaderboardRoute = protectedProcedure.handler(
 );
 
 export const buyItemRoute = protectedProcedure
-  .input(z.object({ itemId: z.string().min(1), cost: z.number().int().positive() }))
+  .input(
+    z.object({ itemId: z.string().min(1), cost: z.number().int().positive() })
+  )
   .handler(async ({ context, input }) => {
     const { userId } = requireAuth(context);
 
@@ -660,19 +673,35 @@ export const buyItemRoute = protectedProcedure
 
     await context.db
       .update(moonlightCredits)
-      .set({ balance: credits.balance - input.cost, updatedAt: new Date().toISOString() })
+      .set({
+        balance: credits.balance - input.cost,
+        updatedAt: new Date().toISOString(),
+      })
       .where(eq(moonlightCredits.userId, userId));
 
     const [existing] = await context.db
       .select()
       .from(spriteInventory)
-      .where(and(eq(spriteInventory.userId, userId), eq(spriteInventory.itemId, input.itemId)))
+      .where(
+        and(
+          eq(spriteInventory.userId, userId),
+          eq(spriteInventory.itemId, input.itemId)
+        )
+      )
       .limit(1);
 
     if (existing) {
-      await context.db.update(spriteInventory).set({ quantity: existing.quantity + 1 }).where(eq(spriteInventory.id, existing.id));
+      await context.db
+        .update(spriteInventory)
+        .set({ quantity: existing.quantity + 1 })
+        .where(eq(spriteInventory.id, existing.id));
     } else {
-      await context.db.insert(spriteInventory).values({ id: crypto.randomUUID(), userId, itemId: input.itemId, quantity: 1 });
+      await context.db.insert(spriteInventory).values({
+        id: crypto.randomUUID(),
+        userId,
+        itemId: input.itemId,
+        quantity: 1,
+      });
     }
 
     return { success: true };
@@ -686,21 +715,33 @@ export const feedSpriteRoute = protectedProcedure
     const [item] = await context.db
       .select()
       .from(spriteInventory)
-      .where(and(eq(spriteInventory.userId, userId), eq(spriteInventory.itemId, input.itemId)))
+      .where(
+        and(
+          eq(spriteInventory.userId, userId),
+          eq(spriteInventory.itemId, input.itemId)
+        )
+      )
       .limit(1);
 
     if (!item || item.quantity < 1) {
       throw new Error("Item not in inventory!");
     }
 
-    await context.db.update(spriteInventory).set({ quantity: item.quantity - 1 }).where(eq(spriteInventory.id, item.id));
+    await context.db
+      .update(spriteInventory)
+      .set({ quantity: item.quantity - 1 })
+      .where(eq(spriteInventory.id, item.id));
 
     // Roll for rarity logic
     const roll = Math.random() * 100;
     let rarity: "common" | "uncommon" | "rare" | "legendary" = "common";
-    if (roll < 2) rarity = "legendary";
-    else if (roll < 10) rarity = "rare";
-    else if (roll < 30) rarity = "uncommon";
+    if (roll < 2) {
+      rarity = "legendary";
+    } else if (roll < 10) {
+      rarity = "rare";
+    } else if (roll < 30) {
+      rarity = "uncommon";
+    }
 
     const items = ITEM_POOL[rarity];
     const iconName = items[Math.floor(Math.random() * items.length)]!;
@@ -709,13 +750,27 @@ export const feedSpriteRoute = protectedProcedure
     const [existing] = await context.db
       .select()
       .from(spriteCollections)
-      .where(and(eq(spriteCollections.userId, userId), eq(spriteCollections.iconName, iconName)))
+      .where(
+        and(
+          eq(spriteCollections.userId, userId),
+          eq(spriteCollections.iconName, iconName)
+        )
+      )
       .limit(1);
 
     if (existing) {
-      await context.db.update(spriteCollections).set({ count: existing.count + 1 }).where(eq(spriteCollections.id, existing.id));
+      await context.db
+        .update(spriteCollections)
+        .set({ count: existing.count + 1 })
+        .where(eq(spriteCollections.id, existing.id));
     } else {
-      await context.db.insert(spriteCollections).values({ id: crypto.randomUUID(), userId, iconName, rarity, count: 1 });
+      await context.db.insert(spriteCollections).values({
+        id: crypto.randomUUID(),
+        userId,
+        iconName,
+        rarity,
+        count: 1,
+      });
     }
 
     return { success: true, drop: { iconName, rarity } };
@@ -724,15 +779,54 @@ export const feedSpriteRoute = protectedProcedure
 export const getInventoryRoute = protectedProcedure.handler(
   async ({ context }) => {
     const { userId } = requireAuth(context);
-    return await context.db.select().from(spriteInventory).where(eq(spriteInventory.userId, userId));
+    return await context.db
+      .select()
+      .from(spriteInventory)
+      .where(eq(spriteInventory.userId, userId));
   }
 );
 
 const ITEM_POOL = {
-  common: ["Apple", "Cookie", "Coffee", "Droplet", "Milk", "Pizza", "Cherry", "Banana"],
-  uncommon: ["GlassWater", "IceCream", "Sandwich", "Cake", "Egg", "Soup", "Fish", "Carrot"],
-  rare: ["Crown", "Diamond", "Gift", "Sparkles", "Star", "Gem", "Trophy", "Rocket"],
-  legendary: ["Alien", "Ghost", "Orbit", "Palette", "Lightbulb", "HeartPulse", "Medal", "Flame"],
+  common: [
+    "Apple",
+    "Cookie",
+    "Coffee",
+    "Droplet",
+    "Milk",
+    "Pizza",
+    "Cherry",
+    "Banana",
+  ],
+  uncommon: [
+    "GlassWater",
+    "IceCream",
+    "Sandwich",
+    "Cake",
+    "Egg",
+    "Soup",
+    "Fish",
+    "Carrot",
+  ],
+  rare: [
+    "Crown",
+    "Diamond",
+    "Gift",
+    "Sparkles",
+    "Star",
+    "Gem",
+    "Trophy",
+    "Rocket",
+  ],
+  legendary: [
+    "Alien",
+    "Ghost",
+    "Orbit",
+    "Palette",
+    "Lightbulb",
+    "HeartPulse",
+    "Medal",
+    "Flame",
+  ],
 };
 
 export const getSpriteCollectionRoute = protectedProcedure.handler(
@@ -747,7 +841,7 @@ export const getSpriteCollectionRoute = protectedProcedure.handler(
 
     return {
       collection,
-      catalog: ITEM_POOL
+      catalog: ITEM_POOL,
     };
   }
 );

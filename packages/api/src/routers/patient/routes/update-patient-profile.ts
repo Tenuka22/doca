@@ -36,7 +36,5 @@ export const updatePatientProfileRoute = protectedProcedure
       where: eq(patientProfiles.userId, userId),
     });
 
-    
-
     return { success: true, profile: updated };
   });

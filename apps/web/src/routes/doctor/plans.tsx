@@ -60,7 +60,6 @@ import { notify } from "@/lib/notify";
 import { orpc } from "@/utils/orpc";
 
 interface DoctorPlan {
-  priceCents: number;
   description: string | null;
   durationMinutes: number;
   features: string | null;
@@ -68,6 +67,7 @@ interface DoctorPlan {
   isActive: boolean;
   isDefault: boolean;
   name: string;
+  priceCents: number;
   sortOrder: number;
 }
 
@@ -251,8 +251,8 @@ function DoctorPlansRoute() {
 
               <BodyText className="max-w-2xl">
                 Manage your session offerings and pricing at a glance. Review
-                plan details, compare pricing, and see which plan is the
-                default for new patients.
+                plan details, compare pricing, and see which plan is the default
+                for new patients.
               </BodyText>
             </div>
           </div>
@@ -401,8 +401,10 @@ function DoctorPlansRoute() {
                     <LabelList
                       dataKey="priceCents"
                       fill="var(--primary)"
+                      formatter={(v: unknown) =>
+                        `$${(Number(v) / 100).toFixed(0)}`
+                      }
                       position="top"
-                      formatter={(v: unknown) => `$${(Number(v) / 100).toFixed(0)}`}
                     />
                   </Bar>
                 </BarChart>

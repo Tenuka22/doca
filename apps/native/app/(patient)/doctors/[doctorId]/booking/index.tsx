@@ -725,7 +725,7 @@ export default function BookingScreen() {
                 {formatTime(new Date(selectedSlot.endAt))}
               </Text>
               {selectedPlan && (
-                <Text className="font-bold font-sans text-emerald-600 text-[10px] uppercase tracking-wider">
+                <Text className="font-bold font-sans text-[10px] text-emerald-600 uppercase tracking-wider">
                   Hold: {formatPrice(selectedPlan.priceCents)}
                 </Text>
               )}

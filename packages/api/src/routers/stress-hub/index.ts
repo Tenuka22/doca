@@ -13,5 +13,4 @@ export const stressHubRouter = {
   startStressSimulation: startSimulationRoute,
   stopStressSimulation: stopSimulationRoute,
   subscribeStressStream: subscribeStressStreamRoute,
-
 };
