@@ -73,6 +73,7 @@ export const server = await Worker("server", {
     LANGSMITH_PROJECT: alchemy.secret.env.LANGSMITH_PROJECT!,
     CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
     STRESS_PREDICTOR_URL: alchemy.env.STRESS_PREDICTOR_URL!,
+    GEMINI_API_KEY: alchemy.env.GEMINI_API_KEY!,
     STRESS_PREDICTOR_SECRET: alchemy.secret.env.STRESS_PREDICTOR_SECRET!,
     STRIPE_SECRET_KEY: alchemy.secret.env.STRIPE_SECRET_KEY!,
     STRIPE_WEBHOOK_SECRET: alchemy.secret.env.STRIPE_WEBHOOK_SECRET!,

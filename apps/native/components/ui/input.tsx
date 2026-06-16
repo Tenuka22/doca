@@ -14,7 +14,7 @@ export const Input = ({ error, label, ...props }: InputProps) => {
   const inputRef = useRef<TextInput>(null);
 
   return (
-    <View className="mb-4 gap-1.5">
+    <View className="gap-1.5">
       <Text
         className="font-medium font-sans text-foreground text-sm"
         onPress={() => inputRef.current?.focus()}

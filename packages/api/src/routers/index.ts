@@ -1,8 +1,8 @@
 import type { RouterClient } from "@orpc/server";
 
 import { adminRouter } from "./admin";
+import { aiRouter } from "./ai";
 import { bookingRouter } from "./booking";
-import { chatHttpRouter } from "./chat";
 import { doctorRouter } from "./doctor";
 import { doctorFilesRouter } from "./doctor-files";
 import { doctorMaterialsRouter } from "./doctor-materials";
@@ -33,7 +33,7 @@ export const appRouter = {
 
   ...stressHubRouter,
   ...tenantRouter,
-  chat: chatHttpRouter,
+  ai: aiRouter,
 };
 
 export const wsAppRouter = {};

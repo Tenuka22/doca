@@ -1,6 +1,12 @@
 "use client";
 
-import { Activity, Sparkles, Stethoscope, User } from "lucide-react-native";
+import {
+  Activity,
+  MessageCircle,
+  Sparkles,
+  Stethoscope,
+  User,
+} from "lucide-react-native";
 import { Text, useWindowDimensions, View } from "react-native";
 import { Button } from "@/components/ui/button";
 import { useThemeColor } from "@/utils/theme";
@@ -11,6 +17,7 @@ const patientTabs = [
   { href: "/doctors", icon: Stethoscope, label: "Doctors" },
   { href: "/sprite", icon: Sparkles, label: "Sprite" },
   { href: "/stress-hub", icon: Activity, label: "Stress Hub" },
+  { href: "/ai", icon: MessageCircle, label: "AI Chat" },
   { href: "/profile", icon: User, label: "Profile" },
 ] as const;
 

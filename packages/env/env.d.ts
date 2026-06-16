@@ -1,10 +1,12 @@
 interface FallbackEnv {
   AI: Ai;
+  CHAT_MESSAGES_KV: KVNamespace;
   CLERK_PUBLISHABLE_KEY: string;
   CLERK_SECRET_KEY: string;
   CORS_ORIGIN: string;
   DB: D1Database;
   DOCTOR_MATERIALS_KV: KVNamespace;
+  GEMINI_API_KEY: string;
   LIVEKIT_API_KEY: string;
   LIVEKIT_API_SECRET: string;
   LIVEKIT_HOST: string;

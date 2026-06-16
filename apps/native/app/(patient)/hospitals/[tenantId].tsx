@@ -22,12 +22,12 @@ import {
 } from "react-native";
 
 import { Button } from "@/components/ui/button";
+import { IconButton } from "@/components/ui/icon-button";
 import { Screen } from "@/components/ui/screen";
 import { ScreenBottomBar } from "@/components/ui/screen-bottom-bar";
 import { Tag } from "@/components/ui/tag";
 import { orpc } from "@/utils/orpc";
 import { useThemeColor } from "@/utils/theme";
-import { IconButton } from "@/components/ui/icon-button";
 
 export default function HospitalDetailScreen() {
   const colors = useThemeColor();
@@ -302,11 +302,9 @@ export default function HospitalDetailScreen() {
         </Button>
 
         {tenant?.phone && (
-
           <IconButton
             icon={Phone}
             iconSize={16}
-
             onPress={() => {
               if (router.canGoBack()) {
                 router.back();
@@ -314,7 +312,7 @@ export default function HospitalDetailScreen() {
                 router.replace("/");
               }
             }}
-            />
+          />
         )}
 
         <IconButton

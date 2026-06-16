@@ -6,12 +6,12 @@ export interface ClerkContextAuth {
 }
 
 export interface ClerkRequestContext {
+  ai: Ai;
   auth: ClerkContextAuth | null;
   chatMessagesKv: KVNamespace;
   clerk: typeof clerkClient;
   db: ReturnType<typeof createDb>;
-  env: { AI: Ai };
-  modelFeaturesKv: KVNamespace;
+  geminiApiKey: string;
   session: null;
 }
 
@@ -53,7 +53,6 @@ export interface CreateContextOptions {
 
 export async function createContext({
   context,
-  token,
 }: CreateContextOptions): Promise<ClerkRequestContext> {
   const clerkAuth = await authenticateClerkRequest(context.req.raw);
   return {
@@ -61,9 +60,9 @@ export async function createContext({
     session: null,
     db: createDb(),
     clerk: clerkClient,
-    modelFeaturesKv: env.MODEL_FEATURES_KV,
     chatMessagesKv: env.CHAT_MESSAGES_KV,
-    env: { AI: context.env.AI },
+    ai: context.env.AI,
+    geminiApiKey: env.GEMINI_API_KEY,
   };
 }
 
