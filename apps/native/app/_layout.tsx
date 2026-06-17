@@ -6,9 +6,7 @@ import { ClerkProvider, useAuth } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { env } from "@suwa/env/native";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { useFonts } from "expo-font";
 import { Redirect, Stack, usePathname } from "expo-router";
-import { hideAsync, preventAutoHideAsync } from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
@@ -21,12 +19,7 @@ import { orpc, queryClient, setQueryErrorHandler } from "@/utils/orpc";
 import { StripePaymentProvider } from "@/utils/stripe";
 import { useThemeColor } from "@/utils/theme";
 
-preventAutoHideAsync().catch(() => undefined);
 WebBrowser.maybeCompleteAuthSession();
-
-const satoshiFonts = {
-  Satoshi: require("../assets/Satoshi_Complete/Fonts/TTF/Satoshi-Variable.ttf"),
-};
 
 function ClerkApiAuthBridge() {
   const { getToken } = useAuth();
@@ -182,7 +175,6 @@ function GlobalErrorBoundary({
 
 function LayoutContent() {
   const { background, foreground } = useThemeColor();
-  const [fontsLoaded, fontError] = useFonts(satoshiFonts);
   const { toast } = useToast();
   const { dialogProps, showError } = useErrorDialog();
 
@@ -195,16 +187,6 @@ function LayoutContent() {
       });
     });
   }, [toast]);
-
-  useEffect(() => {
-    if (fontsLoaded || fontError) {
-      hideAsync().catch(() => undefined);
-    }
-  }, [fontError, fontsLoaded]);
-
-  if (!(fontsLoaded || fontError)) {
-    return null;
-  }
 
   return (
     <ClerkProvider
@@ -222,7 +204,7 @@ function LayoutContent() {
                     backgroundColor: background,
                   },
                   headerTitleStyle: {
-                    fontFamily: "Satoshi",
+                    fontFamily: "Plus Jakarta Sans",
                     fontWeight: "500",
                     color: foreground,
                   },
