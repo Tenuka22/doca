@@ -9,7 +9,6 @@ import {
   MicOff,
   PhoneOff,
   User,
-  Video,
   VideoOff,
 } from "lucide-react-native";
 import type React from "react";
@@ -31,6 +30,7 @@ import { useThemeColor } from "@/utils/theme";
 interface VideoRoomProps {
   alias?: string;
   endAt: string;
+  isMock?: boolean;
   onClose: () => void;
   onFetchToken?: (sessionId: string) => Promise<{
     token: string;
@@ -48,7 +48,6 @@ interface VideoRoomProps {
   role: SessionTimingRole;
   sessionId: string;
   startAt: string;
-  isMock?: boolean;
 }
 
 export function VideoRoom({
@@ -321,7 +320,7 @@ export function VideoRoom({
         <Text className="mt-2 font-bold font-sans text-lg text-white">
           Doctor (Mock)
         </Text>
-        <Text className="font-medium font-sans text-white/60 text-sm">
+        <Text className="font-medium font-sans text-sm text-white/60">
           Simulation Active
         </Text>
       </View>

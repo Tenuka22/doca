@@ -517,7 +517,7 @@ export function VideoRoom({
       )}
 
       {isConnected && (
-        <div className="flex items-center justify-center gap-4">
+        <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-4 p-6">
           <button
             className={`flex h-12 w-12 items-center justify-center rounded-full transition-colors ${
               isMicOn

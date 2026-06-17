@@ -60,6 +60,7 @@ function AdminSessionPage() {
       <div className="flex h-[calc(100vh-theme(spacing.16))] flex-col p-6">
         <VideoRoomWeb
           endAt={activeSession.endAt}
+          isMock={isMock}
           onClose={() => {
             setActiveSession(null);
             setIsMock(false);
@@ -70,7 +71,6 @@ function AdminSessionPage() {
           role={selectedRole}
           sessionId={activeSession.id}
           startAt={activeSession.startAt}
-          isMock={isMock}
         />
       </div>
     );
@@ -208,7 +208,7 @@ function AdminSessionPage() {
                 setActiveSession({
                   id: "mock-session",
                   startAt: new Date().toISOString(),
-                  endAt: new Date(Date.now() + 3600000).toISOString(),
+                  endAt: new Date(Date.now() + 3_600_000).toISOString(),
                 });
               }}
               variant="secondary"

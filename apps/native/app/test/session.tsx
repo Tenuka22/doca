@@ -51,6 +51,7 @@ export default function TestSessionScreen() {
           <VideoRoom
             alias={alias}
             endAt={new Date(Date.now() + 3_600_000).toISOString()}
+            isMock={activeSession.isMock}
             onClose={() => setActiveSession(null)}
             onFetchToken={(sid: string) =>
               orpc.getTestLiveKitToken.call({ sessionId: sid })
@@ -58,7 +59,6 @@ export default function TestSessionScreen() {
             role={selectedRole}
             sessionId={activeSession.id}
             startAt={new Date().toISOString()}
-            isMock={activeSession.isMock}
           />
         </Screen>
       </>
