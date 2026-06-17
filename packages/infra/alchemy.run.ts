@@ -42,6 +42,8 @@ const chatMessagesKv = await KVNamespace("chat-messages");
 
 const aiBinding = Ai({ binding: "AI" });
 
+
+
 export const server = await Worker("server", {
   cwd: "../../apps/server",
   entrypoint: "src/index.ts",

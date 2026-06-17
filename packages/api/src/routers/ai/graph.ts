@@ -1,7 +1,8 @@
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { MessagesAnnotation, StateGraph } from "@langchain/langgraph";
+import { Annotation, MessagesAnnotation, StateGraph } from "@langchain/langgraph";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
+import type { BaseMessage } from "@langchain/core/messages";
 import type { ClerkRequestContext } from "../../context";
+import { CloudflareChatModel } from "./cloudflare-chat-model";
 import {
   createCoordinatorNode,
   createDbAgentNode,
@@ -23,44 +24,40 @@ Use transfer_to_agent tool to route. For simple greetings, answer directly.`,
     "You are a wellness assistant. Provide helpful tips on stress management, wellness activities, and general health advice. Be supportive and encouraging.",
 };
 
-// ── Key rotation ──
+const GraphAnnotation = Annotation.Root({
+  ...MessagesAnnotation.spec,
+  activeAgent: Annotation<string>({
+    default: () => "coordinator",
+    reducer: (_current, next) => next,
+  }),
+});
 
-let keyIndex = 0;
-const keyPool: string[] = [];
+export type GraphState = typeof GraphAnnotation.State;
 
-export function initKeys(keys: string) {
-  keyPool.length = 0;
-  keyPool.push(
-    ...keys
-      .split(",")
-      .map((k) => k.trim())
-      .filter(Boolean)
-  );
-  keyIndex = 0;
+function createAgentRouter() {
+  return (state: GraphState) => {
+    const last = state.messages[state.messages.length - 1] as BaseMessage & {
+      tool_calls?: Array<{ name: string }>;
+    };
+    return last?.tool_calls?.length ? "tools" : "__end__";
+  };
 }
 
-function nextKey(): string {
-  if (keyPool.length === 0) {
-    return "";
-  }
-  const key = keyPool[keyIndex % keyPool.length];
-  keyIndex = (keyIndex + 1) % keyPool.length;
-  return key ?? "";
+function createToolsRouter() {
+  return (state: GraphState) => {
+    const agent = state.activeAgent as string;
+    if (agent === "db" || agent === "general") return agent;
+    return "__end__";
+  };
 }
 
 // ── Graph ──
 
 export function createGraph(ctx: ClerkRequestContext) {
-  if (keyPool.length === 0) {
-    initKeys(ctx.geminiApiKey ?? "");
-  }
-
-  const llm = new ChatGoogleGenerativeAI({
-    model: "gemini-2.0-flash",
-    apiKey: nextKey(),
-    temperature: 0.3,
-    maxRetries: 2,
-  });
+  const llm = new CloudflareChatModel(
+    "@cf/meta/llama-3.1-8b-instruct-fast",
+    ctx.ai,
+  );
 
   const tools = createAiTools(ctx);
   const allTools = Object.values(tools).filter(
@@ -69,16 +66,16 @@ export function createGraph(ctx: ClerkRequestContext) {
   const toolNode = new ToolNode(allTools);
   const config = { llm, toolNode, systemPrompts: PROMPTS, tools };
 
-  return new StateGraph(MessagesAnnotation)
+  return new StateGraph(GraphAnnotation)
     .addNode("coordinator", createCoordinatorNode(config))
     .addNode("db", createDbAgentNode(config))
     .addNode("general", createGeneralAgentNode(config))
     .addNode("tools", toolNode)
     .addEdge("__start__", "coordinator")
     .addConditionalEdges("coordinator", createRouter(config))
-    .addEdge("db", "coordinator")
-    .addEdge("general", "coordinator")
-    .addEdge("tools", "coordinator")
+    .addConditionalEdges("db", createAgentRouter())
+    .addConditionalEdges("general", createAgentRouter())
+    .addConditionalEdges("tools", createToolsRouter())
     .compile();
 }
 

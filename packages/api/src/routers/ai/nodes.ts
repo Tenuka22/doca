@@ -1,13 +1,11 @@
 import type { BaseMessage } from "@langchain/core/messages";
 import { SystemMessage } from "@langchain/core/messages";
-import type { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import type { MessagesAnnotation } from "@langchain/langgraph";
 import type { ToolNode } from "@langchain/langgraph/prebuilt";
-
-type GraphState = typeof MessagesAnnotation.State;
+import type { CloudflareChatModel } from "./cloudflare-chat-model";
+import type { GraphState } from "./graph";
 
 export interface AgentConfig {
-  llm: ChatGoogleGenerativeAI;
+  llm: CloudflareChatModel;
   systemPrompts: Record<string, string>;
   toolNode: ToolNode;
   tools: ReturnType<typeof import("./tools").createAiTools>;
@@ -15,12 +13,21 @@ export interface AgentConfig {
 
 export function createCoordinatorNode(config: AgentConfig) {
   return async (state: GraphState) => {
-    const llm = config.llm.bindTools([config.tools.transferToAgent]);
-    const result = await llm.invoke([
+    config.llm.bindTools([config.tools.transferToAgent]);
+    const result = await config.llm.invoke([
       new SystemMessage(config.systemPrompts.coordinator!),
       ...state.messages,
     ]);
-    return { messages: [result] };
+    const tc = (result as Record<string, unknown>).tool_calls as
+      | Array<{ name: string; args: Record<string, unknown> }>
+      | undefined;
+    const transfer = tc?.find((t) => t.name === "transfer_to_agent");
+    const agent =
+      typeof transfer?.args?.agent === "string" &&
+      ["db", "general"].includes(transfer.args.agent)
+        ? transfer.args.agent
+        : "coordinator";
+    return { messages: [result], activeAgent: agent };
   };
 }
 
