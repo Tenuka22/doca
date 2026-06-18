@@ -4,9 +4,25 @@ import "../global.css";
 
 import { ClerkProvider, useAuth } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
+import {
+  PlayfairDisplay_400Regular,
+  PlayfairDisplay_400Regular_Italic,
+  PlayfairDisplay_500Medium,
+  PlayfairDisplay_600SemiBold,
+  PlayfairDisplay_700Bold,
+} from "@expo-google-fonts/playfair-display";
+import {
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_900Black,
+  useFonts,
+} from "@expo-google-fonts/poppins";
 import { env } from "@suwa/env/native";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Redirect, Stack, usePathname } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
@@ -96,13 +112,8 @@ function OnboardingCheck() {
     const patientData = patientProfileQuery.data;
 
     if (!patientData) {
-      console.log("[OnboardingCheck] no profile, redirecting to /onboarding");
-      if (
-        pathname !== "/onboarding" &&
-        !pathname.startsWith("/onboarding") &&
-        pathname !== "/profile"
-      ) {
-        return <Redirect href="/onboarding" />;
+      if (pathname !== "/landing" && pathname !== "/profile") {
+        return <Redirect href="/landing" />;
       }
       return null;
     }
@@ -122,10 +133,7 @@ function OnboardingCheck() {
         return <Redirect href="/profile" />;
       }
 
-      if (
-        !needsRepair &&
-        (pathname === "/" || pathname.startsWith("/onboarding"))
-      ) {
+      if (!needsRepair && pathname === "/landing") {
         return <Redirect href="/(patient)" />;
       }
     }
@@ -204,7 +212,7 @@ function LayoutContent() {
                     backgroundColor: background,
                   },
                   headerTitleStyle: {
-                    fontFamily: "Plus Jakarta Sans",
+                    fontFamily: "Poppins",
                     fontWeight: "500",
                     color: foreground,
                   },
@@ -212,11 +220,6 @@ function LayoutContent() {
                   headerShadowVisible: false,
                 }}
               >
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="(onboarding)/onboarding"
-                  options={{ headerShown: false }}
-                />
                 <Stack.Screen
                   name="(patient)"
                   options={{ headerShown: false }}
@@ -235,6 +238,29 @@ function LayoutContent() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    Poppins: Poppins_400Regular,
+    "Poppins-Medium": Poppins_500Medium,
+    "Poppins-SemiBold": Poppins_600SemiBold,
+    "Poppins-Bold": Poppins_700Bold,
+    "Poppins-Black": Poppins_900Black,
+    "Playfair Display": PlayfairDisplay_400Regular,
+    "Playfair Display-Italic": PlayfairDisplay_400Regular_Italic,
+    "Playfair Display-Medium": PlayfairDisplay_500Medium,
+    "Playfair Display-SemiBold": PlayfairDisplay_600SemiBold,
+    "Playfair Display-Bold": PlayfairDisplay_700Bold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!(fontsLoaded || fontError)) {
+    return null;
+  }
+
   return (
     <ToastProvider>
       <LayoutContent />

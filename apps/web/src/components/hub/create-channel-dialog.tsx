@@ -76,7 +76,9 @@ export function CreateChannelDialog({
                   Channel name <span className="text-destructive">*</span>
                 </Label>
                 <Input
-                  className={cn(hasNameError && "border-destructive/70 ring-destructive/30")}
+                  className={cn(
+                    hasNameError && "border-destructive/70 ring-destructive/30"
+                  )}
                   id="channel-name"
                   onChange={(e) => {
                     setName(e.target.value);
@@ -88,7 +90,9 @@ export function CreateChannelDialog({
                   value={name}
                 />
                 {hasNameError && (
-                  <p className="text-destructive text-xs">Channel name is required</p>
+                  <p className="text-destructive text-xs">
+                    Channel name is required
+                  </p>
                 )}
               </div>
 
@@ -99,7 +103,11 @@ export function CreateChannelDialog({
                 <div className="relative">
                   <AtSignIcon className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    className={cn("pl-9", hasHandleError && "border-destructive/70 ring-destructive/30")}
+                    className={cn(
+                      "pl-9",
+                      hasHandleError &&
+                        "border-destructive/70 ring-destructive/30"
+                    )}
                     id="channel-handle"
                     onChange={(e) =>
                       setHandle(

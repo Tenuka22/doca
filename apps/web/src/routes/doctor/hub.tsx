@@ -2,15 +2,14 @@ import { useUser } from "@clerk/tanstack-react-start";
 import {
   Avatar,
   Button,
-  Card,
   Chip,
   Input,
   ListBox,
   Select,
   Skeleton,
+  Tabs,
   ToggleButton,
   ToggleButtonGroup,
-  Tabs,
 } from "@heroui/react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -159,12 +158,11 @@ function DoctorHubPage() {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Channel Header Banner */}
-      <div className="relative h-40 overflow-hidden bg-gradient-to-b from-accent/10 via-accent/5 to-background md:h-52">
-      </div>
+      <div className="relative h-40 overflow-hidden bg-gradient-to-b from-accent/10 via-accent/5 to-background md:h-52" />
 
       <div className="relative z-10 -mt-12 px-6">
         <div className="flex items-center gap-5">
-          <Avatar size='lg'>
+          <Avatar size="lg">
             <Avatar.Image src={user?.imageUrl} />
             <Avatar.Fallback>{initials}</Avatar.Fallback>
           </Avatar>
@@ -206,16 +204,16 @@ function DoctorHubPage() {
             <Button
               className="gap-2 rounded-full"
               onPress={() => setCreateChannelOpen(true)}
-              variant="outline"
               size="sm"
+              variant="outline"
             >
               <PlusIcon className="size-4" />
               Channel
             </Button>
             <Button
-              size="sm"
               className="gap-2 rounded-full"
               onPress={() => setUploadOpen(true)}
+              size="sm"
             >
               <UploadIcon className="size-4" />
               Upload
@@ -227,66 +225,60 @@ function DoctorHubPage() {
       {/* Channel Tabs (YouTube-style horizontal scroll) */}
       {allChannels.length > 0 && (
         <div className="px-6 pt-4">
-            <ToggleButtonGroup
-              className="flex flex-wrap"
-              isDetached
-              selectedKeys={[selectedChannel]}
-              selectionMode="single"
-              onSelectionChange={(keys) => {
-                const key = [...keys][0] as string | undefined;
-                if (key) {
-                  setSelectedChannel(key);
-                }
-              }}
-            >
-              <ToggleButton id="all">All channels</ToggleButton>
-              {allChannels.map((channel) => (
-                <ToggleButton id={channel.id} key={channel.id}>
-                  <RadioIcon className="mr-2 size-3" />
-                  {channel.name}
-                </ToggleButton>
-              ))}
-            </ToggleButtonGroup>
-          </div>
+          <ToggleButtonGroup
+            className="flex flex-wrap"
+            isDetached
+            onSelectionChange={(keys) => {
+              const key = [...keys][0] as string | undefined;
+              if (key) {
+                setSelectedChannel(key);
+              }
+            }}
+            selectedKeys={[selectedChannel]}
+            selectionMode="single"
+          >
+            <ToggleButton id="all">All channels</ToggleButton>
+            {allChannels.map((channel) => (
+              <ToggleButton id={channel.id} key={channel.id}>
+                <RadioIcon className="mr-2 size-3" />
+                {channel.name}
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
+        </div>
       )}
 
       <div>
-      <div className="flex flex-1 flex-row gap-4 px-6 pb-6 pt-4">
-            <div className="flex max-w-md flex-1 items-center gap-3">
-              <div className="relative flex-1">
-                <SearchIcon className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  className="h-10 rounded-full border-none bg-muted/30 pl-10 focus-visible:ring-1 focus-visible:ring-primary/50"
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search your materials..."
-                  value={searchQuery}
-                />
-              </div>
+        <div className="flex flex-1 flex-row gap-4 px-6 pt-4 pb-6">
+          <div className="flex max-w-md flex-1 items-center gap-3">
+            <div className="relative flex-1">
+              <SearchIcon className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="h-10 rounded-full border-none bg-muted/30 pl-10 focus-visible:ring-1 focus-visible:ring-primary/50"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search your materials..."
+                value={searchQuery}
+              />
             </div>
+          </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <Tabs
+          <div className="flex flex-wrap items-center gap-2">
+            <Tabs
               onSelectionChange={(v) => setActiveTab(v as FilterTab)}
               selectedKey={activeTab}
             >
               <Tabs.List>
-                <Tabs.Tab
-                  id="all"
-                >
-                    All
-                     <Tabs.Indicator />
+                <Tabs.Tab id="all">
+                  All
+                  <Tabs.Indicator />
                 </Tabs.Tab>
-                <Tabs.Tab
-                  id="videos"
-                >
-                    Videos
-                     <Tabs.Indicator />
+                <Tabs.Tab id="videos">
+                  Videos
+                  <Tabs.Indicator />
                 </Tabs.Tab>
-                <Tabs.Tab
-                  id="audio"
-                >
-                    Audio
-                     <Tabs.Indicator />
+                <Tabs.Tab id="audio">
+                  Audio
+                  <Tabs.Indicator />
                 </Tabs.Tab>
                 {totalUploading > 0 && (
                   <Tabs.Tab
@@ -312,7 +304,7 @@ function DoctorHubPage() {
               onSelectionChange={(id) => setSortBy(id as SortOption)}
               selectedKey={sortBy}
             >
-              <Select.Trigger className="h-9 w-[140px] rounded-full border-border/60 text-sm flex flex-row gap-2 items-center justify-center">
+              <Select.Trigger className="flex h-9 w-[140px] flex-row items-center justify-center gap-2 rounded-full border-border/60 text-sm">
                 <FilterIcon className="mr-1 size-3.5" />
                 <Select.Value />
               </Select.Trigger>
@@ -344,7 +336,7 @@ function DoctorHubPage() {
               </Button>
             </div>
           </div>
-      </div>
+        </div>
         {/* Content Grid/List */}
         {materialsLoading ? (
           <div className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

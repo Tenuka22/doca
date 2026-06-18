@@ -123,13 +123,17 @@ function CreatePlanDialog() {
                   Plan name <span className="text-destructive">*</span>
                 </Label>
                 <Input
-                  className={cn(hasNameError && "border-destructive/70 ring-destructive/30")}
+                  className={cn(
+                    hasNameError && "border-destructive/70 ring-destructive/30"
+                  )}
                   id="plan-name"
                   onChange={(e) => setName(e.target.value)}
                   value={name}
                 />
                 {hasNameError && (
-                  <p className="text-destructive text-xs">Plan name is required</p>
+                  <p className="text-destructive text-xs">
+                    Plan name is required
+                  </p>
                 )}
               </div>
               <div className="grid gap-2">
@@ -142,36 +146,46 @@ function CreatePlanDialog() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="grid gap-2">
-                <Label htmlFor="price-cents">
-                  Price (cents) <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  className={cn(hasPriceError && "border-destructive/70 ring-destructive/30")}
-                  id="price-cents"
-                  min="100"
-                  onChange={(e) => setPriceCents(e.target.value)}
-                  type="number"
-                  value={priceCents}
-                />
-                {hasPriceError && (
-                  <p className="text-destructive text-xs">Price is required</p>
-                )}
+                  <Label htmlFor="price-cents">
+                    Price (cents) <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    className={cn(
+                      hasPriceError &&
+                        "border-destructive/70 ring-destructive/30"
+                    )}
+                    id="price-cents"
+                    min="100"
+                    onChange={(e) => setPriceCents(e.target.value)}
+                    type="number"
+                    value={priceCents}
+                  />
+                  {hasPriceError && (
+                    <p className="text-destructive text-xs">
+                      Price is required
+                    </p>
+                  )}
                 </div>
                 <div className="grid gap-2">
-                <Label htmlFor="duration">
-                  Duration minutes <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  className={cn(hasDurationError && "border-destructive/70 ring-destructive/30")}
-                  id="duration"
-                  min="60"
-                  onChange={(e) => setDurationMinutes(e.target.value)}
-                  type="number"
-                  value={durationMinutes}
-                />
-                {hasDurationError && (
-                  <p className="text-destructive text-xs">Duration is required</p>
-                )}
+                  <Label htmlFor="duration">
+                    Duration minutes <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    className={cn(
+                      hasDurationError &&
+                        "border-destructive/70 ring-destructive/30"
+                    )}
+                    id="duration"
+                    min="60"
+                    onChange={(e) => setDurationMinutes(e.target.value)}
+                    type="number"
+                    value={durationMinutes}
+                  />
+                  {hasDurationError && (
+                    <p className="text-destructive text-xs">
+                      Duration is required
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="grid gap-2">

@@ -50,7 +50,7 @@ function DoctorProfileRoute() {
       <section className="flex flex-col gap-3">
         <div>
           <PageTitle>Profile information</PageTitle>
-          <p className="text-muted-foreground text-sm font-light">
+          <p className="font-light text-muted-foreground text-sm">
             Your professional details visible to patients
           </p>
         </div>
@@ -68,11 +68,11 @@ function DoctorProfileRoute() {
                 qualifications
               </p>
             </div>
-              <DoctorMaterialsCard
-                canManage={canManageFiles}
-                doctorId={user.user.id}
-                isPermanent={profileData?.profile?.permanent ?? false}
-              />
+            <DoctorMaterialsCard
+              canManage={canManageFiles}
+              doctorId={user.user.id}
+              isPermanent={profileData?.profile?.permanent ?? false}
+            />
           </section>
         </>
       ) : null}

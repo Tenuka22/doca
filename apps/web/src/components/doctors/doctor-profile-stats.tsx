@@ -35,11 +35,7 @@ function StatItem({
   );
 }
 
-export function DoctorProfileStats({
-  stats,
-}: {
-  stats?: ProfileStats | null;
-}) {
+export function DoctorProfileStats({ stats }: { stats?: ProfileStats | null }) {
   return (
     <div className="flex flex-wrap gap-x-6 gap-y-2">
       <StatItem

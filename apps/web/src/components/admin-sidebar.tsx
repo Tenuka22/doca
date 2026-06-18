@@ -113,7 +113,7 @@ export function AdminSidebar({ collapsed }: AdminSidebarProps) {
     <div className={["relative", collapsed ? "w-16" : "w-60"].join(" ")}>
       <Surface
         className={[
-          "fixed inset-0 flex h-screen flex-col border-r border-border",
+          "fixed inset-0 flex h-screen flex-col border-border border-r",
           "transition-[width] duration-200 ease-in-out",
           collapsed ? "w-16" : "w-60",
         ].join(" ")}
@@ -126,10 +126,10 @@ export function AdminSidebar({ collapsed }: AdminSidebarProps) {
         >
           {!collapsed && (
             <div className="flex min-w-0 flex-col">
-              <span className="truncate font-semibold text-sm text-foreground">
+              <span className="truncate font-semibold text-foreground text-sm">
                 Admin Console
               </span>
-              <span className="truncate text-xs text-muted">
+              <span className="truncate text-muted text-xs">
                 {APP_DISPLAY_NAME}
               </span>
             </div>
@@ -153,12 +153,12 @@ export function AdminSidebar({ collapsed }: AdminSidebarProps) {
           >
             <ListBox.Section>
               {!collapsed && (
-                <Header className="mb-1 px-3 text-xs font-medium uppercase tracking-wider text-muted">
+                <Header className="mb-1 px-3 font-medium text-muted text-xs uppercase tracking-wider">
                   Main
                 </Header>
               )}
               {mainNav.map((item) => (
-                <NavItem key={item.id} item={item} collapsed={collapsed} />
+                <NavItem collapsed={collapsed} item={item} key={item.id} />
               ))}
             </ListBox.Section>
 
@@ -166,12 +166,12 @@ export function AdminSidebar({ collapsed }: AdminSidebarProps) {
 
             <ListBox.Section>
               {!collapsed && (
-                <Header className="mb-1 px-3 text-xs font-medium uppercase tracking-wider text-muted">
+                <Header className="mb-1 px-3 font-medium text-muted text-xs uppercase tracking-wider">
                   Secondary
                 </Header>
               )}
               {adminNav.map((item) => (
-                <NavItem key={item.id} item={item} collapsed={collapsed} />
+                <NavItem collapsed={collapsed} item={item} key={item.id} />
               ))}
             </ListBox.Section>
           </ListBox>
@@ -188,11 +188,10 @@ export function AdminSidebar({ collapsed }: AdminSidebarProps) {
           <UserButton />
           {!collapsed && user && (
             <div className="flex min-w-0 flex-col">
-              <span className="truncate text-sm font-medium text-foreground">
-                {user.fullName ??
-                  user.primaryEmailAddress?.emailAddress}
+              <span className="truncate font-medium text-foreground text-sm">
+                {user.fullName ?? user.primaryEmailAddress?.emailAddress}
               </span>
-              <span className="truncate text-xs text-muted">
+              <span className="truncate text-muted text-xs">
                 {user.primaryEmailAddress?.emailAddress}
               </span>
             </div>

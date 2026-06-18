@@ -2,8 +2,8 @@ import { SignInButton as ClerkSignInButton } from "@clerk/tanstack-react-start";
 import { Button, Card, Separator } from "@heroui/react";
 import {
   createFileRoute,
-  Outlet,
   Link,
+  Outlet,
   useLoaderData,
   useMatches,
 } from "@tanstack/react-router";
@@ -26,7 +26,6 @@ export const Route = createFileRoute("/admin")({
   loader: ({ context }) => ({ session: context.session }),
   component: AdminLayoutRoute,
 });
-
 
 function AdminBreadcrumbs() {
   const matches = useMatches();
@@ -52,23 +51,23 @@ function AdminBreadcrumbs() {
         index === self.findIndex((c) => c.href === crumb.href)
     );
 
-  if (breadcrumbs.length <= 1) return null;
+  if (breadcrumbs.length <= 1) {
+    return null;
+  }
 
   return (
     <nav
       aria-label="Breadcrumb"
-      className="flex items-center gap-2 text-sm text-muted-foreground"
+      className="flex items-center gap-2 text-muted-foreground text-sm"
     >
       {breadcrumbs.map((crumb) => (
-        <span key={crumb.href} className="flex items-center gap-2">
+        <span className="flex items-center gap-2" key={crumb.href}>
           {crumb.isLast ? (
-            <span className="font-medium text-foreground">
-              {crumb.label}
-            </span>
+            <span className="font-medium text-foreground">{crumb.label}</span>
           ) : (
             <Link
-              to={crumb.href}
               className="transition-colors hover:text-foreground"
+              to={crumb.href}
             >
               {crumb.label}
             </Link>
@@ -79,7 +78,6 @@ function AdminBreadcrumbs() {
     </nav>
   );
 }
-
 
 function AdminLayoutRoute() {
   const { session } = useLoaderData({ from: "/admin" });
@@ -117,13 +115,13 @@ function AdminLayoutRoute() {
         <header className="sticky top-0 z-10 flex h-12 items-center gap-3 border-b bg-background/80 px-3 backdrop-blur-md supports-backdrop-filter:bg-background/60">
           <Button
             isIconOnly
-            variant="ghost"
             onPress={() => setSidebarOpen((v) => !v)}
+            variant="ghost"
           >
             <MenuIcon />
           </Button>
 
-          <Separator orientation="vertical" className="h-12" />
+          <Separator className="h-12" orientation="vertical" />
 
           <AdminBreadcrumbs />
         </header>

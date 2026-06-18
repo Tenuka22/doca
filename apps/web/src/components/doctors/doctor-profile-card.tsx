@@ -406,7 +406,7 @@ export function DoctorProfileCard() {
             <Modal.CloseTrigger />
             <Modal.Header>
               <Modal.Heading>Edit Doctor Profile</Modal.Heading>
-              <p className="text-muted-foreground text-sm font-light">
+              <p className="font-light text-muted-foreground text-sm">
                 Build a stronger public profile with structured practice and
                 background details.
               </p>
@@ -419,8 +419,9 @@ export function DoctorProfileCard() {
               >
                 <Tabs defaultSelectedKey="basic">
                   <Tabs.ListContainer>
-                    <Tabs.List aria-label="Profile tabs"
-                      className="*:h-8 *:px-1 *:text-sm *:font-normal *:data-[selected=true]:text-accent-foreground"
+                    <Tabs.List
+                      aria-label="Profile tabs"
+                      className="*:h-8 *:px-1 *:font-normal *:text-sm *:data-[selected=true]:text-accent-foreground"
                     >
                       <Tabs.Tab
                         className={cn(
@@ -430,7 +431,7 @@ export function DoctorProfileCard() {
                         id="basic"
                       >
                         <span>Info</span>
-  <Tabs.Indicator className="bg-accent" />
+                        <Tabs.Indicator className="bg-accent" />
                       </Tabs.Tab>
                       <Tabs.Tab
                         className={cn(
@@ -440,7 +441,7 @@ export function DoctorProfileCard() {
                         id="practice"
                       >
                         <span>Practice</span>
-  <Tabs.Indicator className="bg-accent" />
+                        <Tabs.Indicator className="bg-accent" />
                       </Tabs.Tab>
                       <Tabs.Tab
                         className={cn(
@@ -450,11 +451,11 @@ export function DoctorProfileCard() {
                         id="specialties"
                       >
                         <span>Specialties</span>
-  <Tabs.Indicator className="bg-accent" />
+                        <Tabs.Indicator className="bg-accent" />
                       </Tabs.Tab>
                       <Tabs.Tab id="experience">
                         <span>App. & Edu</span>
-  <Tabs.Indicator className="bg-accent" />
+                        <Tabs.Indicator className="bg-accent" />
                       </Tabs.Tab>
                     </Tabs.List>
                   </Tabs.ListContainer>
@@ -619,14 +620,16 @@ export function DoctorProfileCard() {
                         <ToggleButtonGroup
                           className="flex flex-wrap pt-4"
                           isDetached
-                          selectedKeys={new Set(form.watch("specialties") ?? [])}
-                          selectionMode="multiple"
                           onSelectionChange={(keys) =>
                             form.setValue("specialties", [...keys] as never, {
                               shouldDirty: true,
                               shouldTouch: true,
                             })
                           }
+                          selectedKeys={
+                            new Set(form.watch("specialties") ?? [])
+                          }
+                          selectionMode="multiple"
                         >
                           {doctorSpecialtyValues.map((value) => (
                             <ToggleButton id={value} key={value}>
@@ -645,14 +648,14 @@ export function DoctorProfileCard() {
                         <ToggleButtonGroup
                           className="flex flex-wrap pt-4"
                           isDetached
-                          selectedKeys={new Set(form.watch("languages") ?? [])}
-                          selectionMode="multiple"
                           onSelectionChange={(keys) =>
                             form.setValue("languages", [...keys] as never, {
                               shouldDirty: true,
                               shouldTouch: true,
                             })
                           }
+                          selectedKeys={new Set(form.watch("languages") ?? [])}
+                          selectionMode="multiple"
                         >
                           {doctorLanguageValues.map((value) => (
                             <ToggleButton id={value} key={value}>
@@ -671,14 +674,20 @@ export function DoctorProfileCard() {
                         <ToggleButtonGroup
                           className="flex flex-wrap pt-4"
                           isDetached
-                          selectedKeys={new Set(form.watch("consultationModes") ?? [])}
-                          selectionMode="multiple"
                           onSelectionChange={(keys) =>
-                            form.setValue("consultationModes", [...keys] as never, {
-                              shouldDirty: true,
-                              shouldTouch: true,
-                            })
+                            form.setValue(
+                              "consultationModes",
+                              [...keys] as never,
+                              {
+                                shouldDirty: true,
+                                shouldTouch: true,
+                              }
+                            )
                           }
+                          selectedKeys={
+                            new Set(form.watch("consultationModes") ?? [])
+                          }
+                          selectionMode="multiple"
                         >
                           {doctorConsultationModeValues.map((value) => (
                             <ToggleButton id={value} key={value}>
@@ -697,14 +706,14 @@ export function DoctorProfileCard() {
                         <ToggleButtonGroup
                           className="flex flex-wrap pt-4"
                           isDetached
-                          selectedKeys={new Set(form.watch("focusAreas") ?? [])}
-                          selectionMode="multiple"
                           onSelectionChange={(keys) =>
                             form.setValue("focusAreas", [...keys] as never, {
                               shouldDirty: true,
                               shouldTouch: true,
                             })
                           }
+                          selectedKeys={new Set(form.watch("focusAreas") ?? [])}
+                          selectionMode="multiple"
                         >
                           {doctorFocusAreaValues.map((value) => (
                             <ToggleButton id={value} key={value}>

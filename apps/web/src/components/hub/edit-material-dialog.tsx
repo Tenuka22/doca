@@ -168,8 +168,8 @@ export function EditMaterialDialog({
           </Modal.Header>
           <Modal.Body>
             <Tabs
-              selectedKey={activeTab}
               onSelectionChange={(key) => setActiveTab(key as EditTab)}
+              selectedKey={activeTab}
             >
               <Tabs.ListContainer>
                 <Tabs.List>
@@ -200,7 +200,10 @@ export function EditMaterialDialog({
                     Title <span className="text-destructive">*</span>
                   </Label>
                   <Input
-                    className={cn(hasDetailsErrors && "border-destructive/70 ring-destructive/30")}
+                    className={cn(
+                      hasDetailsErrors &&
+                        "border-destructive/70 ring-destructive/30"
+                    )}
                     id="edit-title"
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Enter a descriptive title"
@@ -363,7 +366,7 @@ export function EditMaterialDialog({
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center gap-1 rounded-lg border border-dashed border-border/60 py-8 text-center">
+                  <div className="flex flex-col items-center gap-1 rounded-lg border border-border/60 border-dashed py-8 text-center">
                     <p className="text-muted-foreground text-sm">
                       No tags added yet.
                     </p>
