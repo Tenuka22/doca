@@ -73,11 +73,11 @@ function RootDocument() {
     >
       <ClerkApiAuthBridge />
       <TooltipProvider>
-        <html className="dark" lang="en">
+        <html lang="en" className="dark">
           <head>
             <HeadContent />
           </head>
-          <body>
+          <body className="font-sans bg-background text-foreground">
             <Outlet />
             <Toaster richColors />
             <TanStackRouterDevtools position="bottom-left" />

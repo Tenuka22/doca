@@ -1,9 +1,7 @@
 import { UserButton, useUser } from "@clerk/tanstack-react-start";
+import { Button, Card, Chip } from "@heroui/react";
 import { APP_DISPLAY_NAME } from "@suwa/app-info";
-import { Badge } from "@suwa/ui/components/badge";
-import { buttonVariants } from "@suwa/ui/components/button";
-import { Card, CardContent } from "@suwa/ui/components/card";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowRightIcon, ShieldIcon, StethoscopeIcon } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -12,141 +10,126 @@ export const Route = createFileRoute("/")({
 
 function HomeRoute() {
   const user = useUser();
+  const navigate = useNavigate();
   const name = user.user?.fullName ?? user.user?.username;
 
   return (
-    <div className="mx-auto flex min-h-svh w-full max-w-6xl flex-col gap-8">
-      <header className="flex h-14 items-center justify-between rounded-b-2xl border bg-card/50 px-6 py-1 shadow-sm backdrop-blur-md">
-        <div className="flex items-center gap-4">
-          <span className="font-semibold text-lg tracking-tight">
-            {APP_DISPLAY_NAME}
-          </span>
+    <div className="flex-1 size-full">
+      <header className="sticky top-0 z-50 border-border/40 border-b bg-background/20 backdrop-blur-xl">
+        <div className="px-8 flex h-16 max-w-7xl items-center justify-between">
+          <img src="/Logo.png" className="size-12"/>
           <nav className="hidden items-center gap-2 sm:flex">
-            <Link
-              className="cursor-pointer rounded-lg text-muted-foreground text-sm transition-colors hover:bg-muted hover:text-foreground"
-              search={{ page: 1 }}
-              to="/doctor"
-            >
-              Doctor
-            </Link>
+
             {user.isLoaded && user.user && (
-              <Link
-                className="cursor-pointer rounded-lg text-muted-foreground text-sm transition-colors hover:bg-muted hover:text-foreground"
-                to="/tenant"
+              <Button
+                size="sm"
+                onPress={() => navigate({ to: "/doctor", search: { page: 1 } })}
+                variant="outline"
+              >
+                Doctor
+              </Button>
+              )}
+            {user.isLoaded && user.user && (
+              <Button
+                size="sm"
+                onPress={() => navigate({ to: "/tenant" })}
+                variant="outline"
               >
                 Tenant
-              </Link>
+              </Button>
             )}
             {user.isLoaded && user.user?.publicMetadata?.role === "admin" && (
-              <Link
-                className="cursor-pointer rounded-lg text-muted-foreground text-sm transition-colors hover:bg-muted hover:text-foreground"
-                search={{ page: 1, query: "" }}
-                to="/admin"
+              <Button
+                size="sm"
+                onPress={() =>
+                  navigate({ to: "/admin", search: { page: 1, query: "" } })
+                }
+                variant="ghost"
               >
                 Admin
-              </Link>
+              </Button>
             )}
           </nav>
-        </div>
-        <div className="flex items-center gap-2">
-          {user.isLoaded && user.user ? (
-            <div className="flex items-center gap-3">
-              <span className="hidden text-muted-foreground text-sm sm:inline">
-                {name}
-              </span>
-              <UserButton />
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Link
-                className={buttonVariants({ variant: "outline", size: "sm" })}
-                to="/sign-in"
-              >
-                Sign In
-              </Link>
-              <Link
-                className={buttonVariants({ variant: "default", size: "sm" })}
-                to="/sign-up"
-              >
-                Sign Up
-              </Link>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {user.isLoaded && user.user ? (
+              <>
+                <span className="hidden text-muted-foreground text-sm sm:inline">
+                  {name}
+                </span>
+                <UserButton />
+              </>
+            ) : (
+              <>
+                <Button
+                  onPress={() => navigate({ to: "/sign-in" })}
+                    variant="tertiary"
+                    size="sm"
+                >
+                  Sign In
+                </Button>
+                  <Button onPress={() => navigate({ to: "/sign-up" })}
+                    size="sm"
+                  >
+                  Sign Up
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
-      <section className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
-        <div className="flex flex-col items-center gap-4">
-          <Badge variant="secondary">Doctor Onboarding & Admin Platform</Badge>
-          <h1 className="font-semibold text-lg tracking-tight">
-            Welcome to {APP_DISPLAY_NAME}
-          </h1>
-          <p className="mx-auto max-w-xl text-muted-foreground text-sm">
-            Streamlined doctor onboarding, credential management, and
-            administrative oversight for modern telehealth practices.
-          </p>
-        </div>
+      <main className="flex-1 size-full">
+        <section className="bg-gradient-to-b from-accent/5 via-accent/[2%] to-background">
+          <div className="flex flex-col items-center px-6 text-center gap-3 pt-20">
+            <Chip color="accent" variant="soft">
+              Doctor Onboarding & Admin Platform
+            </Chip>
+            <h1 className="max-w-3xl font-light text-4xl tracking-tight pt-3 sm:text-5xl lg:text-6xl">
+              Welcome to {APP_DISPLAY_NAME}
+            </h1>
+            <p className="max-w-2xl font-light text-lg text-muted-foreground sm:text-xl">
+              Streamlined doctor onboarding, credential management, and
+              administrative oversight for modern telehealth practices.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+              {user.isLoaded && user.user ? (
+                <Button
+                  onPress={() =>
+                    navigate({
+                      to:
+                        user.user.publicMetadata?.role === "admin"
+                          ? "/admin"
+                          : "/doctor",
+                    })
+                  }
+                  size="sm"
+                >
+                  Go to Dashboard
+                  <ArrowRightIcon />
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    onPress={() => navigate({ to: "/sign-up" })}
+                    size="sm"
+                  >
+                    Get Started
+                  </Button>
+                  <Button
+                    onPress={() => navigate({ to: "/sign-in" })}
+                    size="sm"
+                    variant="tertiary"
+                  >
+                    Sign In
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
 
-        <div className="flex flex-wrap justify-center gap-4">
-          {user.isLoaded && user.user ? (
-            <Link
-              className={buttonVariants({
-                className: "gap-2",
-                size: "lg",
-              })}
-              to={
-                user.user.publicMetadata?.role === "admin"
-                  ? "/admin"
-                  : "/doctor"
-              }
-            >
-              Go to Dashboard
-              <ArrowRightIcon className="size-4" />
-            </Link>
-          ) : (
-            <>
-              <Link className={buttonVariants({ size: "lg" })} to="/sign-up">
-                Get Started
-              </Link>
-              <Link
-                className={buttonVariants({ size: "lg", variant: "outline" })}
-                to="/sign-in"
-              >
-                Sign In
-              </Link>
-            </>
-          )}
-        </div>
-      </section>
+      </main>
 
-      <footer className="grid gap-4 pb-8 md:grid-cols-2">
-        <Card className="cursor-pointer rounded-2xl border-border/60 transition-colors duration-200 hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-primary">
-          <CardContent className="flex items-start gap-4">
-            <div className="rounded-xl border bg-muted/40 p-2.5 text-muted-foreground">
-              <StethoscopeIcon className="size-5" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <p className="font-medium text-sm">Doctor Portal</p>
-              <p className="text-muted-foreground text-xs">
-                Manage your profile, availability, sessions, and earnings.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="cursor-pointer rounded-2xl border-border/60 transition-colors duration-200 hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-primary">
-          <CardContent className="flex items-start gap-4">
-            <div className="rounded-xl border bg-muted/40 p-2.5 text-muted-foreground">
-              <ShieldIcon className="size-5" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <p className="font-medium text-sm">Admin Console</p>
-              <p className="text-muted-foreground text-xs">
-                Oversee doctors, sessions, plans, and platform activity.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </footer>
     </div>
   );
 }
