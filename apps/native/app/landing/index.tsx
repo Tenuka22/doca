@@ -5,16 +5,12 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import * as Linking from "expo-linking";
 import { Stack, useRouter } from "expo-router";
 import { ArrowRight } from "lucide-react-native";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
-import {
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { Image, ScrollView, Text, View } from "react-native";
 import { z } from "zod";
+import { Button } from "@/components/design/ui/button";
+import { Input } from "@/components/design/ui/input";
+import { ToggleGroup } from "@/components/design/ui/toggle-group";
 import { pushDecoratedUrl } from "@/utils/auth";
 import { orpc, queryClient } from "@/utils/orpc";
 import { encryptData, generateUserSecret, storeSecret } from "@/utils/privacy";
@@ -35,47 +31,24 @@ type AuthMode = "sign-in" | "sign-up";
 
 type ProviderStrategy = "oauth_google" | "oauth_facebook";
 
-function Field({
-  label,
-  error,
-  ...props
-}: { label: string; error?: string } & React.ComponentProps<typeof TextInput>) {
-  return (
-    <View className="gap-2">
-      <Text className="font-medium font-sans text-foreground text-sm">
-        {label}
-      </Text>
-      <TextInput
-        className={`rounded-full border-2 bg-background-subtle px-5 py-4 font-sans text-base text-foreground outline-none placeholder:text-foreground-muted ${error ? "border-destructive" : "border-border"}`}
-        {...props}
-      />
-      {error ? (
-        <Text className="font-sans text-destructive text-sm">{error}</Text>
-      ) : null}
-    </View>
-  );
-}
-
 function ActionButton({
   children,
   onPress,
   disabled,
 }: {
-  children: ReactNode;
+  children: string;
   onPress: () => void;
   disabled?: boolean;
 }) {
   return (
-    <Pressable
-      className={`flex-row items-center justify-between gap-4 rounded-full bg-primary px-8 py-5 font-sans text-primary-foreground ${disabled ? "opacity-60" : ""}`}
+    <Button
       disabled={disabled}
+      icon={<ArrowRight color="white" size={18} />}
+      justify="between"
       onPress={onPress}
     >
-      <Text className="font-medium font-sans text-base text-primary-foreground">
-        {children}
-      </Text>
-      <ArrowRight />
-    </Pressable>
+      {children}
+    </Button>
   );
 }
 
@@ -88,7 +61,8 @@ function OAuthButton({
 }) {
   const { startOAuthFlow } = useOAuth({ strategy });
   return (
-    <ActionButton
+    <Button
+      variant="outline"
       onPress={async () => {
         const { createdSessionId, setActive } = await startOAuthFlow({
           redirectUrl: Linking.createURL("/", { scheme: "suwa" }),
@@ -99,7 +73,7 @@ function OAuthButton({
       }}
     >
       {label}
-    </ActionButton>
+    </Button>
   );
 }
 
@@ -249,15 +223,14 @@ export default function LandingScreen() {
               <Text className="max-w-60 font-sans text-body text-foreground leading-relaxed">
                 Anonymous by design.{"\n"}Care that understands.
               </Text>
-              <Pressable
-                className="flex-row items-center justify-between gap-4 rounded-full bg-primary px-8 py-5 font-sans text-primary-foreground"
+              <Button
+                icon={<ArrowRight color="white" />}
+                justify="between"
+                size="lg"
                 onPress={() => setStep("auth")}
               >
-                <Text className="font-medium font-sans text-base text-primary-foreground">
-                  Begin your journey
-                </Text>
-                <ArrowRight />
-              </Pressable>
+                Begin your journey
+              </Button>
             </View>
           ) : currentFlow === "auth" ? (
             <View className="gap-8 px-8">
@@ -268,36 +241,19 @@ export default function LandingScreen() {
                 <View className="h-1 w-12 bg-accent" />
               </View>
               <View className="gap-4">
-                <View className="flex-row gap-3">
-                  <Pressable
-                    className={`rounded-full border-2 px-4 py-2 ${mode === "sign-up" ? "border-primary bg-primary" : "border-border bg-secondary"}`}
-                    onPress={() => {
-                      setMode("sign-in");
-                      setStatusMessage(null);
-                    }}
-                  >
-                    <Text
-                      className={`font-medium font-sans text-sm ${mode === "sign-up" ? "text-primary-foreground" : "text-foreground"}`}
-                    >
-                      Sign in
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    className={`rounded-full border-2 px-4 py-2 ${mode === "sign-in" ? "border-primary bg-primary" : "border-border bg-secondary"}`}
-                    onPress={() => {
-                      setMode("sign-up");
-                      setStatusMessage(null);
-                    }}
-                  >
-                    <Text
-                      className={`font-medium font-sans text-sm ${mode === "sign-in" ? "text-primary-foreground" : "text-foreground"}`}
-                    >
-                      Sign up
-                    </Text>
-                  </Pressable>
-                </View>
+                <ToggleGroup
+                  items={[
+                    { label: "Sign in", value: "sign-in" },
+                    { label: "Sign up", value: "sign-up" },
+                  ]}
+                  onValueChange={(val) => {
+                    setMode(val as AuthMode);
+                    setStatusMessage(null);
+                  }}
+                  value={mode}
+                />
 
-                <Field
+                <Input
                   autoCapitalize="none"
                   autoComplete="email"
                   error={
@@ -310,7 +266,7 @@ export default function LandingScreen() {
                   onChangeText={setEmailAddress}
                   value={emailAddress}
                 />
-                <Field
+                <Input
                   error={
                     mode === "sign-in"
                       ? signInErrors.fields.password?.message
@@ -327,7 +283,7 @@ export default function LandingScreen() {
                   </Text>
                 ) : null}
                 {needsCode ? (
-                  <Field
+                  <Input
                     autoComplete="one-time-code"
                     error={
                       mode === "sign-in"
@@ -383,14 +339,14 @@ export default function LandingScreen() {
                 <View className="h-1 w-12 bg-accent" />
               </View>
               <View className="gap-4">
-                <Field
+                <Input
                   label="Alias"
                   onChangeText={(alias: string) =>
                     setPatientForm((value) => ({ ...value, alias }))
                   }
                   value={patientForm.alias}
                 />
-                <Field
+                <Input
                   autoCapitalize="none"
                   keyboardType="email-address"
                   label="Email"
@@ -399,7 +355,7 @@ export default function LandingScreen() {
                   }
                   value={patientForm.email ?? ""}
                 />
-                <Field
+                <Input
                   keyboardType="phone-pad"
                   label="Phone"
                   onChangeText={(phone: string) =>
@@ -407,14 +363,14 @@ export default function LandingScreen() {
                   }
                   value={patientForm.phone ?? ""}
                 />
-                <Field
+                <Input
                   label="Full name"
                   onChangeText={(fullName: string) =>
                     setPatientForm((value) => ({ ...value, fullName }))
                   }
                   value={patientForm.fullName ?? ""}
                 />
-                <Field
+                <Input
                   label="Address"
                   onChangeText={(address: string) =>
                     setPatientForm((value) => ({ ...value, address }))
