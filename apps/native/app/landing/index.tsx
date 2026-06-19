@@ -5,8 +5,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import * as Linking from "expo-linking";
 import { Stack, useRouter } from "expo-router";
 import { ArrowRight } from "lucide-react-native";
-import { useEffect, useMemo, useState } from "react";
-import { Image, ScrollView, Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Image, ScrollView, Text, View } from "react-native";
 import { z } from "zod";
 import { Button } from "@/components/design/ui/button";
 import { Input } from "@/components/design/ui/input";
@@ -108,6 +108,7 @@ export default function LandingScreen() {
     fullName: "",
     address: "",
   });
+  const fadeAnim = useRef(new Animated.Value(0)).current;
   useQuery(
     orpc.getPatientProfile.queryOptions({
       enabled: isLoaded && isSignedIn,
@@ -134,6 +135,14 @@ export default function LandingScreen() {
     () => (step === "profile" ? "profile" : step === "auth" ? "auth" : "start"),
     [step]
   );
+  useEffect(() => {
+    fadeAnim.setValue(0);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+  }, [currentFlow, fadeAnim]);
   const submitAuth = async () => {
     setStatusMessage(null);
     const result =
@@ -196,41 +205,49 @@ export default function LandingScreen() {
           contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
           showsVerticalScrollIndicator={false}
         >
+          <Animated.View
+            style={{ opacity: fadeAnim }}
+          >
           {currentFlow === "start" ? (
-            <View className="gap-8 px-8">
+            <View className="flex-1 relative">
               <Image
-                resizeMode="contain"
-                source={require("@/assets/images/icon-stripped.png")}
-                style={{ height: 220, width: 120 }}
+                resizeMode="cover"
+                className="absolute  right-0 bottom-0"
+                source={require("@/assets/leaves01.png")}
+                style={{  width:  480, height:820  }}
               />
-              <View className="gap-6">
-                <Text className="font-serif text-display text-foreground">
-                  Suwa
-                </Text>
-                <View>
-                  <Text className="font-sans text-foreground text-sub-display leading-tight">
-                    Your health.
+              <View className="gap-8 px-8 flex-1 justify-center">
+                <Image
+                  resizeMode="contain"
+                  source={require("@/assets/images/icon-stripped.png")}
+                  style={{ height: 220, width: 120 }}
+                />
+                <View className="gap-6 pb-12">
+                  <Text className="font-serif text-display text-foreground">
+                    Suwa
                   </Text>
-                  <Text className="font-sans text-foreground text-sub-display leading-tight">
-                    Your privacy.
-                  </Text>
-                  <Text className="font-sans font-semibold text-accent text-sub-display leading-tight">
-                    Always.
-                  </Text>
+                  <View>
+                    <Text className="font-sans text-foreground text-sub-display leading-tight">
+                      Your health.
+                    </Text>
+                    <Text className="font-sans text-foreground text-sub-display leading-tight">
+                      Your privacy.
+                    </Text>
+                    <Text className="font-sans font-semibold text-accent text-sub-display leading-tight">
+                      Always.
+                    </Text>
+                    <View className="h-1 w-12 bg-accent" />
+                  </View>
                 </View>
-                <View className="h-1 w-12 bg-accent" />
+                <Button
+                  icon={<ArrowRight color="white" />}
+                  justify="between"
+                  size="lg"
+                  onPress={() => setStep("auth")}
+                >
+                  Begin your journey
+                </Button>
               </View>
-              <Text className="max-w-60 font-sans text-body text-foreground leading-relaxed">
-                Anonymous by design.{"\n"}Care that understands.
-              </Text>
-              <Button
-                icon={<ArrowRight color="white" />}
-                justify="between"
-                size="lg"
-                onPress={() => setStep("auth")}
-              >
-                Begin your journey
-              </Button>
             </View>
           ) : currentFlow === "auth" ? (
             <View className="gap-8 px-8">
@@ -264,6 +281,7 @@ export default function LandingScreen() {
                   keyboardType="email-address"
                   label="Email address"
                   onChangeText={setEmailAddress}
+                  placeholder="you@example.com"
                   value={emailAddress}
                 />
                 <Input
@@ -274,6 +292,7 @@ export default function LandingScreen() {
                   }
                   label="Password"
                   onChangeText={setPassword}
+                  placeholder="Your password"
                   secureTextEntry
                   value={password}
                 />
@@ -293,6 +312,7 @@ export default function LandingScreen() {
                     keyboardType="numeric"
                     label="Verification code"
                     onChangeText={setCode}
+                    placeholder="000000"
                     value={code}
                   />
                 ) : null}
@@ -344,6 +364,7 @@ export default function LandingScreen() {
                   onChangeText={(alias: string) =>
                     setPatientForm((value) => ({ ...value, alias }))
                   }
+                  placeholder="Choose an alias"
                   value={patientForm.alias}
                 />
                 <Input
@@ -353,6 +374,7 @@ export default function LandingScreen() {
                   onChangeText={(email: string) =>
                     setPatientForm((value) => ({ ...value, email }))
                   }
+                  placeholder="you@example.com"
                   value={patientForm.email ?? ""}
                 />
                 <Input
@@ -361,6 +383,7 @@ export default function LandingScreen() {
                   onChangeText={(phone: string) =>
                     setPatientForm((value) => ({ ...value, phone }))
                   }
+                  placeholder="+1 (555) 000-0000"
                   value={patientForm.phone ?? ""}
                 />
                 <Input
@@ -368,6 +391,7 @@ export default function LandingScreen() {
                   onChangeText={(fullName: string) =>
                     setPatientForm((value) => ({ ...value, fullName }))
                   }
+                  placeholder="Your full name"
                   value={patientForm.fullName ?? ""}
                 />
                 <Input
@@ -375,6 +399,7 @@ export default function LandingScreen() {
                   onChangeText={(address: string) =>
                     setPatientForm((value) => ({ ...value, address }))
                   }
+                  placeholder="Your address"
                   value={patientForm.address ?? ""}
                 />
                 <ActionButton
@@ -388,6 +413,7 @@ export default function LandingScreen() {
               </View>
             </View>
           )}
+          </Animated.View>
         </ScrollView>
       </View>
     </>
