@@ -9,6 +9,7 @@ import {
   Surface,
   Tooltip,
 } from "@heroui/react";
+import type { Selection } from "@heroui/react";
 import { APP_DISPLAY_NAME } from "@suwa/app-info";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
@@ -19,7 +20,7 @@ import {
   ShieldIcon,
   UserRoundIcon,
 } from "lucide-react";
-import type { Key } from "react";
+import { useCallback, useMemo } from "react";
 
 interface AdminSidebarProps {
   collapsed: boolean;
@@ -98,16 +99,23 @@ export function AdminSidebar({ collapsed }: AdminSidebarProps) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useUser();
 
-  const handleAction = (key: Key) => {
-    navigate({ to: key as string });
-  };
+  const handleSelectionChange = useCallback(
+    (keys: Selection) => {
+      const key = keys === "all" ? undefined : [...keys][0];
+      if (key) {
+        navigate({ to: key as string });
+      }
+    },
+    [navigate],
+  );
 
-  const activeKey =
-    [...mainNav, ...adminNav]
+  const selectedKeys = useMemo(() => {
+    const activeKey = [...mainNav, ...adminNav]
       .slice()
       .reverse()
-      .find((item) => pathname.startsWith(item.id))?.id ?? undefined;
-  const selectedKeys = activeKey ? [activeKey] : [];
+      .find((item) => pathname.startsWith(item.id))?.id;
+    return activeKey ? [activeKey] : [];
+  }, [pathname]);
 
   return (
     <div className={["relative", collapsed ? "w-16" : "w-60"].join(" ")}>
@@ -147,7 +155,7 @@ export function AdminSidebar({ collapsed }: AdminSidebarProps) {
           <ListBox
             aria-label="Admin navigation"
             className="border-none bg-transparent p-0 shadow-none"
-            onAction={handleAction}
+            onSelectionChange={handleSelectionChange}
             selectedKeys={selectedKeys}
             selectionMode="single"
           >

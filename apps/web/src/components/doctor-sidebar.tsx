@@ -7,6 +7,7 @@ import {
   Surface,
   Tooltip,
 } from "@heroui/react";
+import type { Selection } from "@heroui/react";
 import { APP_DISPLAY_NAME } from "@suwa/app-info";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
@@ -18,7 +19,7 @@ import {
   TagsIcon,
   UserIcon,
 } from "lucide-react";
-import type { Key } from "react";
+import { useCallback, useMemo } from "react";
 
 interface DoctorSidebarProps {
   collapsed: boolean;
@@ -79,16 +80,23 @@ export function DoctorSidebar({ collapsed }: DoctorSidebarProps) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useUser();
 
-  const handleAction = (key: Key) => {
-    navigate({ to: key as string });
-  };
+  const handleSelectionChange = useCallback(
+    (keys: Selection) => {
+      const key = keys === "all" ? undefined : [...keys][0];
+      if (key) {
+        navigate({ to: key as string });
+      }
+    },
+    [navigate],
+  );
 
-  const activeKey =
-    [...mainNav, ...doctorNav]
+  const selectedKeys = useMemo(() => {
+    const activeKey = [...mainNav, ...doctorNav]
       .slice()
       .reverse()
-      .find((item) => pathname.startsWith(item.id))?.id ?? undefined;
-  const selectedKeys = activeKey ? [activeKey] : [];
+      .find((item) => pathname.startsWith(item.id))?.id;
+    return activeKey ? [activeKey] : [];
+  }, [pathname]);
 
   return (
     <div className={["relative", collapsed ? "w-16" : "w-60"].join(" ")}>
@@ -123,7 +131,7 @@ export function DoctorSidebar({ collapsed }: DoctorSidebarProps) {
           <ListBox
             aria-label="Doctor navigation"
             className="border-none bg-transparent p-0 shadow-none"
-            onAction={handleAction}
+            onSelectionChange={handleSelectionChange}
             selectedKeys={selectedKeys}
             selectionMode="single"
           >

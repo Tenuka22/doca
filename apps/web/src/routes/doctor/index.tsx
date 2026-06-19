@@ -1,4 +1,14 @@
-import { Avatar, Button, Card, Chip, Separator } from "@heroui/react";
+import {
+  Avatar,
+  Button,
+  Chip,
+  Input,
+  Separator,
+  Skeleton,
+  Tabs,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@heroui/react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
 import {
@@ -8,9 +18,10 @@ import {
   Clock3Icon,
   DollarSignIcon,
   InboxIcon,
-  SparklesIcon,
-  TrendingUpIcon,
+  ListChecksIcon,
+  SearchIcon,
 } from "lucide-react";
+import { useState } from "react";
 import {
   Area,
   AreaChart,
@@ -20,9 +31,9 @@ import {
   YAxis,
 } from "recharts";
 
-import { MetricCard, SectionHeader } from "@/components/dashboard-metrics";
 import { SessionStatusBadge } from "@/components/session-status-badge";
 import { DoctorHospitalAffiliations } from "@/components/tenant/doctor-hospital-affiliations";
+import { BodyText, PageTitle } from "@/components/typography";
 import { orpc } from "@/utils/orpc";
 
 interface SessionItem {
@@ -34,79 +45,42 @@ interface SessionItem {
   status: string;
 }
 
-function PendingRequests({ sessions }: { sessions: SessionItem[] }) {
-  const pendingSessions = sessions.filter(
-    (session) =>
-      session.status === "requested" || session.status === "rescheduled"
-  );
-
-  if (!sessions) {
-    return (
-      <div className="flex flex-col gap-3">
-        {Array.from({ length: 3 }).map((_, index) => (
-          <div
-            className="h-24 animate-pulse rounded-2xl bg-muted"
-            key={index.toString()}
-          />
-        ))}
-      </div>
-    );
-  }
-
-  if (pendingSessions.length === 0) {
-    return (
-      <div className="flex size-full flex-col items-center justify-center gap-3 py-12 text-center">
-        <div className="rounded-xl border bg-muted/40 p-3 text-muted-foreground">
-          <InboxIcon className="size-5" />
-        </div>
-        <p className="font-medium text-sm">No pending requests</p>
-        <p className="max-w-xs text-muted-foreground text-sm">
-          New patient requests will appear here.
-        </p>
-      </div>
-    );
-  }
-
+function StatItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof CalendarDaysIcon;
+  label: string;
+  value: string;
+}) {
   return (
-    <div className="flex flex-col gap-3">
-      {pendingSessions.map((session) => {
-        const start = new Date(session.startAt);
-        const end = new Date(session.endAt);
-
-        return (
-          <Card
-            className="rounded-2xl border-border/60 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-primary"
-            key={session.id}
-          >
-            <Card.Content className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <div className="rounded-xl border bg-muted/40 p-2 text-muted-foreground">
-                  <CalendarClockIcon className="size-4" />
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <p className="font-medium text-sm">
-                    {session.patientId.slice(0, 12)}...
-                  </p>
-
-                  <p className="text-muted-foreground text-sm">
-                    {format(start, "EEE, MMM d")}
-                  </p>
-
-                  <p className="text-muted-foreground text-xs">
-                    {format(start, "h:mm a")} - {format(end, "h:mm a")}
-                  </p>
-                </div>
-              </div>
-
-              <SessionStatusBadge status={session.status} />
-            </Card.Content>
-          </Card>
-        );
-      })}
+    <div className="flex items-center gap-2">
+      <Icon className="size-4 shrink-0 text-foreground/50" />
+      <span className="font-medium text-sm tabular-nums">{value}</span>
+      <span className="text-foreground/60 text-sm">{label}</span>
     </div>
   );
 }
+
+function DashboardSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <Skeleton className="h-52 rounded-3xl" />
+      <Separator />
+      <div className="flex flex-wrap gap-x-6 gap-y-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton className="h-5 w-40" key={i.toString()} />
+        ))}
+      </div>
+      <Separator />
+      <Skeleton className="h-[400px] rounded-3xl" />
+      <Separator />
+    </div>
+  );
+}
+
+type FilterTab = "all" | "pending" | "completed" | "upcoming";
 
 export const Route = createFileRoute("/doctor/")({
   loaderDeps: () => ({}),
@@ -128,6 +102,10 @@ function DoctorDashboardRoute() {
   const { stats, sessions: sessionsData } = Route.useLoaderData();
   const sessions = (sessionsData?.sessions as SessionItem[]) ?? [];
 
+  const [activeTab, setActiveTab] = useState<FilterTab>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+
   const name = session?.name ?? session?.email ?? "Doctor";
 
   const initials = name
@@ -138,8 +116,7 @@ function DoctorDashboardRoute() {
     .slice(0, 2);
 
   const pendingSessions = sessions.filter(
-    (session) =>
-      session.status === "requested" || session.status === "rescheduled"
+    (s) => s.status === "requested" || s.status === "rescheduled"
   );
 
   const totalEarned = Number(stats?.totalEarnedCents ?? 0) / 100;
@@ -155,104 +132,175 @@ function DoctorDashboardRoute() {
       })
     ) ?? [];
 
+  const filteredSessions = sessions.filter((s) => {
+    if (statusFilter !== "all" && s.status !== statusFilter) {
+      return false;
+    }
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!s.patientId.toLowerCase().includes(q)) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  const statusCounts = {
+    requested: sessions.filter((s) => s.status === "requested").length,
+    rescheduled: sessions.filter((s) => s.status === "rescheduled").length,
+    confirmed: sessions.filter((s) => s.status === "confirmed").length,
+    completed: sessions.filter((s) => s.status === "completed").length,
+    cancelled: sessions.filter((s) => s.status === "cancelled").length,
+  };
+
+  if (!stats) {
+    return <DashboardSkeleton />;
+  }
+
   return (
-    <div className="flex flex-col gap-6">
-      <Card className="overflow-hidden rounded-[2rem] border-border/60 bg-gradient-to-br from-background via-background to-muted/20">
-        <Card.Content>
-          <div className="flex flex-col gap-8 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex items-start gap-4">
-              <Avatar className="size-16 border shadow-sm">
-                <Avatar.Fallback className="font-semibold text-lg">
-                  {initials}
-                </Avatar.Fallback>
-              </Avatar>
+    <div className="flex flex-col gap-4">
+      <div className="relative h-44 overflow-hidden rounded-[2rem] bg-gradient-to-b from-accent/10 via-accent/5 to-background md:h-52" />
 
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-wrap gap-2">
-                  <Chip>Doctor dashboard</Chip>
-                  <Chip color="default" variant="soft">
-                    Live overview
-                  </Chip>
-                </div>
+      <div className="relative z-10 -mt-16 flex flex-col gap-4 px-6">
+        <div className="flex items-center gap-5">
+          <Avatar className="size-16" size="lg">
+            <Avatar.Fallback className="font-light text-lg">
+              {initials}
+            </Avatar.Fallback>
+          </Avatar>
 
-                <div className="flex flex-col gap-2">
-                  <h1 className="font-semibold text-lg tracking-tight">
-                    Welcome back, {name}
-                  </h1>
-
-                  <p className="max-w-2xl text-muted-foreground text-sm">
-                    Monitor patient requests, manage upcoming appointments,
-                    track earnings, and stay on top of your schedule from one
-                    unified dashboard.
-                  </p>
-                </div>
-              </div>
+          <div className="flex-1 pb-2">
+            <div className="flex items-center gap-3">
+              <h1 className="font-light text-2xl tracking-tight">
+                Welcome back, {name}
+              </h1>
+              <Chip color="accent" variant="soft">
+                <CalendarDaysIcon className="size-3" />
+                Doctor dashboard
+              </Chip>
             </div>
+
+            <BodyText className="max-w-2xl">
+              Monitor patient requests, manage upcoming appointments, track
+              earnings, and stay on top of your schedule.
+            </BodyText>
           </div>
-        </Card.Content>
-      </Card>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          description="Completed and scheduled consultations"
-          icon={<CalendarDaysIcon className="size-5" />}
-          title="Total sessions"
-          trend="Healthy"
-          value={totalSessions.toString()}
-        />
+          <div className="flex items-center gap-2 pb-2">
+            <Button
+              onPress={() => navigate({ to: "/doctor/availability" })}
+              size="sm"
+              variant="outline"
+            >
+              <CalendarClockIcon className="size-4" />
+              Availability
+            </Button>
+            <Button
+              onPress={() => navigate({ to: "/doctor/sessions" })}
+              size="sm"
+            >
+              <ListChecksIcon className="size-4" />
+              All sessions
+            </Button>
+          </div>
+        </div>
+      </div>
 
-        <MetricCard
-          description="Revenue generated from completed work"
-          icon={<DollarSignIcon className="size-5" />}
-          title="Total earned"
-          trend="Growing"
-          value={`$${totalEarned.toFixed(2)}`}
-        />
+      <Separator />
 
-        <MetricCard
-          description="Confirmed future appointments"
-          icon={<Clock3Icon className="size-5" />}
-          title="Upcoming"
-          value={upcomingSessions.toString()}
-        />
-
-        <MetricCard
-          description="Awaiting review or response"
-          icon={<InboxIcon className="size-5" />}
-          title="Pending"
-          value={pendingSessions.length.toString()}
-        />
+      <section className="flex flex-col gap-2 px-6">
+        <PageTitle>Overview</PageTitle>
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <StatItem
+            icon={CalendarDaysIcon}
+            label="total sessions"
+            value={totalSessions.toString()}
+          />
+          <StatItem
+            icon={DollarSignIcon}
+            label="earned"
+            value={`$${totalEarned.toFixed(2)}`}
+          />
+          <StatItem
+            icon={Clock3Icon}
+            label="upcoming"
+            value={upcomingSessions.toString()}
+          />
+          <StatItem
+            icon={InboxIcon}
+            label="pending"
+            value={pendingSessions.length.toString()}
+          />
+          {pendingSessions.length > 0 && (
+            <Chip color="warning" variant="soft">
+              <InboxIcon className="size-3" />
+              {pendingSessions.length} awaiting review
+            </Chip>
+          )}
+        </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
-        <Card className="rounded-3xl border-border/60">
-          <Card.Header>
-            <SectionHeader
-              action={
-                <Chip className="gap-1" color="default" variant="soft">
-                  <TrendingUpIcon className="size-3" />
-                  Earnings overview
+      <Separator />
+
+      <Tabs
+        onSelectionChange={(v) => setActiveTab(v as FilterTab)}
+        selectedKey={activeTab}
+      >
+        <Tabs.ListContainer>
+          <Tabs.List aria-label="Dashboard views">
+            <Tabs.Tab id="all">
+              Overview
+              <Tabs.Indicator />
+            </Tabs.Tab>
+            <Tabs.Tab id="pending">
+              Pending
+              {statusCounts.requested + statusCounts.rescheduled > 0 && (
+                <Chip className="ml-1.5" color="warning" variant="soft">
+                  {statusCounts.requested + statusCounts.rescheduled}
                 </Chip>
-              }
-              description="Monthly income over the last six months"
-              title="Earnings analytics"
-            />
-          </Card.Header>
+              )}
+              <Tabs.Indicator />
+            </Tabs.Tab>
+            <Tabs.Tab id="upcoming">
+              Upcoming
+              {statusCounts.confirmed > 0 && (
+                <Chip className="ml-1.5" color="accent" variant="soft">
+                  {statusCounts.confirmed}
+                </Chip>
+              )}
+              <Tabs.Indicator />
+            </Tabs.Tab>
+            <Tabs.Tab id="completed">
+              Completed
+              {statusCounts.completed > 0 && (
+                <Chip className="ml-1.5" color="success" variant="soft">
+                  {statusCounts.completed}
+                </Chip>
+              )}
+              <Tabs.Indicator />
+            </Tabs.Tab>
+          </Tabs.List>
+        </Tabs.ListContainer>
 
-          <Separator />
+        <Tabs.Panel className="flex flex-col gap-6 pt-6" id="all">
+          <section className="flex flex-col gap-3">
+            <div>
+              <PageTitle>Earnings</PageTitle>
+              <p className="font-light text-foreground/60 text-sm">
+                Monthly income over the last six months
+              </p>
+            </div>
 
-          <Card.Content>
             {earningsTrend.length > 0 ? (
-              <div className="h-[360px] w-full">
+              <div className="h-[340px] w-full">
                 <AreaChart
                   accessibilityLayer
                   data={earningsTrend}
-                  height={360}
+                  height={340}
                   margin={{ left: 8, right: 8 }}
                   width="100%"
                 >
                   <CartesianGrid vertical={false} />
-
                   <XAxis
                     axisLine={false}
                     dataKey="month"
@@ -264,14 +312,12 @@ function DoctorDashboardRoute() {
                     tickLine={false}
                     tickMargin={10}
                   />
-
                   <YAxis
                     axisLine={false}
                     tickFormatter={(value: number) => `$${value.toFixed(0)}`}
                     tickLine={false}
                     tickMargin={10}
                   />
-
                   <Tooltip
                     content={({ active, payload }) => {
                       if (!(active && payload?.length)) {
@@ -285,7 +331,6 @@ function DoctorDashboardRoute() {
                     }}
                     cursor={false}
                   />
-
                   <Area
                     dataKey="earnings"
                     fill="var(--primary)"
@@ -298,133 +343,310 @@ function DoctorDashboardRoute() {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-                <div className="rounded-xl border bg-muted/40 p-3 text-muted-foreground">
-                  <TrendingUpIcon className="size-5" />
-                </div>
-                <p className="font-medium text-sm">No earnings data yet</p>
-                <p className="max-w-xs text-muted-foreground text-sm">
+                <p className="font-light text-sm">No earnings data yet</p>
+                <p className="max-w-xs font-light text-foreground/60 text-sm">
                   Earnings analytics will appear once sessions are completed.
                 </p>
               </div>
             )}
-          </Card.Content>
-        </Card>
+          </section>
 
-        <Card className="rounded-3xl border-border/60">
-          <Card.Header>
-            <SectionHeader
-              action={
-                <Button
-                  onPress={() => navigate({ to: "/doctor/availability" })}
-                  size="sm"
-                  variant="secondary"
-                >
-                  Manage
-                  <ArrowRightIcon />
-                </Button>
-              }
-              description="Patients currently waiting for your response"
-              title="Pending requests"
-            />
-          </Card.Header>
+          <section className="flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <PageTitle>Pending requests</PageTitle>
+                <p className="font-light text-foreground/60 text-sm">
+                  Patients currently waiting for your response
+                </p>
+              </div>
+              <Button
+                onPress={() => navigate({ to: "/doctor/availability" })}
+                size="sm"
+                variant="secondary"
+              >
+                Manage
+                <ArrowRightIcon />
+              </Button>
+            </div>
 
-          <Separator />
-
-          <Card.Content className="size-full">
-            <PendingRequests sessions={sessions} />
-          </Card.Content>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[0.7fr_1.3fr]">
-        <Card className="rounded-3xl border-border/60">
-          <Card.Header>
-            <SectionHeader
-              action={
-                <Button
-                  onPress={() => navigate({ to: "/doctor/sessions" })}
-                  size="sm"
-                  variant="secondary"
-                >
-                  View
-                  <ArrowRightIcon />
-                </Button>
-              }
-              description="Latest appointment updates and completed sessions"
-              title="Recent activity"
-            />
-          </Card.Header>
-
-          <Separator />
-
-          <Card.Content>
-            {recentSessions.length > 0 ? (
-              <div className="flex flex-col gap-3">
-                {recentSessions.map((session) => {
-                  const start = new Date(session.startAt);
-                  const end = new Date(session.endAt);
-
-                  const sessionValue =
-                    session.doctorEarnedCents == null
-                      ? "--"
-                      : `$${(session.doctorEarnedCents / 100).toFixed(2)}`;
+            {pendingSessions.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                {pendingSessions.map((s) => {
+                  const start = new Date(s.startAt);
+                  const end = new Date(s.endAt);
 
                   return (
-                    <Card
-                      className="rounded-2xl border-border/60 transition-colors duration-200 hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-primary"
-                      key={session.id}
+                    <div
+                      className="flex items-start justify-between gap-4 rounded-xl border border-border px-4 py-3"
+                      key={s.id}
                     >
-                      <Card.Content className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                        <div className="flex items-start gap-4">
-                          <div className="rounded-2xl border bg-muted/40 p-3 text-muted-foreground">
-                            <Clock3Icon className="size-4" />
-                          </div>
-
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium text-sm">
-                                {session.patientId.slice(0, 12)}...
-                              </p>
-                            </div>
-
-                            <p className="text-muted-foreground text-sm">
-                              {format(start, "EEE, MMM d • h:mm a")}
-                            </p>
-
-                            <p className="text-muted-foreground text-xs">
-                              Ends at {format(end, "h:mm a")}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-row items-center justify-between gap-3 md:flex-col md:items-end">
-                          <SessionStatusBadge status={session.status} />
-
-                          <div className="font-semibold text-sm">
-                            {sessionValue}
-                          </div>
-                        </div>
-                      </Card.Content>
-                    </Card>
+                      <div className="flex flex-col gap-1">
+                        <p className="font-light text-sm">
+                          {s.patientId.slice(0, 12)}...
+                        </p>
+                        <p className="text-foreground/60 text-sm">
+                          {format(start, "EEE, MMM d")}
+                        </p>
+                        <p className="text-foreground/60 text-xs">
+                          {format(start, "h:mm a")} -{" "}
+                          {format(end, "h:mm a")}
+                        </p>
+                      </div>
+                      <SessionStatusBadge status={s.status} />
+                    </div>
                   );
                 })}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-                <div className="rounded-xl border bg-muted/40 p-3 text-muted-foreground">
-                  <SparklesIcon className="size-5" />
-                </div>
-                <p className="font-medium text-sm">No recent activity</p>
-                <p className="max-w-xs text-muted-foreground text-sm">
+                <p className="font-light text-sm">No pending requests</p>
+                <p className="max-w-xs font-light text-foreground/60 text-sm">
+                  New patient requests will appear here.
+                </p>
+              </div>
+            )}
+          </section>
+
+          <section className="flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <PageTitle>Recent activity</PageTitle>
+                <p className="font-light text-foreground/60 text-sm">
+                  Latest appointment updates and completed sessions
+                </p>
+              </div>
+              <Button
+                onPress={() => navigate({ to: "/doctor/sessions" })}
+                size="sm"
+                variant="secondary"
+              >
+                View all
+                <ArrowRightIcon />
+              </Button>
+            </div>
+
+            {recentSessions.length > 0 ? (
+              <div className="flex flex-col gap-2">
+                {recentSessions.map((s) => {
+                  const start = new Date(s.startAt);
+                  const end = new Date(s.endAt);
+
+                  const sessionValue =
+                    s.doctorEarnedCents == null
+                      ? "--"
+                      : `$${(s.doctorEarnedCents / 100).toFixed(2)}`;
+
+                  return (
+                    <div
+                      className="flex items-start justify-between gap-4 rounded-xl border border-border px-4 py-3"
+                      key={s.id}
+                    >
+                      <div className="flex flex-col gap-1">
+                        <p className="font-light text-sm">
+                          {s.patientId.slice(0, 12)}...
+                        </p>
+                        <p className="text-foreground/60 text-sm">
+                          {format(start, "EEE, MMM d h:mm a")}
+                        </p>
+                        <p className="text-foreground/60 text-xs">
+                          Ends at {format(end, "h:mm a")}
+                        </p>
+                      </div>
+                      <div className="flex flex-row items-center justify-between gap-3 md:flex-col md:items-end">
+                        <SessionStatusBadge status={s.status} />
+                        <span className="font-medium text-sm tabular-nums">
+                          {sessionValue}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+                <p className="font-light text-sm">No recent activity</p>
+                <p className="max-w-xs font-light text-foreground/60 text-sm">
                   Your recent sessions and earnings will appear here.
                 </p>
               </div>
             )}
-          </Card.Content>
-        </Card>
-      </div>
+          </section>
+        </Tabs.Panel>
 
-      {/* Hospital Affiliations Section */}
+        <Tabs.Panel className="flex flex-col gap-4 pt-6" id="pending">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative max-w-sm flex-1">
+              <SearchIcon className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-foreground/60" />
+              <Input
+                className="h-10 rounded-full border-none bg-foreground/5 pl-10 focus-visible:ring-1 focus-visible:ring-primary/50"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by patient ID..."
+                value={searchQuery}
+              />
+            </div>
+
+            <ToggleButtonGroup
+              isDetached
+              onSelectionChange={(keys) => {
+                const key = [...keys][0] as string | undefined;
+                if (key) {
+                  setStatusFilter(key);
+                }
+              }}
+              selectedKeys={[statusFilter]}
+              selectionMode="single"
+            >
+              <ToggleButton id="all">All</ToggleButton>
+              <ToggleButton id="requested">Requested</ToggleButton>
+              <ToggleButton id="rescheduled">Rescheduled</ToggleButton>
+            </ToggleButtonGroup>
+          </div>
+
+          {filteredSessions.filter(
+            (s) => s.status === "requested" || s.status === "rescheduled"
+          ).length > 0 ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {filteredSessions
+                .filter(
+                  (s) =>
+                    s.status === "requested" || s.status === "rescheduled"
+                )
+                .map((s) => {
+                  const start = new Date(s.startAt);
+                  const end = new Date(s.endAt);
+
+                  return (
+                    <div
+                      className="flex items-start justify-between gap-4 rounded-xl border border-border px-4 py-3"
+                      key={s.id}
+                    >
+                      <div className="flex flex-col gap-1">
+                        <p className="font-light text-sm">
+                          {s.patientId.slice(0, 12)}...
+                        </p>
+                        <p className="text-foreground/60 text-sm">
+                          {format(start, "EEE, MMM d")}
+                        </p>
+                        <p className="text-foreground/60 text-xs">
+                          {format(start, "h:mm a")} -{" "}
+                          {format(end, "h:mm a")}
+                        </p>
+                      </div>
+                      <SessionStatusBadge status={s.status} />
+                    </div>
+                  );
+                })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+              <p className="font-light text-sm">
+                {searchQuery ? "No results found" : "All caught up"}
+              </p>
+              <p className="max-w-sm font-light text-foreground/60 text-sm">
+                {searchQuery
+                  ? "Try a different search term or clear your filters."
+                  : "All patient requests have been reviewed. New pending requests will appear here."}
+              </p>
+            </div>
+          )}
+        </Tabs.Panel>
+
+        <Tabs.Panel className="flex flex-col gap-4 pt-6" id="upcoming">
+          {sessions.filter((s) => s.status === "confirmed").length > 0 ? (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {sessions
+                .filter((s) => s.status === "confirmed")
+                .map((s) => {
+                  const start = new Date(s.startAt);
+                  const end = new Date(s.endAt);
+
+                  return (
+                    <div
+                      className="rounded-xl border border-border px-4 py-3"
+                      key={s.id}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex flex-col gap-1">
+                          <p className="font-light text-sm">
+                            {s.patientId.slice(0, 12)}...
+                          </p>
+                          <p className="text-foreground/60 text-sm">
+                            {format(start, "EEE, MMM d")}
+                          </p>
+                          <p className="text-foreground/60 text-xs">
+                            {format(start, "h:mm a")} -{" "}
+                            {format(end, "h:mm a")}
+                          </p>
+                        </div>
+                        <SessionStatusBadge status={s.status} />
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+              <p className="font-light text-sm">No upcoming sessions</p>
+              <p className="max-w-sm font-light text-foreground/60 text-sm">
+                Confirmed appointments will appear here once patients book
+                sessions with you.
+              </p>
+            </div>
+          )}
+        </Tabs.Panel>
+
+        <Tabs.Panel className="flex flex-col gap-4 pt-6" id="completed">
+          {sessions.filter((s) => s.status === "completed").length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {sessions
+                .filter((s) => s.status === "completed")
+                .map((s) => {
+                  const start = new Date(s.startAt);
+                  const end = new Date(s.endAt);
+
+                  const sessionValue =
+                    s.doctorEarnedCents == null
+                      ? "--"
+                      : `$${(s.doctorEarnedCents / 100).toFixed(2)}`;
+
+                  return (
+                    <div
+                      className="flex items-start justify-between gap-4 rounded-xl border border-border px-4 py-3"
+                      key={s.id}
+                    >
+                      <div className="flex flex-col gap-1">
+                        <p className="font-light text-sm">
+                          {s.patientId.slice(0, 12)}...
+                        </p>
+                        <p className="text-foreground/60 text-sm">
+                          {format(start, "EEE, MMM d h:mm a")}
+                        </p>
+                        <p className="text-foreground/60 text-xs">
+                          Ends at {format(end, "h:mm a")}
+                        </p>
+                      </div>
+                      <div className="flex flex-row items-center justify-between gap-3 md:flex-col md:items-end">
+                        <SessionStatusBadge status={s.status} />
+                        <span className="font-medium text-sm tabular-nums">
+                          {sessionValue}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+              <p className="font-light text-sm">No completed sessions</p>
+              <p className="max-w-sm font-light text-foreground/60 text-sm">
+                Completed sessions will appear here with their earnings
+                breakdown.
+              </p>
+            </div>
+          )}
+        </Tabs.Panel>
+      </Tabs>
+
       <DoctorHospitalAffiliations />
     </div>
   );

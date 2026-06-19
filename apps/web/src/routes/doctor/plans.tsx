@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-import { MetricCard } from "@/components/dashboard-metrics";
 import { BodyText, PageTitle } from "@/components/typography";
 import { notify } from "@/lib/notify";
 import { orpc } from "@/utils/orpc";
@@ -101,7 +100,7 @@ function CreatePlanDialog() {
 
       <Modal.Backdrop isOpen={open} onOpenChange={setOpen}>
         <Modal.Container className="sm:max-w-[520px]">
-          <Modal.Dialog>
+          <Modal.Dialog className="bg-background">
             <Modal.CloseTrigger />
             <Modal.Header>
               <Modal.Heading>Create plan</Modal.Heading>
@@ -217,6 +216,24 @@ function CreatePlanDialog() {
   );
 }
 
+function StatItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof PackageIcon;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <Icon className="size-4 shrink-0 text-foreground/50" />
+      <span className="font-medium text-sm tabular-nums">{value}</span>
+      <span className="text-foreground/60 text-sm">{label}</span>
+    </div>
+  );
+}
+
 export const Route = createFileRoute("/doctor/plans")({
   loaderDeps: () => ({}),
   loader: async ({ context }) => {
@@ -253,65 +270,64 @@ function DoctorPlansRoute() {
   });
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="relative h-32 overflow-hidden rounded-2xl bg-gradient-to-b from-accent/10 via-accent/5 to-background" />
+    <div className="flex flex-col gap-4">
+      <div className="relative h-44 overflow-hidden rounded-[2rem] bg-gradient-to-b from-accent/10 via-accent/5 to-background md:h-52" />
 
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-wrap gap-2">
-          <Chip className="gap-1" color="accent" variant="soft">
-            <CoinsIcon className="size-3" />
-            Plans dashboard
-          </Chip>
+      <div className="relative z-10 -mt-16 flex flex-col gap-4 px-6">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <h1 className="font-light text-2xl tracking-tight">
+              Session plans
+            </h1>
+            <Chip color="accent" variant="soft">
+              <CoinsIcon className="size-3" />
+              Plans dashboard
+            </Chip>
+          </div>
+
+          <BodyText className="max-w-2xl">
+            Manage your session offerings and pricing at a glance. Review plan
+            details, compare pricing, and see which plan is the default for new
+            patients.
+          </BodyText>
         </div>
-
-        <PageTitle>Session plans</PageTitle>
-
-        <BodyText className="max-w-2xl">
-          Manage your session offerings and pricing at a glance. Review plan
-          details, compare pricing, and see which plan is the default for new
-          patients.
-        </BodyText>
       </div>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          description="Active session offerings"
-          icon={<PackageIcon className="size-5" />}
-          title="Total plans"
-          trend="Active"
-          value={totalPlans.toString()}
-        />
+      <Separator />
 
-        <MetricCard
-          description="Average price per plan"
-          icon={<CoinsIcon className="size-5" />}
-          title="Avg price"
-          trend={`$${(minPriceCents / 100).toFixed(0)}–$${(maxPriceCents / 100).toFixed(0)}`}
-          value={`$${(averagePriceCents / 100).toFixed(2)}`}
-        />
-
-        <MetricCard
-          description="Average session duration"
-          icon={<ClockIcon className="size-5" />}
-          title="Avg minutes"
-          value={averageDurationMinutes.toString()}
-        />
-
-        <MetricCard
-          description="Pre-selected for new patients"
-          icon={<StarIcon className="size-5" />}
-          title="Default plan"
-          value={defaultPlanName ?? "None"}
-        />
+      <section className="flex flex-col gap-2 px-6">
+        <PageTitle>Overview</PageTitle>
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <StatItem
+            icon={PackageIcon}
+            label="total plans"
+            value={totalPlans.toString()}
+          />
+          <StatItem
+            icon={CoinsIcon}
+            label="avg price"
+            value={`$${(averagePriceCents / 100).toFixed(2)}`}
+          />
+          <StatItem
+            icon={ClockIcon}
+            label="avg minutes"
+            value={averageDurationMinutes.toString()}
+          />
+          <StatItem
+            icon={StarIcon}
+            label="default"
+            value={defaultPlanName ?? "None"}
+          />
+        </div>
       </section>
 
       <Separator />
 
-      <section className="flex flex-col gap-4">
+      <section className="flex flex-col gap-3">
         <div className="flex items-start justify-between gap-4">
           <div>
             <PageTitle>Plan controls</PageTitle>
-            <p className="font-light text-muted-foreground text-sm">
+            <p className="font-light text-foreground/60 text-sm">
               Create and manage the plans patients can book
             </p>
           </div>
@@ -319,17 +335,19 @@ function DoctorPlansRoute() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-border/60 bg-muted/30 p-4">
-            <p className="text-muted-foreground text-xs uppercase tracking-wider">
+          <div className="rounded-xl border border-border px-4 py-3">
+            <p className="font-light text-foreground/60 text-xs uppercase tracking-wider">
               Total plans
             </p>
-            <p className="mt-2 font-semibold text-2xl">{totalPlans}</p>
+            <p className="mt-1 font-medium text-2xl tabular-nums">
+              {totalPlans}
+            </p>
           </div>
-          <div className="rounded-2xl border border-border/60 bg-muted/30 p-4">
-            <p className="text-muted-foreground text-xs uppercase tracking-wider">
+          <div className="rounded-xl border border-border px-4 py-3">
+            <p className="font-light text-foreground/60 text-xs uppercase tracking-wider">
               Default plan
             </p>
-            <p className="mt-2 font-semibold text-2xl">
+            <p className="mt-1 font-medium text-2xl tabular-nums">
               {defaultPlanName ?? "None"}
             </p>
           </div>
@@ -338,28 +356,31 @@ function DoctorPlansRoute() {
 
       <Separator />
 
-      <section className="flex flex-col gap-4">
+      <section className="flex flex-col gap-3">
         <div>
           <PageTitle>Plan comparison</PageTitle>
-          <p className="font-light text-muted-foreground text-sm">
+          <p className="font-light text-foreground/60 text-sm">
             A compact comparison of pricing and minutes
           </p>
         </div>
 
         {parsedPlans.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {parsedPlans.map((plan) => (
               <div
-                className={`flex flex-col rounded-2xl border border-border/60 bg-gradient-to-br from-card to-card/50 p-5 shadow-sm transition-all duration-200 hover:shadow-md ${
+                className={`rounded-xl border border-border px-4 py-3 ${
                   plan.isDefault ? "ring-1 ring-primary/20" : ""
                 }`}
                 key={plan.id}
               >
-                <div className="flex items-center justify-between gap-2 pb-3">
+                <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">{plan.name}</span>
+                    <span className="font-light text-sm">{plan.name}</span>
                     {plan.isDefault && (
-                      <Chip className="border-primary/20 bg-primary/10 text-primary">
+                      <Chip
+                        className="border-primary/20 bg-primary/10 text-primary text-[10px]"
+                        variant="tertiary"
+                      >
                         Default
                       </Chip>
                     )}
@@ -367,40 +388,40 @@ function DoctorPlansRoute() {
                 </div>
 
                 {plan.description && (
-                  <p className="pb-3 text-muted-foreground text-xs leading-relaxed">
+                  <p className="mt-1 font-light text-foreground/60 text-xs leading-relaxed">
                     {plan.description}
                   </p>
                 )}
 
-                <div className="flex items-center gap-4 border-border/50 border-y py-2">
+                <div className="mt-3 flex items-center gap-4 border-border/50 border-t pt-3">
                   <div className="flex items-center gap-1.5">
-                    <CoinsIcon className="size-4 text-muted-foreground" />
-                    <span className="font-semibold text-lg">
+                    <CoinsIcon className="size-4 text-foreground/50" />
+                    <span className="font-medium text-lg">
                       ${(plan.priceCents / 100).toFixed(2)}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-1.5">
-                    <ClockIcon className="size-4 text-muted-foreground" />
-                    <span className="font-semibold text-lg">
+                    <ClockIcon className="size-4 text-foreground/50" />
+                    <span className="font-medium text-lg">
                       {plan.durationMinutes}
                     </span>
-                    <span className="text-muted-foreground text-xs">min</span>
+                    <span className="text-foreground/60 text-xs">min</span>
                   </div>
                 </div>
 
                 {plan.parsedFeatures.length > 0 && (
-                  <div className="flex flex-col gap-2 pt-3">
+                  <div className="mt-3 flex flex-col gap-1.5">
                     {plan.parsedFeatures.slice(0, 3).map((feature) => (
                       <div className="flex items-start gap-2" key={feature}>
-                        <CheckIcon className="mt-1 size-3 shrink-0 text-emerald-500" />
-                        <span className="text-muted-foreground text-xs">
+                        <CheckIcon className="mt-0.5 size-3 shrink-0 text-emerald-500" />
+                        <span className="text-foreground/60 text-xs">
                           {feature}
                         </span>
                       </div>
                     ))}
                     {plan.parsedFeatures.length > 3 && (
-                      <p className="pl-5 text-[10px] text-muted-foreground">
+                      <p className="pl-5 text-[10px] text-foreground/60">
                         +{plan.parsedFeatures.length - 3} more
                       </p>
                     )}
@@ -411,11 +432,8 @@ function DoctorPlansRoute() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-            <div className="rounded-xl border bg-muted/40 p-3 text-muted-foreground">
-              <PackageIcon className="size-5" />
-            </div>
-            <p className="font-medium text-sm">No plans configured</p>
-            <p className="max-w-xs text-muted-foreground text-sm">
+            <p className="font-light text-sm">No plans configured</p>
+            <p className="max-w-xs font-light text-foreground/60 text-sm">
               Create your first session plan to start offering consultations to
               patients.
             </p>

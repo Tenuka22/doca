@@ -1,6 +1,5 @@
 import {
   Button,
-  Card,
   Chip,
   Label,
   ListBox,
@@ -11,14 +10,14 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  BuildingIcon,
   CalendarDaysIcon,
+  CheckIcon,
   Clock3Icon,
   ClockIcon,
   InboxIcon,
   Loader2,
   Trash2,
-  TrendingUpIcon,
+  XIcon,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -31,7 +30,6 @@ import {
   YAxis,
 } from "recharts";
 
-import { MetricCard, SectionHeader } from "@/components/dashboard-metrics";
 import { BodyText, PageTitle } from "@/components/typography";
 import {
   useListDoctorAffiliations,
@@ -71,6 +69,24 @@ const timeToMinutes = (time: string) => {
 
 const getHoursForSlot = (slot: AvailabilitySlot) =>
   (timeToMinutes(slot.endTime) - timeToMinutes(slot.startTime)) / 60;
+
+function StatItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof CalendarDaysIcon;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <Icon className="size-4 shrink-0 text-foreground/60" />
+      <span className="font-medium text-sm tabular-nums">{value}</span>
+      <span className="text-foreground/60 text-sm">{label}</span>
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/doctor/availability")({
   loaderDeps: () => ({}),
@@ -354,113 +370,94 @@ function DoctorAvailabilityRoute() {
     })) ?? [];
 
   return (
-    <div className="flex flex-col gap-6">
-      <Card className="overflow-hidden rounded-[2rem] border-border/60 bg-gradient-to-br from-background via-background to-muted/20">
-        <Card.Content>
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap gap-2">
-              <Chip>Availability dashboard</Chip>
-              {isTenantMode ? (
-                <Chip color="default" variant="soft">
-                  {currentAffiliation?.tenantName ?? "Hospital"}
-                </Chip>
-              ) : (
-                <Chip color="default" variant="soft">
-                  Schedule overview
-                </Chip>
-              )}
-            </div>
+    <div className="flex flex-col gap-4">
+      <div className="relative h-44 overflow-hidden rounded-[2rem] bg-gradient-to-b from-accent/10 via-accent/5 to-background md:h-52" />
 
-            <div className="flex flex-col gap-2">
-              <PageTitle>
-                {isTenantMode
-                  ? `Availability at ${currentAffiliation?.tenantName ?? "Hospital"}`
-                  : "Weekly availability"}
-              </PageTitle>
-
-              <BodyText className="max-w-2xl">
-                {isTenantMode
-                  ? `Set your working hours for ${currentAffiliation?.tenantName ?? "this hospital"} so the facility knows when you're available.`
-                  : "Set your weekly working hours so patients can book sessions that fit your schedule. Days and slots can be individually toggled."}
-              </BodyText>
-            </div>
-
-            {affiliations.length > 0 && (
-              <div className="flex items-center gap-2">
-                <BuildingIcon className="size-4 text-muted-foreground" />
-                <Select
-                  onSelectionChange={(id) => handleTenantChange(id ?? "")}
-                  selectedKey={selectedTenantId}
-                >
-                  <Select.Trigger className="w-[260px]">
-                    <Select.Value />
-                  </Select.Trigger>
-                  <Select.Popover>
-                    <ListBox>
-                      <ListBox.Item id="">My general availability</ListBox.Item>
-                      {affiliations.map((aff) => (
-                        <ListBox.Item id={aff.tenantId} key={aff.id}>
-                          {aff.tenantName}
-                        </ListBox.Item>
-                      ))}
-                    </ListBox>
-                  </Select.Popover>
-                </Select>
-              </div>
-            )}
+      <div className="relative z-10 -mt-16 flex flex-col gap-4 px-6">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <h1 className="font-light text-2xl tracking-tight">
+              {isTenantMode
+                ? `Availability at ${currentAffiliation?.tenantName ?? "Hospital"}`
+                : "Weekly availability"}
+            </h1>
+            <Chip color="accent" variant="soft">
+              <CalendarDaysIcon className="size-3" />
+              {isTenantMode
+                ? currentAffiliation?.tenantName ?? "Hospital"
+                : "Schedule overview"}
+            </Chip>
           </div>
-        </Card.Content>
-      </Card>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          description="Days you're accepting sessions"
-          icon={<CalendarDaysIcon className="size-5" />}
-          title="Active days"
-          trend="of 7"
-          value={availableDays.size.toString()}
-        />
+          <BodyText className="max-w-2xl">
+            {isTenantMode
+              ? `Set your working hours for ${currentAffiliation?.tenantName ?? "this hospital"} so the facility knows when you're available.`
+              : "Set your weekly working hours so patients can book sessions that fit your schedule. Days and slots can be individually toggled."}
+          </BodyText>
 
-        <MetricCard
-          description="Total availability per week"
-          icon={<Clock3Icon className="size-5" />}
-          title="Weekly hours"
-          value={totalHours.toFixed(1)}
-        />
+          {affiliations.length > 0 && (
+            <Select
+              onSelectionChange={(id) => handleTenantChange(id ?? "")}
+              selectedKey={selectedTenantId}
+            >
+              <Select.Trigger className="w-[260px]">
+                <Select.Value />
+              </Select.Trigger>
+              <Select.Popover>
+                <ListBox>
+                  <ListBox.Item id="">My general availability</ListBox.Item>
+                  {affiliations.map((aff) => (
+                    <ListBox.Item id={aff.tenantId} key={aff.id}>
+                      {aff.tenantName}
+                    </ListBox.Item>
+                  ))}
+                </ListBox>
+              </Select.Popover>
+            </Select>
+          )}
+        </div>
+      </div>
 
-        <MetricCard
-          description="Time slots configured"
-          icon={<ClockIcon className="size-5" />}
-          title="Total slots"
-          value={slots.filter((s) => s.isAvailable).length.toString()}
-        />
+      <Separator />
 
-        <MetricCard
-          description="Awaiting your response"
-          icon={<InboxIcon className="size-5" />}
-          title="Pending"
-          value={pendingSessions.length.toString()}
-        />
+      <section className="flex flex-col gap-2 px-6">
+        <PageTitle>Overview</PageTitle>
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <StatItem
+            icon={CalendarDaysIcon}
+            label="active days"
+            value={`${availableDays.size} of 7`}
+          />
+          <StatItem
+            icon={Clock3Icon}
+            label="weekly hours"
+            value={totalHours.toFixed(1)}
+          />
+          <StatItem
+            icon={ClockIcon}
+            label="total slots"
+            value={slots.filter((s) => s.isAvailable).length.toString()}
+          />
+          <StatItem
+            icon={InboxIcon}
+            label="pending"
+            value={pendingSessions.length.toString()}
+          />
+        </div>
       </section>
 
-      {chartData.some((d: { hours: number }) => d.hours > 0) ? (
-        <Card className="rounded-3xl border-border/60">
-          <Card.Header>
-            <SectionHeader
-              action={
-                <Chip className="gap-1" color="default" variant="soft">
-                  <TrendingUpIcon className="size-3" />
-                  Hours breakdown
-                </Chip>
-              }
-              description="Available hours per day of the week"
-              title="Weekly distribution"
-            />
-          </Card.Header>
-
+      {chartData.some((d: { hours: number }) => d.hours > 0) && (
+        <>
           <Separator />
 
-          <Card.Content>
+          <section className="flex flex-col gap-3">
+            <div>
+              <PageTitle>Weekly distribution</PageTitle>
+              <p className="font-light text-foreground/60 text-sm">
+                Available hours per day of the week
+              </p>
+            </div>
+
             <div className="h-[300px] w-full">
               <BarChart
                 accessibilityLayer
@@ -517,292 +514,274 @@ function DoctorAvailabilityRoute() {
                 </Bar>
               </BarChart>
             </div>
-          </Card.Content>
-        </Card>
-      ) : null}
+          </section>
+        </>
+      )}
 
-      <Card className="rounded-3xl border-border/60">
-        <Card.Header>
-          <SectionHeader
-            action={
-              <Button
-                className="text-xs"
-                isDisabled={
-                  isSaving ||
-                  slots.filter((slot) => slot.isAvailable).length === 0 ||
-                  !hasChanges
-                }
-                onPress={handleSave}
-                size="sm"
-              >
-                {isSaving ? (
-                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                ) : null}
-                {isTenantMode ? "Save Tenant Availability" : "Save Changes"}
-              </Button>
+      <Separator />
+
+      <section className="flex flex-col gap-3">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <PageTitle>Schedule editor</PageTitle>
+            <p className="font-light text-foreground/60 text-sm">
+              Configure time windows for each day of the week
+            </p>
+          </div>
+          <Button
+            className="text-xs"
+            isDisabled={
+              isSaving ||
+              slots.filter((slot) => slot.isAvailable).length === 0 ||
+              !hasChanges
             }
-            description="Configure time windows for each day of the week"
-            title="Schedule editor"
-          />
-        </Card.Header>
+            onPress={handleSave}
+            size="sm"
+          >
+            {isSaving ? (
+              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+            ) : null}
+            {isTenantMode ? "Save Tenant Availability" : "Save Changes"}
+          </Button>
+        </div>
 
-        <Separator />
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+          {DAYS.map((dayName, dayOfWeek) => {
+            const daySlots = slots.filter(
+              (slot) => slot.dayOfWeek === dayOfWeek
+            );
+            const isDayAvailable = daySlots.some((slot) => slot.isAvailable);
+            const dayHours = daySlots.reduce(
+              (acc, slot) => acc + getHoursForSlot(slot),
+              0
+            );
 
-        <Card.Content>
-          <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-            {DAYS.map((dayName, dayOfWeek) => {
-              const daySlots = slots.filter(
-                (slot) => slot.dayOfWeek === dayOfWeek
-              );
-              const isDayAvailable = daySlots.some((slot) => slot.isAvailable);
-              const dayHours = daySlots.reduce(
-                (acc, slot) => acc + getHoursForSlot(slot),
-                0
-              );
+            return (
+              <div
+                className="rounded-xl border border-border px-4 py-3"
+                key={dayName}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-light text-sm">{dayName}</p>
+                      <Chip
+                        className="text-[10px]"
+                        color={isDayAvailable ? "success" : "default"}
+                        variant={isDayAvailable ? "soft" : "tertiary"}
+                      >
+                        {isDayAvailable ? "Available" : "Off"}
+                      </Chip>
+                    </div>
+                    <p className="font-light text-foreground/60 text-xs">
+                      {daySlots.length === 0
+                        ? "No hours set"
+                        : `${daySlots.length} slot${daySlots.length === 1 ? "" : "s"} · ${dayHours.toFixed(1)}h`}
+                    </p>
+                  </div>
 
-              return (
-                <Card
-                  className="border-border/80 bg-gradient-to-br from-card to-card/50 shadow-sm transition-shadow duration-200 hover:shadow-md"
-                  key={dayName}
-                >
-                  <Card.Header className="pb-3">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                          <Card.Title className="text-base">
-                            {dayName}
-                          </Card.Title>
-                          <Chip
-                            className={
-                              isDayAvailable
-                                ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400"
-                                : "bg-muted text-muted-foreground"
+                  <div className="flex items-center gap-2 justify-center">
+                    <Switch
+                      aria-label={`${dayName} availability`}
+                      isSelected={isDayAvailable}
+                      onChange={(checked) => toggleDay(dayOfWeek, checked)}
+                      size="md"
+                    >
+                      {({ isSelected }) => (
+                        <Switch.Content>
+                          <Switch.Control>
+                            <Switch.Thumb>
+                              <Switch.Icon>
+                                {isSelected ? (
+                                  <CheckIcon className="size-2.5 text-inherit opacity-100" />
+                                ) : (
+                                  <XIcon className="size-2.5 text-inherit opacity-60" />
+                                )}
+                              </Switch.Icon>
+                            </Switch.Thumb>
+                          </Switch.Control>
+                          {isSelected ? "Working" : "Day off"}
+                        </Switch.Content>
+                      )}
+                    </Switch>
+                    <Button
+                      className="text-xs"
+                      onPress={() => addSlotForDay(dayOfWeek)}
+                      size="sm"
+                      variant="outline"
+                    >
+                      Add Slot
+                    </Button>
+                  </div>
+                </div>
+
+                <Separator className="my-3" />
+
+                <div className="flex flex-col gap-3">
+                  {daySlots.length === 0 ? (
+                    <div className="rounded-lg border border-border border-dashed bg-foreground/5 px-4 py-6 text-center font-light text-foreground/60 text-xs">
+                      No slots yet &mdash; tap &quot;Add Slot&quot; to set your
+                      available hours for {dayName}.
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      {daySlots.map((slot, slotOffset) => {
+                        const slotIndex = slots.indexOf(slot);
+                        const validEndOptions = TIME_OPTIONS.filter(
+                          (t) =>
+                            timeToMinutes(t) > timeToMinutes(slot.startTime)
+                        );
+
+                        return (
+                          <div
+                            className="rounded-lg border border-border bg-foreground/5 px-3 py-3"
+                            key={
+                              slot.id ??
+                              `${dayName}-${slot.startTime}-${slot.endTime}-${slotOffset}`
                             }
                           >
-                            {isDayAvailable ? "Available" : "Off"}
-                          </Chip>
-                        </div>
-                        <p className="text-muted-foreground text-xs">
-                          {daySlots.length === 0
-                            ? "No hours set"
-                            : `${daySlots.length} slot${daySlots.length === 1 ? "" : "s"} · ${dayHours.toFixed(1)}h`}
-                        </p>
-                      </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5 text-sm">
+                                <ClockIcon className="size-3.5 text-foreground/60" />
+                                <span className="font-light text-xs">
+                                  {slot.startTime} - {slot.endTime}
+                                </span>
+                              </div>
+                              <Button
+                                aria-label="Remove slot"
+                                className="h-8 w-8"
+                                isIconOnly
+                                onPress={() => removeSlot(slotIndex)}
+                                variant="ghost"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </Button>
+                            </div>
 
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-2 rounded-md border border-border/50 bg-muted/30 px-2.5 py-1.5">
-                          <Switch
-                            aria-label={`${dayName} availability`}
-                            className="h-4 w-7"
-                            isSelected={isDayAvailable}
-                            onChange={(checked) =>
-                              toggleDay(dayOfWeek, checked)
-                            }
-                          />
-                          <Label className="text-muted-foreground text-xs">
-                            {isDayAvailable ? "Working" : "Day off"}
-                          </Label>
-                        </div>
-                        <Button
-                          className="text-xs"
-                          onPress={() => addSlotForDay(dayOfWeek)}
-                          size="sm"
-                          variant="outline"
-                        >
-                          Add Slot
-                        </Button>
-                      </div>
-                    </div>
-                  </Card.Header>
-
-                  <Card.Content className="flex flex-col gap-3">
-                    {daySlots.length === 0 ? (
-                      <div className="rounded-lg border border-border/70 border-dashed bg-muted/20 px-4 py-6 text-center text-muted-foreground text-xs">
-                        No slots yet — tap "Add Slot" to set your available
-                        hours for {dayName}.
-                      </div>
-                    ) : (
-                      <div className="flex flex-col gap-3">
-                        {daySlots.map((slot, slotOffset) => {
-                          const slotIndex = slots.indexOf(slot);
-                          const validEndOptions = TIME_OPTIONS.filter(
-                            (t) =>
-                              timeToMinutes(t) > timeToMinutes(slot.startTime)
-                          );
-
-                          return (
-                            <div
-                              className="rounded-lg border border-border/50 bg-muted/30 p-3"
-                              key={
-                                slot.id ??
-                                `${dayName}-${slot.startTime}-${slot.endTime}-${slotOffset}`
-                              }
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-1.5 text-sm">
-                                  <ClockIcon className="size-3.5 text-muted-foreground" />
-                                  <span className="font-medium text-xs">
-                                    {slot.startTime} - {slot.endTime}
-                                  </span>
-                                </div>
-                                <Button
-                                  aria-label="Remove slot"
-                                  className="h-8 w-8"
-                                  isIconOnly
-                                  onPress={() => removeSlot(slotIndex)}
-                                  variant="ghost"
+                            <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-foreground/60 text-xs">
+                                  Start
+                                </Label>
+                                <Select
+                                  onSelectionChange={(value) =>
+                                    updateSlot(
+                                      slotIndex,
+                                      "startTime",
+                                      String(value ?? "")
+                                    )
+                                  }
+                                  selectedKey={slot.startTime}
                                 >
-                                  <Trash2 className="size-3.5" />
-                                </Button>
+                                  <Select.Trigger className="h-9 w-full">
+                                    <Select.Value />
+                                  </Select.Trigger>
+                                  <Select.Popover>
+                                    <ListBox>
+                                      {TIME_OPTIONS.map((time) => (
+                                        <ListBox.Item id={time} key={time}>
+                                          {time}
+                                        </ListBox.Item>
+                                      ))}
+                                    </ListBox>
+                                  </Select.Popover>
+                                </Select>
                               </div>
 
-                              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                                <div className="flex flex-col gap-1.5">
-                                  <Label className="text-muted-foreground text-xs">
-                                    Start
-                                  </Label>
-                                  <Select
-                                    onSelectionChange={(value) =>
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-foreground/60 text-xs">
+                                  End
+                                </Label>
+                                <Select
+                                  isDisabled={!slot.startTime}
+                                  onSelectionChange={(value) =>
+                                    updateSlot(
+                                      slotIndex,
+                                      "endTime",
+                                      String(value ?? "")
+                                    )
+                                  }
+                                  selectedKey={slot.endTime}
+                                >
+                                  <Select.Trigger className="h-9 w-full">
+                                    <Select.Value />
+                                  </Select.Trigger>
+                                  <Select.Popover>
+                                    <ListBox>
+                                      {validEndOptions.map((time) => (
+                                        <ListBox.Item id={time} key={time}>
+                                          {time}
+                                        </ListBox.Item>
+                                      ))}
+                                    </ListBox>
+                                  </Select.Popover>
+                                </Select>
+                              </div>
+
+                              <div className="flex flex-col gap-1.5">
+                                <Label className="text-foreground/60 text-xs">
+                                  Status
+                                </Label>
+                                <div className="flex h-9 items-center rounded-md border border-border bg-background px-3">
+                                  <Switch
+                                    aria-label={`Slot ${slot.startTime}-${slot.endTime} status`}
+                                    className="h-4 w-7"
+                                    isSelected={slot.isAvailable}
+                                    onChange={(checked) =>
                                       updateSlot(
                                         slotIndex,
-                                        "startTime",
-                                        String(value ?? "")
+                                        "isAvailable",
+                                        checked
                                       )
                                     }
-                                    selectedKey={slot.startTime}
-                                  >
-                                    <Select.Trigger className="h-9 w-full">
-                                      <Select.Value />
-                                    </Select.Trigger>
-                                    <Select.Popover>
-                                      <ListBox>
-                                        {TIME_OPTIONS.map((time) => (
-                                          <ListBox.Item id={time} key={time}>
-                                            {time}
-                                          </ListBox.Item>
-                                        ))}
-                                      </ListBox>
-                                    </Select.Popover>
-                                  </Select>
-                                </div>
-
-                                <div className="flex flex-col gap-1.5">
-                                  <Label className="text-muted-foreground text-xs">
-                                    End
-                                  </Label>
-                                  <Select
-                                    isDisabled={!slot.startTime}
-                                    onSelectionChange={(value) =>
-                                      updateSlot(
-                                        slotIndex,
-                                        "endTime",
-                                        String(value ?? "")
-                                      )
-                                    }
-                                    selectedKey={slot.endTime}
-                                  >
-                                    <Select.Trigger className="h-9 w-full">
-                                      <Select.Value />
-                                    </Select.Trigger>
-                                    <Select.Popover>
-                                      <ListBox>
-                                        {validEndOptions.map((time) => (
-                                          <ListBox.Item id={time} key={time}>
-                                            {time}
-                                          </ListBox.Item>
-                                        ))}
-                                      </ListBox>
-                                    </Select.Popover>
-                                  </Select>
-                                </div>
-
-                                <div className="flex flex-col gap-1.5">
-                                  <Label className="text-muted-foreground text-xs">
-                                    Status
-                                  </Label>
-                                  <div className="flex h-9 items-center rounded-md border border-border/50 bg-background px-3">
-                                    <Switch
-                                      aria-label={`Slot ${slot.startTime}-${slot.endTime} status`}
-                                      className="h-4 w-7"
-                                      isSelected={slot.isAvailable}
-                                      onChange={(checked) =>
-                                        updateSlot(
-                                          slotIndex,
-                                          "isAvailable",
-                                          checked
-                                        )
-                                      }
-                                    />
-                                    <span className="ml-2 text-muted-foreground text-sm">
-                                      {slot.isAvailable ? "On" : "Off"}
-                                    </span>
-                                  </div>
+                                  />
+                                  <span className="ml-2 text-foreground/60 text-sm">
+                                    {slot.isAvailable ? "On" : "Off"}
+                                  </span>
                                 </div>
                               </div>
                             </div>
-                          );
-                        })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {!isTenantMode &&
+                    tenantWindowsByDay.filter(
+                      (w) => w.dayOfWeek === dayOfWeek
+                    ).length > 0 && (
+                      <div className="flex flex-col gap-2 border-border border-t pt-2">
+                        <p className="font-light text-foreground/60 text-xs">
+                          Tenant reservations
+                        </p>
+                        {tenantWindowsByDay
+                          .filter((w) => w.dayOfWeek === dayOfWeek)
+                          .map((w, i) => (
+                            <div
+                              className="flex items-center gap-2 rounded-lg border border-border bg-primary/5 px-3 py-2"
+                              key={i}
+                            >
+                              <Chip
+                                className="text-[10px]"
+                                color="default"
+                                variant="soft"
+                              >
+                                {w.tenantName}
+                              </Chip>
+                              <span className="font-mono text-foreground/60 text-xs">
+                                {w.startTime}&ndash;{w.endTime}
+                              </span>
+                            </div>
+                          ))}
                       </div>
                     )}
-                    {!isTenantMode &&
-                      tenantWindowsByDay.filter(
-                        (w) => w.dayOfWeek === dayOfWeek
-                      ).length > 0 && (
-                        <div className="flex flex-col gap-2 border-border/40 border-t pt-2">
-                          <p className="font-medium text-muted-foreground text-xs">
-                            Tenant reservations
-                          </p>
-                          {tenantWindowsByDay
-                            .filter((w) => w.dayOfWeek === dayOfWeek)
-                            .map((w, i) => (
-                              <div
-                                className="flex items-center gap-2 rounded-lg border border-border/50 bg-primary/5 px-3 py-2"
-                                key={i}
-                              >
-                                <Chip
-                                  className="text-[10px]"
-                                  color="default"
-                                  variant="soft"
-                                >
-                                  {w.tenantName}
-                                </Chip>
-                                <span className="font-mono text-muted-foreground text-xs">
-                                  {w.startTime}–{w.endTime}
-                                </span>
-                              </div>
-                            ))}
-                        </div>
-                      )}
-                  </Card.Content>
-                </Card>
-              );
-            })}
-          </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
-          <div className="mt-6 flex items-center justify-between gap-3 rounded-lg border border-border/80 bg-card/95 p-4 shadow-lg backdrop-blur-md">
-            <div className="flex items-center gap-2">
-              {hasChanges ? (
-                <Chip className="bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                  Unsaved changes
-                </Chip>
-              ) : null}
-            </div>
-            <Button
-              isDisabled={
-                isSaving ||
-                slots.filter((slot) => slot.isAvailable).length === 0 ||
-                !hasChanges
-              }
-              onPress={handleSave}
-            >
-              {isSaving ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
-              {isTenantMode ? "Save Tenant Availability" : "Save Availability"}
-            </Button>
-          </div>
-        </Card.Content>
-      </Card>
+      </section>
     </div>
   );
 }

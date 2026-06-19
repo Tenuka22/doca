@@ -330,10 +330,10 @@ export function EditMaterialDialog({
                       value={tagInput}
                     />
                     <Button
+                      className="size-9"
                       isDisabled={!tagInput.trim() || tags.length >= 20}
                       onPress={handleAddTag}
                       size="sm"
-                      className="size-9"
                       variant="secondary"
                     >
                       <PlusIcon className="size-4" />

@@ -379,9 +379,7 @@ export function UploadWizardDialog({
                     <CheckboxGroup
                       onChange={(values) => {
                         if (values.length > 0) {
-                          setVisibility(
-                            values.at(-1) as typeof visibility
-                          );
+                          setVisibility(values.at(-1) as typeof visibility);
                         }
                       }}
                       value={[visibility]}
