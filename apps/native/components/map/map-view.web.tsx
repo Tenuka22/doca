@@ -56,6 +56,7 @@ const MapComponent = forwardRef<
     return (
       <View className="flex-1">
         <Map
+          attributionControl={false}
           initialViewState={{
             longitude: GALLE_REGION.longitude,
             latitude: GALLE_REGION.latitude,

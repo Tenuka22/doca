@@ -254,8 +254,6 @@ function DoctorPlansRoute() {
   const averagePriceCents = stats?.averagePriceCents ?? 0;
   const averageDurationMinutes = stats?.averageDurationMinutes ?? 0;
   const defaultPlanName = stats?.defaultPlanName ?? null;
-  const minPriceCents = stats?.minPriceCents ?? 0;
-  const maxPriceCents = stats?.maxPriceCents ?? 0;
 
   const parsedPlans = plans.map((plan) => {
     let parsedFeatures: string[] = [];

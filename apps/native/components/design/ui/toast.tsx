@@ -39,7 +39,7 @@ export function ToastContainer() {
     <View className="absolute top-4 right-4 left-4 z-50">
       {toasts.map((toast, index) => (
         <View
-          className={`mb-2 rounded-lg p-4 shadow-lg ${toast.type === "error" ? "bg-destructive" : toast.type === "warning" ? "bg-yellow-500" : toast.type === "info" ? "bg-blue-500" : "bg-green-500"}`}
+          className={`mb-2 rounded-lg p-4 shadow-lg backdrop-blur-[1px] ${toast.type === "error" ? "bg-rose-700/60" : toast.type === "warning" ? "bg-yellow-700/60" : toast.type === "info" ? "bg-blue-700/60" : "bg-green-700/60"}`}
           key={index}
         >
           {toast.title && (

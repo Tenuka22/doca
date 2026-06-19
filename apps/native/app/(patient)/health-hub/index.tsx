@@ -18,13 +18,7 @@ import {
   User,
 } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { Screen } from "@/components/design/ui/screen";
 import { ScreenTabBar } from "@/components/design/ui/screen-tab-bar";
 import { vibrate } from "@/utils/haptics";
@@ -301,171 +295,167 @@ export default function HealthHubScreen() {
             </Text>
           </View>
 
-            {/* Status Ring */}
-            <View className="items-center py-huge">
-              <Pressable
-                className="h-52 w-52 items-center justify-center rounded-full border-4 border-border shadow-lg"
-                onPressIn={() => setIconPressed(true)}
-                onPressOut={() => setIconPressed(false)}
+          {/* Status Ring */}
+          <View className="items-center py-huge">
+            <Pressable
+              className="h-52 w-52 items-center justify-center rounded-full border-4 border-border shadow-lg"
+              onPressIn={() => setIconPressed(true)}
+              onPressOut={() => setIconPressed(false)}
+            >
+              <View
+                className={`h-full w-full items-center justify-center rounded-full ${status?.bg || "bg-background-subtle/50"}`}
+                style={{
+                  transform: [
+                    { translateY: iconPressed ? 4 : 0 },
+                    { scale: iconPressed ? 0.96 : 1 },
+                  ],
+                }}
               >
-                <View
-                  className={`h-full w-full items-center justify-center rounded-full ${status?.bg || "bg-background-subtle/50"}`}
-                  style={{
-                    transform: [
-                      { translateY: iconPressed ? 4 : 0 },
-                      { scale: iconPressed ? 0.96 : 1 },
-                    ],
-                  }}
-                >
-                  {streamLoading && bundles.length === 0 ? (
-                    <ActivityIndicator color="#2d3e35" size="large" />
-                  ) : (
-                    <>
-                      <StatusIcon
-                        className={status?.color || "text-primary"}
-                        size={56}
-                      />
-                      <Text
-                        className={`mt-md font-serif text-title uppercase tracking-wider ${status?.color || "text-foreground-muted"}`}
-                      >
-                        {status?.label || "No Data"}
-                      </Text>
-                    </>
-                  )}
-                </View>
-              </Pressable>
-            </View>
-
-            {/* Live Stats */}
-            <View className="gap-lg rounded-3xl bg-background-elevated p-lg shadow-sm">
-              <View className="flex-row items-center justify-between">
-                <Text className="font-serif text-primary text-title">
-                  Live Stats
-                </Text>
-                {streaming && (
-                  <View className="flex-row items-center gap-xs rounded-full bg-primary-subtle px-md py-xxs">
-                    <View className="h-2 w-2 rounded-full bg-primary" />
-                    <Text className="font-bold font-sans text-micro text-primary uppercase tracking-widest">
-                      Active
+                {streamLoading && bundles.length === 0 ? (
+                  <ActivityIndicator color="#2d3e35" size="large" />
+                ) : (
+                  <>
+                    <StatusIcon
+                      className={status?.color || "text-primary"}
+                      size={56}
+                    />
+                    <Text
+                      className={`mt-md font-serif text-title uppercase tracking-wider ${status?.color || "text-foreground-muted"}`}
+                    >
+                      {status?.label || "No Data"}
                     </Text>
-                  </View>
+                  </>
                 )}
               </View>
+            </Pressable>
+          </View>
 
-              <View className="flex-row items-center gap-lg rounded-2xl bg-background-subtle/50 p-lg">
-                <View className="h-12 w-12 items-center justify-center rounded-full bg-tint-green">
-                  <Activity className="text-tint-green-foreground" size={24} />
-                </View>
-                <View className="flex-1">
-                  <Text className="font-sans text-foreground-muted text-micro uppercase tracking-widest">
-                    Current State
+          {/* Live Stats */}
+          <View className="gap-lg rounded-3xl bg-background-elevated p-lg shadow-sm">
+            <View className="flex-row items-center justify-between">
+              <Text className="font-serif text-primary text-title">
+                Live Stats
+              </Text>
+              {streaming && (
+                <View className="flex-row items-center gap-xs rounded-full bg-primary-subtle px-md py-xxs">
+                  <View className="h-2 w-2 rounded-full bg-primary" />
+                  <Text className="font-bold font-sans text-micro text-primary uppercase tracking-widest">
+                    Active
                   </Text>
-                  <Text className="font-serif text-foreground text-subtitle">
-                    {insights?.dominantLabel || "Idle"}
-                  </Text>
                 </View>
+              )}
+            </View>
+
+            <View className="flex-row items-center gap-lg rounded-2xl bg-background-subtle/50 p-lg">
+              <View className="h-12 w-12 items-center justify-center rounded-full bg-tint-green">
+                <Activity className="text-tint-green-foreground" size={24} />
               </View>
-
-              <View className="gap-sm">
-                <View className="flex-row justify-between">
-                  <Text className="font-sans text-foreground-muted text-micro uppercase">
-                    Stress Level
-                  </Text>
-                  <Text className="font-bold font-sans text-foreground text-micro">
-                    {insights?.stressRatio || 0}%
-                  </Text>
-                </View>
-                <View className="h-2 rounded-full bg-background-subtle">
-                  <View
-                    className="h-full rounded-full bg-accent"
-                    style={{
-                      width: `${Math.min(100, insights?.stressRatio || 0)}%`,
-                    }}
-                  />
-                </View>
-              </View>
-
-              <View className="flex-row gap-md">
-                <View className="flex-1 items-center gap-xxs rounded-2xl bg-background-subtle/50 p-md">
-                  {trendIcon(insights?.trendDirection)}
-                  <Text className="font-sans text-foreground-muted text-micro">
-                    Trend
-                  </Text>
-                  <Text className="font-bold font-sans text-caption text-foreground">
-                    {insights?.trendLabel || "Stable"}
-                  </Text>
-                </View>
-                <View className="flex-1 items-center gap-xxs rounded-2xl bg-background-subtle/50 p-md">
-                  <Brain className="text-tint-purple-foreground" size={20} />
-                  <Text className="font-sans text-foreground-muted text-micro">
-                    Confidence
-                  </Text>
-                  <Text className="font-bold font-sans text-caption text-foreground">
-                    {insights?.averageConfidence || 0}%
-                  </Text>
-                </View>
+              <View className="flex-1">
+                <Text className="font-sans text-foreground-muted text-micro uppercase tracking-widest">
+                  Current State
+                </Text>
+                <Text className="font-serif text-foreground text-subtitle">
+                  {insights?.dominantLabel || "Idle"}
+                </Text>
               </View>
             </View>
 
-            {/* Timeline */}
-            {bundles.length > 0 && (
-              <View className="mt-md gap-md">
-                <Text className="font-serif text-primary text-title">
-                  Prediction Timeline
+            <View className="gap-sm">
+              <View className="flex-row justify-between">
+                <Text className="font-sans text-foreground-muted text-micro uppercase">
+                  Stress Level
                 </Text>
-                <View className="rounded-3xl bg-background-elevated p-lg shadow-sm">
-                  <View className="flex-row items-end gap-[2px]">
-                    {bundles.slice(-60).map((b, i) => {
-                      const idx = b.prediction
-                        ? classIndex(b.prediction.predictedClass)
-                        : -1;
-                      const color = idx >= 0 ? CLASS_COLORS[idx] : "#7f8a83";
-                      const height = idx >= 0 ? 16 + idx * 10 : 6;
-                      return (
-                        <View
-                          className="flex-1 rounded-sm"
-                          key={b.bundleId ?? i}
-                          style={{ backgroundColor: color, height }}
-                        />
-                      );
-                    })}
-                  </View>
-                  <View className="mt-md flex-row gap-lg">
-                    {CLASS_LABELS.map((label, i) => (
+                <Text className="font-bold font-sans text-foreground text-micro">
+                  {insights?.stressRatio || 0}%
+                </Text>
+              </View>
+              <View className="h-2 rounded-full bg-background-subtle">
+                <View
+                  className="h-full rounded-full bg-accent"
+                  style={{
+                    width: `${Math.min(100, insights?.stressRatio || 0)}%`,
+                  }}
+                />
+              </View>
+            </View>
+
+            <View className="flex-row gap-md">
+              <View className="flex-1 items-center gap-xxs rounded-2xl bg-background-subtle/50 p-md">
+                {trendIcon(insights?.trendDirection)}
+                <Text className="font-sans text-foreground-muted text-micro">
+                  Trend
+                </Text>
+                <Text className="font-bold font-sans text-caption text-foreground">
+                  {insights?.trendLabel || "Stable"}
+                </Text>
+              </View>
+              <View className="flex-1 items-center gap-xxs rounded-2xl bg-background-subtle/50 p-md">
+                <Brain className="text-tint-purple-foreground" size={20} />
+                <Text className="font-sans text-foreground-muted text-micro">
+                  Confidence
+                </Text>
+                <Text className="font-bold font-sans text-caption text-foreground">
+                  {insights?.averageConfidence || 0}%
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Timeline */}
+          {bundles.length > 0 && (
+            <View className="mt-md gap-md">
+              <Text className="font-serif text-primary text-title">
+                Prediction Timeline
+              </Text>
+              <View className="rounded-3xl bg-background-elevated p-lg shadow-sm">
+                <View className="flex-row items-end gap-[2px]">
+                  {bundles.slice(-60).map((b, i) => {
+                    const idx = b.prediction
+                      ? classIndex(b.prediction.predictedClass)
+                      : -1;
+                    const color = idx >= 0 ? CLASS_COLORS[idx] : "#7f8a83";
+                    const height = idx >= 0 ? 16 + idx * 10 : 6;
+                    return (
                       <View
-                        className="flex-row items-center gap-xs"
-                        key={label}
-                      >
-                        <View
-                          className="h-2 w-2 rounded-full"
-                          style={{ backgroundColor: CLASS_COLORS[i] }}
-                        />
-                        <Text className="font-sans text-foreground-muted text-micro">
-                          {label}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
+                        className="flex-1 rounded-sm"
+                        key={b.bundleId ?? i}
+                        style={{ backgroundColor: color, height }}
+                      />
+                    );
+                  })}
+                </View>
+                <View className="mt-md flex-row gap-lg">
+                  {CLASS_LABELS.map((label, i) => (
+                    <View className="flex-row items-center gap-xs" key={label}>
+                      <View
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: CLASS_COLORS[i] }}
+                      />
+                      <Text className="font-sans text-foreground-muted text-micro">
+                        {label}
+                      </Text>
+                    </View>
+                  ))}
                 </View>
               </View>
+            </View>
+          )}
+
+          <Pressable
+            className={`mt-md flex-row items-center justify-center gap-2 rounded-full py-3.5 ${streaming ? "border-2 border-border bg-background-elevated" : "bg-primary"}`}
+            onPress={handleStartStop}
+          >
+            {streaming ? (
+              <Square className="text-foreground" size={18} />
+            ) : (
+              <Play className="text-primary-foreground" size={18} />
             )}
-
-            <Pressable
-              className={`mt-md flex-row items-center justify-center gap-2 rounded-full py-3.5 ${streaming ? "border-2 border-border bg-background-elevated" : "bg-primary"}`}
-              onPress={handleStartStop}
+            <Text
+              className={`font-bold font-sans text-body ${streaming ? "text-foreground" : "text-primary-foreground"}`}
             >
-              {streaming ? (
-                <Square className="text-foreground" size={18} />
-              ) : (
-                <Play className="text-primary-foreground" size={18} />
-              )}
-              <Text
-                className={`font-bold font-sans text-body ${streaming ? "text-foreground" : "text-primary-foreground"}`}
-              >
-                {streaming ? "Stop Monitoring" : "Start Monitoring"}
-              </Text>
-            </Pressable>
-
+              {streaming ? "Stop Monitoring" : "Start Monitoring"}
+            </Text>
+          </Pressable>
         </Screen>
       </View>
     </ScreenTabBar>

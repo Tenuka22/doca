@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Pressable, Text, View, ScrollView } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 interface ScreenTab {
   active?: boolean;
@@ -22,11 +22,11 @@ export function ScreenTabBar({ children, tabs }: ScreenTabBarProps) {
         <View className="flex-1 pb-32">{children}</View>
       </ScrollView>
 
-      <View className="absolute bottom-4 left-0 right-0 flex-row justify-center">
-        <View className="flex-row gap-1 rounded-full border-2 border-border bg-background-elevated/80 shadow-md">
+      <View className="absolute right-0 bottom-4 left-0 flex-row justify-center">
+        <View className="flex-row gap-1 rounded-full border-2 border-border bg-background-elevated/60 backdrop-blur-[0.4px] shadow-md p-1">
           {tabs.map((tab) => (
             <Pressable
-              className={`items-center size-20 justify-center gap-0 px-4 py-2 ${tab.active ? "rounded-full bg-primary" : ""}`}
+              className={`size-20 items-center justify-center gap-0 px-4 py-2 ${tab.active ? "rounded-full bg-primary/70 backdrop-blur-md" : ""}`}
               key={tab.label}
               onPress={tab.onPress}
             >

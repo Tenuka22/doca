@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
 import {
   ArrowLeft,
+  Building2,
+  ListIcon,
   LocateFixed,
   MapPin,
   Search,
@@ -11,9 +13,17 @@ import {
   X,
 } from "lucide-react-native";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Linking, Pressable, Text, TextInput, View } from "react-native";
+import {
+  FlatList,
+  Linking,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import type MapView from "react-native-maps";
 import { Button } from "@/components/design/ui/button";
+import { Input } from "@/components/design/ui/input";
 import { ScreenBottomBar } from "@/components/design/ui/screen-bottom-bar";
 import MapComponent from "@/components/map/map-view";
 import { hospitals as staticHospitals } from "@/data/hospitals";
@@ -27,6 +37,7 @@ export default function MapScreen() {
 
   const [search, setSearch] = useState("");
   const [selectedHospital, setSelectedHospital] = useState<any>(null);
+  const [listOpen, setListOpen] = useState(false);
 
   const centerOnUserLocation = useCallback(() => {
     if (userLocation) {
@@ -44,8 +55,31 @@ export default function MapScreen() {
     }
   }, [userLocation, requestLocation]);
 
+  const centerOnHospital = useCallback((hospital: any) => {
+    setSelectedHospital(hospital);
+    setListOpen(false);
+    setSearch("");
+    mapRef.current?.animateToRegion(
+      {
+        latitude: hospital.latitude,
+        longitude: hospital.longitude,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      },
+      400
+    );
+  }, []);
+
+  const handleSearch = useCallback(() => {
+    setListOpen(true);
+  }, []);
+
+  const toggleList = useCallback(() => {
+    setListOpen((prev) => !prev);
+  }, []);
+
   const tenantsQuery = useQuery(
-    orpc.listTenants.queryOptions({ input: { page: 0, pageSize: 0 } })
+    orpc.listTenants.queryOptions({ input: { page: 1, pageSize: 50 } })
   );
   const tenants = tenantsQuery.data?.tenants ?? [];
 
@@ -70,6 +104,18 @@ export default function MapScreen() {
     return merged;
   }, [tenants]);
 
+  const filteredForList = useMemo(() => {
+    if (!search) {
+      return allHospitals;
+    }
+    const q = search.toLowerCase();
+    return allHospitals.filter(
+      (h: any) =>
+        h.name.toLowerCase().includes(q) ||
+        (h.address && h.address.toLowerCase().includes(q))
+    );
+  }, [allHospitals, search]);
+
   const openMapsNavigation = (hospital: any) => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${hospital.latitude},${hospital.longitude}`;
     Linking.openURL(url);
@@ -82,32 +128,40 @@ export default function MapScreen() {
       <MapComponent
         filteredHospitals={allHospitals}
         onMarkerPress={setSelectedHospital}
-        platformHospitalNames={tenants.map((t: any) => t.name)}
+        platformHospitalNames={tenants.map((t) => t.name)}
         ref={mapRef}
         selectedHospitalId={selectedHospital?.name}
         userLocation={userLocation}
       />
 
       {/* Floating Header */}
-      <View className="absolute top-14 right-lg left-lg gap-md">
-        <View className="flex-row items-center gap-md">
-
-          <View className="h-12 flex-1 flex-row items-center gap-md rounded-full bg-background-elevated px-lg shadow-lg">
-            <Search className="text-foreground-placeholder" size={20} />
-            <TextInput
-              className="flex-1 font-sans text-body"
+      <View className="absolute top-8 right-lg left-lg">
+        <View className="flex-row items-center gap-2">
+          <View className="flex-1">
+            <Input
+              className="pr-4 py-4"
+              inputContainerClassName="rounded-full bg-background-elevated/80 backdrop-blur-[2px]"
+              leftIcon={<MapPin className="text-foreground-placeholder" size={20} />}
               onChangeText={setSearch}
+              onSubmitEditing={handleSearch}
               placeholder="Search hospitals..."
+              returnKeyType="search"
               value={search}
             />
           </View>
+          <Pressable
+            className="size-16 items-center justify-center rounded-xl bg-background-elevated/60 backdrop-blur-[2px] shadow-lg border-input border-2"
+            onPress={handleSearch}
+          >
+            <Search className="text-foreground" size={20} />
+          </Pressable>
         </View>
       </View>
 
       {/* Selected Hospital Card */}
       {selectedHospital && (
-        <View className="absolute right-lg bottom-huge left-lg">
-          <View className="gap-lg rounded-3xl bg-background-elevated p-lg shadow-xl">
+        <View className="absolute right-lg bottom-8 left-lg">
+          <View className="gap-lg rounded-3xl bg-background-elevated/50 backdrop-blur-[2px] p-lg shadow-xl">
             <View className="flex-row items-start justify-between">
               <View className="flex-1 gap-xxs">
                 <Text className="font-serif text-primary text-title">
@@ -167,19 +221,89 @@ export default function MapScreen() {
         </View>
       )}
 
-      <ScreenBottomBar
-        leftActions={[
-          {
-            icon: <LocateFixed className="text-foreground" size={20} />,
-            label: "My location",
-            onPress: centerOnUserLocation,
-          },
-        ]}
-        returnAction={{
-          href: "/(patient)",
-          icon: <ArrowLeft className="text-foreground" size={24} />,
-        }}
-      />
+      {!selectedHospital && (
+        <ScreenBottomBar
+          leftActions={[
+            {
+              icon: <ListIcon className="text-foreground" size={20} />,
+              label: "Hospitals",
+              onPress: toggleList,
+            },
+            {
+              icon: <LocateFixed className="text-foreground" size={20} />,
+              label: "My Loc.",
+              onPress: centerOnUserLocation,
+            },
+          ]}
+          returnAction={{
+            href: "/(patient)",
+            icon: <ArrowLeft className="text-foreground" size={24} />,
+          }}
+        />
+      )}
+
+      {/* Hospital List Panel */}
+      {listOpen && (
+        <View className="absolute top-28 right-lg border-2 border-input left-lg h-auto max-h-[70%] rounded-2xl bg-background-elevated/80 backdrop-blur-[2px] shadow-xl">
+
+          <View className="flex-row items-center justify-between border-b border-border px-4 py-3">
+            <Pressable
+              className="h-8 w-8 items-center justify-center rounded-full bg-background-subtle"
+              onPress={() => setListOpen(false)}
+            >
+              <ArrowLeft className="text-foreground-muted" size={18} />
+            </Pressable>
+            <Text className="font-sans text-caption text-foreground">
+              {search ? `Results for "${search}"` : "All hospitals"}
+            </Text>
+            <View className="w-8" />
+          </View>
+
+          <FlatList
+            className="px-2"
+            contentContainerClassName="py-2 gap-2"
+            data={filteredForList}
+            keyExtractor={(item: any) => item.name}
+            keyboardShouldPersistTaps="handled"
+            ListEmptyComponent={
+              <View className="items-center justify-center py-12">
+                <Building2 className="text-foreground-muted" size={32} />
+                <Text className="mt-2 font-sans text-caption text-foreground-muted">
+                  No hospitals found
+                </Text>
+              </View>
+            }
+            renderItem={({ item }: { item: any }) => (
+              <TouchableOpacity
+                className="rounded-xl border border-border px-3 py-2.5"
+                onPress={() => centerOnHospital(item)}
+              >
+                <Text className="font-sans text-body text-primary">
+                  {item.name}
+                </Text>
+                <Text
+                  className="mt-0.5 font-sans text-caption text-foreground-secondary"
+                  numberOfLines={1}
+                >
+                  {item.address}
+                </Text>
+                <View className="mt-1 flex-row items-center gap-2">
+                  <Star className="fill-accent text-accent" size={11} />
+                  <Text className="font-sans text-caption text-foreground-muted">
+                    {item.rating || "4.5"}
+                  </Text>
+                  <Text className="font-sans text-caption text-foreground-muted">
+                    &middot;
+                  </Text>
+                  <Text className="font-sans text-caption text-foreground-muted">
+                    {item.category}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      )}
     </View>
   );
 }

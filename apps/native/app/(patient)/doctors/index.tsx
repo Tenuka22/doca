@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
 import {
-  ArrowLeft,
   BookOpen,
   ChevronLeft,
   ChevronRight,
@@ -202,14 +201,14 @@ export default function DoctorsScreen() {
           scrollClassName="flex-1 bg-background"
         >
           {/* Header */}
-            <View>
-              <Text className="font-serif text-hero text-primary leading-tight">
-                Clinicians
-              </Text>
-              <Text className="font-sans text-caption text-foreground-muted uppercase tracking-widest">
-                Private Care
-              </Text>
-            </View>
+          <View>
+            <Text className="font-serif text-hero text-primary leading-tight">
+              Clinicians
+            </Text>
+            <Text className="font-sans text-caption text-foreground-muted uppercase tracking-widest">
+              Private Care
+            </Text>
+          </View>
 
           {/* Search Bar */}
           <Input

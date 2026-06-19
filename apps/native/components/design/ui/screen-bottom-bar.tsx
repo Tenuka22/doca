@@ -29,13 +29,13 @@ export function ScreenBottomBar({
   const hasRight = !!returnAction;
 
   return (
-    <View className="absolute bottom-4 left-0 right-0 px-6">
+    <View className="absolute right-0 bottom-4 left-0 px-6">
       <View className="flex-row items-center justify-between">
         {hasLeft && (
-          <View className="flex-row gap-2 rounded-full border-2 border-border bg-background-elevated px-2 shadow-md">
+          <View className="flex-row gap-2 rounded-full border-2 border-border bg-background-elevated/60 backdrop-blur-[0.4px] shadow-md">
             {leftActions.map((action) => (
               <Pressable
-                className={`items-center justify-center gap-0 py-2 ${action.active ? "rounded-2xl bg-primary px-4" : "size-20"}`}
+                className={`items-center justify-center gap-0 py-2 ${action.active ? "rounded-full bg-primary/70 px-4 backdrop-blur-md" : "size-20"}`}
                 key={action.label}
                 onPress={action.onPress}
               >
@@ -54,7 +54,7 @@ export function ScreenBottomBar({
 
         {hasRight && (
           <Link asChild href={returnAction.href as Href}>
-            <Pressable className="size-20 items-center justify-center rounded-full border-2 border-border bg-background-elevated shadow-md">
+            <Pressable className="size-20 items-center justify-center rounded-full border-2 border-border bg-background-elevated/60 backdrop-blur-[0.4] shadow-md">
               {returnAction.icon}
             </Pressable>
           </Link>
