@@ -6,7 +6,8 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "dev:bare": "vite dev --port 3000",
+    "prebuild": "bun scripts/optimize-images.ts",
+    "dev:bare": "bun scripts/optimize-images.ts && vite dev --port 3000",
     "generate-routes": "tsr generate",
     "build": "vite build",
     "preview": "vite preview",
@@ -14,10 +15,10 @@
     "format": "biome format",
     "lint": "biome lint",
     "check": "biome check",
-    "deploy": "bun run build && wrangler deploy"
+    "check-types": "tsc --noEmit",
+    "optimize-images": "bun scripts/optimize-images.ts"
   },
   "dependencies": {
-    "alchemy": "^0.93.7",
     "@orpc/client": "^1.13.6",
     "@orpc/json-schema": "^1.13.6",
     "@orpc/openapi": "^1.13.6",
@@ -34,6 +35,8 @@
     "@tanstack/react-router-ssr-query": "latest",
     "@tanstack/react-start": "latest",
     "@tanstack/router-plugin": "^1.132.0",
+    "alchemy": "^0.93.7",
+    "class-variance-authority": "^0.7.1",
     "lucide-react": "^0.545.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -52,6 +55,7 @@
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^6.0.1",
     "jsdom": "^28.1.0",
+    "sharp": "^0.35.2",
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
     "vitest": "^4.1.5",

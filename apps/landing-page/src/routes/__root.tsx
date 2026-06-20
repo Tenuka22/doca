@@ -11,7 +11,8 @@ export const Route = createRootRoute({
   head: () => ({
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico" },
+      { rel: "icon", type: "image/png", href: "/icon.png" },
+      { rel: "apple-touch-icon", href: "/logo.png" },
     ],
     meta: [
       { charSet: "utf-8" },
@@ -22,7 +23,8 @@ export const Route = createRootRoute({
         content:
           "Private health consultations with licensed professionals and anonymity built in from the start.",
       },
-      { name: "theme-color", content: "#faf8f2" },
+      { name: "theme-color", content: "#faf7f2" },
+      { property: "og:image", content: "/logo.png" },
     ],
   }),
   component: RootDocument,

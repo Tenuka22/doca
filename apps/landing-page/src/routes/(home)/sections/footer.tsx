@@ -1,0 +1,28 @@
+import { Wordmark } from "../helpers/wordmark";
+
+export function Footer() {
+  return (
+    <footer className="pt-[68px] pb-[38px]">
+      <div className="page-shell grid grid-cols-[1.1fr_auto_1fr] items-end gap-[50px] max-landing-lg:grid-cols-[1fr_auto] max-landing-md:grid-cols-1 max-landing-md:gap-[31px]">
+        <div>
+          <Wordmark aria-label="Back to Suwa home" href="#top" size="footer" />
+          <p className="mx-0 mt-[12px] mb-0 text-[10px] text-foreground-muted">
+            Private, compassionate healthcare—built around you.
+          </p>
+        </div>
+        <nav
+          aria-label="Footer navigation"
+          className="flex gap-[28px] text-[11px] max-landing-md:flex-wrap max-landing-md:gap-[14px_23px]"
+        >
+          <a href="#how-it-works">How it works</a>
+          <a href="#why-suwa">Why Suwa</a>
+          <a href="#stories">Stories</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+        <p className="m-0 justify-self-end text-[10px] text-foreground-muted max-landing-lg:col-span-2 max-landing-md:col-auto max-landing-lg:justify-self-start">
+          &copy; 2026 Suwa. Privacy is part of the care.
+        </p>
+      </div>
+    </footer>
+  );
+}
