@@ -17,7 +17,7 @@ const config = defineConfig(({ command }) => ({
     {
       name: "optimize-images",
       buildStart() {
-        const genDir = resolve("public/images/.gen");
+        const genDir = resolve("public/images/gen");
         if (!existsSync(genDir)) {
           console.log("\n🖼️  Generating optimized images...");
           try {

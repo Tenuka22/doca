@@ -112,7 +112,7 @@ export const landingPage = await TanStackStart("landing-page", {
   bindings: {},
   domains: [{ domainName: "suwa.life", zoneId: "32f35707091cc8835c6734e191cbd6c2" }],
   build: {
-    command: "bun scripts/optimize-images.ts && vite build",
+    command: "bun run build",
   },
   observability: {
     enabled: true,
