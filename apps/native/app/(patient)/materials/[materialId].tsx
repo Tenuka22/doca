@@ -2,27 +2,23 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ResizeMode, Video } from "expo-av";
+import * as FileSystem from "expo-file-system";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ArrowLeft,
-  Maximize,
   MessageCircle,
-  Minimize,
   Pause,
   Play,
   Send,
   ThumbsDown,
   ThumbsUp,
-  Volume2,
-  VolumeX,
 } from "lucide-react-native";
-import { useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Platform, Pressable, Text, View } from "react-native";
 
 import { Input } from "@/components/design/ui/input";
 import { Screen } from "@/components/design/ui/screen";
 import { ScreenBottomBar } from "@/components/design/ui/screen-bottom-bar";
-import { env } from "@suwa/env/native";
 import { orpc } from "@/utils/orpc";
 
 export default function MaterialDetailScreen() {
@@ -32,22 +28,18 @@ export default function MaterialDetailScreen() {
   const id = Array.isArray(materialId) ? materialId[0] : materialId;
 
   const [commentText, setCommentText] = useState("");
-  const [paused, setPaused] = useState(true);
-  const [muted, setMuted] = useState(false);
-  const [fullscreen, setFullscreen] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const [videoLocalUri, setVideoLocalUri] = useState<string | null>(null);
   const videoRef = useRef<Video>(null);
   const userId = "patient-demo";
-
-  const videoUri = id
-    ? `${env.EXPO_PUBLIC_SERVER_URL}/materials/${id}/file`
-    : null;
 
   const materialsQuery = useQuery(
     orpc.listPublicMaterials.queryOptions({
       input: { page: 1, pageSize: 1 },
     })
   );
-  const material = (materialsQuery.data ?? []).find((m: any) => m.id === id);
+  const material = (materialsQuery.data ?? []).find((m) => m.id === id);
 
   const likeQuery = useQuery(
     orpc.getMaterialLikeStatus.queryOptions({
@@ -61,9 +53,60 @@ export default function MaterialDetailScreen() {
     })
   );
 
+  const fileQuery = useQuery(
+    orpc.getHubMaterialFile.queryOptions({
+      input: { id: id ?? "" },
+      enabled: !!id,
+    })
+  );
+
+  useEffect(() => {
+    if (!fileQuery.data) return;
+
+    const blob = fileQuery.data as Blob;
+
+    if (Platform.OS === "web") {
+      const url = URL.createObjectURL(blob);
+      setVideoLocalUri(url);
+      return () => URL.revokeObjectURL(url);
+    }
+
+    const writeFile = async () => {
+      const cacheFile = new FileSystem.File(
+        FileSystem.Paths.cache,
+        `material-${id}`
+      );
+      cacheFile.create({ overwrite: true });
+      const buffer = await blob.arrayBuffer();
+      cacheFile.write(new Uint8Array(buffer));
+      setVideoLocalUri(cacheFile.uri);
+    };
+
+    writeFile().catch(console.error);
+  }, [fileQuery.data, id]);
+
   const toggleLikeMutation = useMutation(
     orpc.toggleLikeMaterial.mutationOptions({
-      onSuccess: () => {
+      onMutate: async () => {
+        const queryKey = orpc.getMaterialLikeStatus.queryKey({
+          input: { materialId: id ?? "", userId },
+        });
+        await queryClient.cancelQueries({ queryKey });
+        const previous = queryClient.getQueryData(queryKey);
+        queryClient.setQueryData(queryKey, (old: any) => ({
+          liked: old ? !old.liked : true,
+        }));
+        return { previous };
+      },
+      onError: (_err, _vars, context) => {
+        const queryKey = orpc.getMaterialLikeStatus.queryKey({
+          input: { materialId: id ?? "", userId },
+        });
+        if (context?.previous !== undefined) {
+          queryClient.setQueryData(queryKey, context.previous);
+        }
+      },
+      onSettled: () => {
         queryClient.invalidateQueries({ queryKey: ["getMaterialLikeStatus"] });
       },
     })
@@ -101,50 +144,17 @@ export default function MaterialDetailScreen() {
         scrollClassName="flex-1 bg-background"
       >
         {/* Video Player */}
-        <View className="overflow-hidden rounded-2xl bg-black">
-          {videoUri ? (
-            <>
-              <Video
-                className="aspect-video w-full"
-                isMuted={muted}
-                ref={videoRef}
-                resizeMode={ResizeMode.CONTAIN}
-                shouldPlay={!paused}
-                source={{ uri: videoUri }}
-                useNativeControls={false}
-              />
-              <View className="absolute inset-0" />
-              {/* Controls overlay */}
-              <View className="absolute inset-x-0 bottom-0 flex-row items-center gap-4 bg-gradient-to-t from-black/70 to-transparent px-4 pt-12 pb-3">
-                <Pressable onPress={() => setPaused(!paused)}>
-                  {paused ? (
-                    <Play className="text-white" fill="white" size={24} />
-                  ) : (
-                    <Pause className="text-white" fill="white" size={24} />
-                  )}
-                </Pressable>
-                <Pressable onPress={() => setMuted(!muted)}>
-                  {muted ? (
-                    <VolumeX className="text-white" size={24} />
-                  ) : (
-                    <Volume2 className="text-white" size={24} />
-                  )}
-                </Pressable>
-                <View className="flex-1" />
-                <Pressable
-                  onPress={() => {
-                    setFullscreen(!fullscreen);
-                    videoRef.current?.presentFullscreenPlayer();
-                  }}
-                >
-                  {fullscreen ? (
-                    <Minimize className="text-white" size={24} />
-                  ) : (
-                    <Maximize className="text-white" size={24} />
-                  )}
-                </Pressable>
-              </View>
-            </>
+        <View className="overflow-hidden rounded-2xl bg-black min-h-64">
+          {videoLocalUri ? (
+            <Video
+              className="aspect-video w-full"
+              isMuted={muted}
+              ref={videoRef}
+              resizeMode={ResizeMode.CONTAIN}
+              shouldPlay={!paused}
+              source={{ uri: videoLocalUri }}
+              useNativeControls={false}
+            />
           ) : (
             <View className="aspect-video items-center justify-center bg-background-subtle">
               <Text className="font-serif text-foreground-muted text-title">
@@ -172,41 +182,6 @@ export default function MaterialDetailScreen() {
             {material.description}
           </Text>
         )}
-
-        {/* Like / Dislike */}
-        <View className="flex-row items-center gap-lg">
-          <Pressable
-            className="flex-row items-center gap-2 rounded-full border border-border px-4 py-2"
-            onPress={() =>
-              toggleLikeMutation.mutate({
-                materialId: id ?? "",
-                userId,
-              })
-            }
-          >
-            <ThumbsUp
-              className={
-                isLiked ? "fill-rose-500 text-rose-500" : "text-foreground"
-              }
-              size={20}
-            />
-            <Text className="font-sans text-caption text-foreground">Like</Text>
-          </Pressable>
-          <Pressable
-            className="flex-row items-center gap-2 rounded-full border border-border px-4 py-2"
-            onPress={() =>
-              toggleLikeMutation.mutate({
-                materialId: id ?? "",
-                userId,
-              })
-            }
-          >
-            <ThumbsDown className="text-foreground" size={20} />
-            <Text className="font-sans text-caption text-foreground">
-              Dislike
-            </Text>
-          </Pressable>
-        </View>
 
         {/* Comments Header */}
         <View className="flex-row items-center gap-sm">
@@ -265,6 +240,46 @@ export default function MaterialDetailScreen() {
       </Screen>
 
       <ScreenBottomBar
+        leftActions={[
+          {
+            className: "rounded-full bg-background-subtle/60",
+            icon: paused ? (
+              <Play className="text-foreground" size={20} />
+            ) : (
+              <Pause className="text-foreground" size={20} />
+            ),
+            label: paused ? "Play" : "Pause",
+            onPress: () => setPaused(!paused),
+          },
+          {
+            active: isLiked,
+            activeClassName: "rounded-full bg-rose-600/70 backdrop-blur-md",
+            icon: (
+              <ThumbsUp
+                className={
+                  isLiked ? "fill-white text-white" : "text-foreground"
+                }
+                size={20}
+              />
+            ),
+            label: isLiked ? "Liked" : "Like",
+            onPress: () =>
+              toggleLikeMutation.mutate({
+                materialId: id ?? "",
+                userId,
+              }),
+          },
+          {
+            className: "rounded-full bg-background-subtle/60",
+            icon: <ThumbsDown className="text-foreground" size={20} />,
+            label: "Dislike",
+            onPress: () =>
+              toggleLikeMutation.mutate({
+                materialId: id ?? "",
+                userId,
+              }),
+          },
+        ]}
         returnAction={{
           href: "/(patient)",
           icon: <ArrowLeft className="text-foreground" size={24} />,

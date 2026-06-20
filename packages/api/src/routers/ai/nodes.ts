@@ -13,18 +13,16 @@ export interface AgentConfig {
 
 export function createCoordinatorNode(config: AgentConfig) {
   return async (state: GraphState) => {
-    config.llm.bindTools([config.tools.transferToAgent]);
-    const result = await config.llm.invoke([
+    const llm = config.llm.bindTools([config.tools.transferToAgent]);
+    const result = await llm.invoke([
       new SystemMessage(config.systemPrompts.coordinator!),
       ...state.messages,
     ]);
-    const tc = (result as Record<string, unknown>).tool_calls as
-      | Array<{ name: string; args: Record<string, unknown> }>
-      | undefined;
+    const tc = (result as unknown as { tool_calls?: Array<{ name: string; args: Record<string, unknown> }> }).tool_calls;
     const transfer = tc?.find((t) => t.name === "transfer_to_agent");
     const agent =
       typeof transfer?.args?.agent === "string" &&
-      ["db", "general"].includes(transfer.args.agent)
+      transfer.args.agent === "db"
         ? transfer.args.agent
         : "coordinator";
     return { messages: [result], activeAgent: agent };
@@ -48,25 +46,11 @@ export function createDbAgentNode(config: AgentConfig) {
   };
 }
 
-export function createGeneralAgentNode(config: AgentConfig) {
-  return async (state: GraphState) => {
-    const tools = [
-      config.tools.getWellnessInfo,
-      config.tools.getStressTips,
-    ].filter(Boolean);
-    const llm = tools.length > 0 ? config.llm.bindTools(tools) : config.llm;
-    const result = await llm.invoke([
-      new SystemMessage(config.systemPrompts.general!),
-      ...state.messages,
-    ]);
-    return { messages: [result] };
-  };
-}
-
 export function createRouter(_config: AgentConfig) {
   return (state: GraphState) => {
     const last = state.messages[state.messages.length - 1] as BaseMessage & {
       tool_calls?: Array<{ name: string; args: Record<string, unknown> }>;
+      content?: string;
     };
     const calls = last?.tool_calls ?? [];
     if (calls.length === 0) {
@@ -75,10 +59,14 @@ export function createRouter(_config: AgentConfig) {
     const transfer = calls.find((tc) => tc.name === "transfer_to_agent");
     if (transfer) {
       const agent = transfer.args.agent;
-      if (typeof agent === "string" && ["db", "general"].includes(agent)) {
-        return agent;
+      if (typeof agent === "string" && agent === "db") {
+        const userMsg = (state.messages[0]?.content as string)?.toLowerCase() ?? "";
+        const needsDoctor = /doctor|appointment|book|schedule|availability|clinic|search find|profile|specialist/i.test(userMsg);
+        if (needsDoctor) {
+          return agent;
+        }
       }
     }
-    return "tools";
+    return "__end__";
   };
 }

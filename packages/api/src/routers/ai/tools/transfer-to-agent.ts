@@ -10,7 +10,7 @@ export function createTransferToAgentTool(_context: ClerkRequestContext) {
       name: "transfer_to_agent",
       description: "Transfer to a specialized agent",
       schema: z.object({
-        agent: z.enum(["db", "general"]).describe("Agent to transfer to"),
+        agent: z.enum(["db"]).describe("Agent to transfer to"),
       }),
     }
   );

@@ -1,25 +1,87 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { Image } from "expo-image";
 import { Stack, useRouter } from "expo-router";
 import { ArrowLeft, Film, Search } from "lucide-react-native";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 
 import { Input } from "@/components/design/ui/input";
 import { ScreenBottomBar } from "@/components/design/ui/screen-bottom-bar";
+import { useMaterialThumbnail } from "@/utils/material-thumbnail";
 import { orpc } from "@/utils/orpc";
 
-export default function MaterialsScreen() {
+function MaterialCard({ item }: { item: any }) {
   const router = useRouter();
+  const { uri, loading } = useMaterialThumbnail(item.id);
+
+  return (
+    <Pressable
+      className="rounded-2xl border border-border p-md"
+      onPress={() =>
+        router.push({
+          pathname: "/(patient)/materials/[materialId]",
+          params: { materialId: item.id },
+        })
+      }
+    >
+      <View className="h-36 items-center justify-center overflow-hidden rounded-xl bg-black">
+        {uri ? (
+          <Image
+            className="h-full w-full"
+            contentFit="cover"
+            source={{ uri }}
+            transition={200}
+          />
+        ) : (
+          <View className="h-full w-full items-center justify-center bg-background-subtle">
+            <Film
+              className={
+                loading
+                  ? "text-primary animate-pulse"
+                  : "text-foreground-muted"
+              }
+              size={32}
+            />
+          </View>
+        )}
+      </View>
+      <View className="mt-3 gap-1">
+        <Text className="font-sans text-body text-primary" numberOfLines={1}>
+          {item.title}
+        </Text>
+        {item.doctorName && (
+          <Text className="font-sans text-caption text-foreground-muted">
+            {item.doctorName}
+          </Text>
+        )}
+        {item.description && (
+          <Text
+            className="font-sans text-caption text-foreground-secondary"
+            numberOfLines={2}
+          >
+            {item.description}
+          </Text>
+        )}
+      </View>
+    </Pressable>
+  );
+}
+
+export default function MaterialsScreen() {
   const [search, setSearch] = useState("");
 
   const { data: materials, isLoading } = useQuery(
     orpc.listPublicMaterials.queryOptions({ input: { page: 1, pageSize: 50 } })
   );
 
-  const filtered = (materials ?? []).filter((m: any) =>
-    search ? m.title.toLowerCase().includes(search.toLowerCase()) : true
+  const filtered = useMemo(
+    () =>
+      (materials ?? []).filter((m: any) =>
+        search ? m.title.toLowerCase().includes(search.toLowerCase()) : true
+      ),
+    [materials, search]
   );
 
   return (
@@ -62,42 +124,7 @@ export default function MaterialsScreen() {
                 </Text>
               </View>
             }
-            renderItem={({ item }: { item: any }) => (
-              <Pressable
-                className="rounded-2xl border border-border p-md"
-                onPress={() =>
-                  router.push({
-                    pathname: "/(patient)/materials/[materialId]",
-                    params: { materialId: item.id },
-                  })
-                }
-              >
-                <View className="h-36 items-center justify-center rounded-xl bg-background-subtle">
-                  <Film className="text-foreground-muted" size={32} />
-                </View>
-                <View className="mt-3 gap-1">
-                  <Text
-                    className="font-sans text-body text-primary"
-                    numberOfLines={1}
-                  >
-                    {item.title}
-                  </Text>
-                  {item.doctorName && (
-                    <Text className="font-sans text-caption text-foreground-muted">
-                      {item.doctorName}
-                    </Text>
-                  )}
-                  {item.description && (
-                    <Text
-                      className="font-sans text-caption text-foreground-secondary"
-                      numberOfLines={2}
-                    >
-                      {item.description}
-                    </Text>
-                  )}
-                </View>
-              </Pressable>
-            )}
+            renderItem={({ item }) => <MaterialCard item={item} />}
           />
         )}
       </View>

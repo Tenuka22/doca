@@ -10,22 +10,13 @@ import { CloudflareChatModel } from "./cloudflare-chat-model";
 import {
   createCoordinatorNode,
   createDbAgentNode,
-  createGeneralAgentNode,
   createRouter,
 } from "./nodes";
 import { createAiTools } from "./tools";
 
 const PROMPTS: Record<string, string> = {
-  coordinator: `You are a medical assistant coordinator. Route user queries to the right agent.
-
-Agents:
-- db: Doctor search, profiles, appointments, availability
-- general: Wellness tips, stress management, general Q&A
-
-Use transfer_to_agent tool to route. For simple greetings, answer directly.`,
+  coordinator: `You are a friendly, conversational medical assistant. Your ONLY tool is transfer_to_agent — use it ONLY when the user explicitly asks to find a doctor, book an appointment, check a doctor's availability, or view a doctor profile. For ANY other query — greetings, feelings, loneliness, health advice, general questions, or just chatting — respond conversationally and NEVER call transfer_to_agent.`,
   db: "You are a database assistant. Help users find doctors, view profiles, check availability, and manage appointments. Use your tools to query information.",
-  general:
-    "You are a wellness assistant. Provide helpful tips on stress management, wellness activities, and general health advice. Be supportive and encouraging.",
 };
 
 const GraphAnnotation = Annotation.Root({
@@ -49,11 +40,10 @@ function createAgentRouter() {
 
 function createToolsRouter() {
   return (state: GraphState) => {
-    const agent = state.activeAgent as string;
-    if (agent === "db" || agent === "general") {
-      return agent;
+    if (state.activeAgent === "db") {
+      return "db";
     }
-    return "__end__";
+    return "coordinator";
   };
 }
 
@@ -75,12 +65,10 @@ export function createGraph(ctx: ClerkRequestContext) {
   return new StateGraph(GraphAnnotation)
     .addNode("coordinator", createCoordinatorNode(config))
     .addNode("db", createDbAgentNode(config))
-    .addNode("general", createGeneralAgentNode(config))
     .addNode("tools", toolNode)
     .addEdge("__start__", "coordinator")
     .addConditionalEdges("coordinator", createRouter(config))
     .addConditionalEdges("db", createAgentRouter())
-    .addConditionalEdges("general", createAgentRouter())
     .addConditionalEdges("tools", createToolsRouter())
     .compile();
 }
@@ -103,6 +91,7 @@ export async function* runAgentStream(
   const graph = createGraph(ctx);
   let lastContent = "";
   let agent = "coordinator";
+  let prevAgent = "";
 
   try {
     const stream = await graph.stream({
@@ -122,6 +111,14 @@ export async function* runAgentStream(
         ]
       >) {
         agent = node;
+        if (node !== "tools" && agent !== prevAgent && prevAgent !== "") {
+          yield {
+            event: "message.start",
+            data: { agent: node },
+          };
+          lastContent = "";
+        }
+        prevAgent = agent;
         const msgs = data?.messages ?? [];
         for (const msg of msgs) {
           if (msg.tool_calls?.length) {
@@ -132,6 +129,7 @@ export async function* runAgentStream(
               };
             }
           }
+          if (node === "tools") continue;
           const content = typeof msg.content === "string" ? msg.content : "";
           if (content && content !== lastContent) {
             const delta = content.slice(lastContent.length);
