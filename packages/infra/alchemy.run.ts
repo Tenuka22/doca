@@ -7,7 +7,6 @@ import {
   Website,
   Worker,
 } from "alchemy/cloudflare";
-import { CloudflareStateStore } from "alchemy/state";
 // import { UpstashRedis } from "alchemy/upstash";
 import { config } from "dotenv";
 
@@ -21,10 +20,6 @@ if (process.env.NODE_ENV === "production") {
   config({ path: "../../apps/server/.env" });
   config({ path: "../../apps/web/.env" });
 }
-
-const app = await alchemy("suwa", {
-  stateStore: (scope) => new CloudflareStateStore(scope),
-});
 
 const db = await D1Database("primary-database", {
   migrationsDir: "../../packages/db/src/migrations",
