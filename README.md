@@ -1,122 +1,182 @@
-# Suwa
+# Doca (ZenDoc / Suwa)
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, TanStack Start, Hono, ORPC, and more.
+**Doca** (product name **ZenDoc**, internal monorepo name **Suwa**) is a privacy-first mental health and telehealth platform connecting patients anonymously with licensed doctors and therapists. Built as a polyglot monorepo using Turborepo + Bun.
+
+## Surfaces
+
+| Surface | Tech | Audience |
+|---------|------|----------|
+| **Mobile** | Expo + React Native + Expo Router | Patients (self and guardian modes) |
+| **Web** | TanStack Start + React + TanStack Router | Doctors and admins |
+| **API** | Hono v4 + oRPC (Cloudflare Workers) | Backend services |
 
 ## Features
 
-- **TypeScript** - For type safety and improved developer experience
-- **TanStack Start** - SSR framework with TanStack Router
-- **React Native** - Build mobile apps using React
-- **Expo** - Tools for React Native development
-- **TailwindCSS** - Utility-first CSS for rapid UI development
-- **Shared UI package** - shadcn/ui primitives live in `packages/ui`
-- **Hono** - Lightweight, performant server framework
-- **oRPC** - End-to-end type-safe APIs with OpenAPI integration
-- **workers** - Runtime environment
-- **Drizzle** - TypeScript-first ORM
-- **SQLite/Turso** - Database engine
-- **Authentication** - Clerk
-- **Turborepo** - Optimized monorepo build system
+### Patient (Mobile)
+- **Onboarding** – Mode selection (self / guardian), alias setup
+- **Wellness Activities** – Breathing, yoga, grounding, journaling, body scan
+- **Doctor Discovery** – Browse anonymized doctor profiles
+- **Plan-Based Booking** – Trial access + subscription booking with session redemption
+- **Smartwatch Integration** – Health telemetry ingestion for monitoring
+- **Crisis Safety System** – Real-time risk detection → low/medium/high escalation with doctor/guardian/emergency routing
+- **Profile Management** – Alias-based identity, guardian linkage
 
-## Getting Started
+### Doctor (Web)
+- **Dashboard** – Appointment queue, session management, history
+- **Schedule Management** – Open/block/session interval arithmetic with overlap detection
+- **Patient Records** – Alias-based lookup
+- **Crisis Review** – Alert workflow and escalation audit
+- **Profile & Credentials** – R2-hosted media (portraits, qualifications, videos)
 
-First, install the dependencies:
+### Admin (Web)
+- **User & Doctor Administration** – Approval, moderation
+- **Consent & Audit Review** – Compliance oversight
+- **Crisis Event Review** – Escalation monitoring
+- **Platform Configuration** – Operational controls, plan oversight
 
-```bash
-bun install
-```
+### AI / ML Services
+- **Stress Predictor Service** – FastAPI + TensorFlow risk scoring
+- **Model Trainer** – scikit-learn / TensorFlow pipeline with Kaggle datasets
+- **Map Scraper** – Python data ingestion via Scrapling
+- **YouTube Suggestion Scraper** – Content scraping via yt-dlp
 
-## Database Setup
+## Tech Stack
 
-This project uses SQLite with Drizzle ORM.
-
-1. Start the local SQLite database (optional):
-   D1 local development and migrations are handled automatically by Alchemy during dev and deploy.
-
-2. Update your `.env` file in the `apps/server` directory with the appropriate connection details if needed.
-
-3. Apply the schema to your database:
-
-```bash
-bun run db:push
-```
-
-## Clerk Authentication Setup
-
-- Follow the guide: [Clerk Quickstart](https://clerk.com/docs/tanstack-react-start/getting-started/quickstart)
-- Set `VITE_CLERK_PUBLISHABLE_KEY` in `apps/web/.env`
-- Set `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` in `apps/native/.env`
-- Set `CLERK_SECRET_KEY` in `apps/web/.env` for Clerk server middleware
-- Set `CLERK_SECRET_KEY` in `apps/server/.env` for server-side Clerk auth
-- Set `CLERK_PUBLISHABLE_KEY` in `apps/server/.env` for server-side Clerk request verification
-
-Then, run the development server:
-
-```bash
-bun run dev
-```
-
-Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
-Use the Expo Go app to run the mobile application.
-The API is running at [http://localhost:3000](http://localhost:3000).
-
-## UI Customization
-
-React web apps in this stack share shadcn/ui primitives through `packages/ui`.
-
-- Change design tokens and global styles in `packages/ui/src/styles/globals.css`
-- Update shared primitives in `packages/ui/src/components/*`
-- Adjust shadcn aliases or style config in `packages/ui/components.json` and `apps/web/components.json`
-
-### Add more shared components
-
-Run this from the project root to add more primitives to the shared UI package:
-
-```bash
-npx shadcn@latest add accordion dialog popover sheet table -c packages/ui
-```
-
-Import shared components like this:
-
-```tsx
-import { Button } from "@suwa/ui/components/button";
-```
-
-### Add app-specific blocks
-
-If you want to add app-specific blocks instead of shared primitives, run the shadcn CLI from `apps/web`.
-
-## Deployment (Cloudflare via Alchemy)
-
-- Target: server
-- Dev: bun run dev
-- Deploy: bun run deploy
-- Destroy: bun run destroy
-
-For more details, see the guide on [Deploying to Cloudflare with Alchemy](https://www.better-t-stack.dev/docs/guides/cloudflare-alchemy).
+| Layer | Technology |
+|-------|-----------|
+| **Web Framework** | TanStack Start + Vite |
+| **Mobile** | Expo SDK 55 + Expo Router |
+| **Styling (web)** | Tailwind CSS v4 + shadcn/ui (base-lyra) |
+| **Styling (mobile)** | NativeWind v5 (neo-brutalist) |
+| **Server** | Hono v4 (Cloudflare Workers) |
+| **API Layer** | oRPC (end-to-end type-safe RPC with OpenAPI) |
+| **Database** | Drizzle ORM + SQLite / Turso / Cloudflare D1 |
+| **Auth** | Clerk (`@clerk/tanstack-react-start` + `@clerk/expo`) |
+| **Payments** | Stripe Connect ($50/session doctor payouts) |
+| **State** | TanStack React Query v5 |
+| **Charts** | Recharts v3 |
+| **Maps** | MapLibre GL + `@vis.gl/react-maplibre` |
+| **Video Calls** | LiveKit |
+| **Forms** | React Hook Form + Zod |
+| **Notifications** | Sonner (web) |
+| **Icons** | Lucide React / Lucide React Native |
+| **Dates** | date-fns v4 |
+| **ML / Data** | Python 3.12, TensorFlow, scikit-learn, FastAPI (uv-managed) |
+| **Infrastructure** | Cloudflare (Workers, D1, R2, KV, AI) via Alchemy |
 
 ## Project Structure
 
 ```
-suwa/
-+-- apps/
-�   +-- web/         # Frontend application (React + TanStack Start)
-�   +-- native/      # Mobile application (React Native, Expo)
-�   +-- server/      # Backend API (Hono, ORPC)
-+-- packages/
-�   +-- ui/          # Shared shadcn/ui components and styles
-�   +-- api/         # API layer / business logic
-�   +-- db/          # Database schema & queries
+doca/
+├── apps/
+│   ├── web/                         # Web app (doctors + admin)
+│   ├── native/                      # Mobile app (patients)
+│   ├── server/                      # API server (Hono + oRPC)
+│   ├── stress-predictor-service/    # FastAPI stress risk scorer
+│   ├── model-trainer/               # ML model training pipeline
+│   ├── map-scraper/                 # Map data ingestion
+│   └── youtube-suggestion-scraper/  # YouTube content scraper
+├── packages/
+│   ├── api/          # Shared oRPC routers & contracts
+│   ├── db/           # Drizzle schema, migrations, queries
+│   ├── ui/           # 55+ shadcn/ui components (@base-ui/react)
+│   ├── env/          # Type-safe env vars per runtime
+│   ├── infra/        # Alchemy Cloudflare deployment
+│   ├── config/       # Shared TS & tooling config
+│   ├── app-info/     # App metadata
+│   └── crypto/       # Crypto & security utilities
+├── knowledge-base/   # Obsidian product documentation
+├── turbo.json
+├── biome.jsonc       # Ultracite / Biome linting
+└── package.json
 ```
 
-## Available Scripts
+## API Design (oRPC)
 
-- `bun run dev`: Start all applications in development mode
-- `bun run build`: Build all applications
-- `bun run dev:web`: Start only the web application
-- `bun run dev:server`: Start only the server
-- `bun run check-types`: Check TypeScript types across all apps
-- `bun run dev:native`: Start the React Native/Expo development server
-- `bun run db:push`: Push schema changes to database
-- `bun run db:generate`: Generate database client/types
+| Router | File | Auth | Purpose |
+|--------|------|------|---------|
+| `publicRouter` | `public.ts` | Mixed | Health check, doctor discovery |
+| `doctorRouter` | `doctor.ts` | Protected | Doctor profile, schedule management |
+| `patientRouter` | `patient.ts` | Protected | Onboarding, guardian management |
+| `adminRouter` | `admin.ts` | Admin role | Doctor approval, oversight |
+| `bookingRouter` | `booking.ts` | Protected | Session booking, Stripe Connect |
+| `doctorFilesRouter` | `doctor-files.ts` | Mixed | File CRUD with R2 |
 
+## Database (Drizzle + SQLite)
+
+| Table | Key | Description |
+|-------|-----|-------------|
+| `doctor_profiles` | `userId` | Doctor profile with JSON string arrays |
+| `doctor_sessions` | `id` | Booking sessions with status/payout tracking |
+| `doctor_files` | `id` | Media files (portraits, qualifications, videos) |
+| `doctor_schedule_entries` | `id` | Schedule blocks (open/block/session) |
+| `doctor_education_entries` | `id` | Education history |
+| `patient_profiles` | `userId` | Alias profiles with guardian linkage |
+| `guardian_profiles` | `userId` | Guardian contact info |
+
+## Getting Started
+
+```bash
+# Install dependencies
+bun install
+
+# Set up database
+bun run db:push
+
+# Start development
+bun run dev
+```
+
+### Environment Variables
+
+| File | Variables |
+|------|-----------|
+| `apps/web/.env` | `VITE_SERVER_URL`, `VITE_WEB_URL`, `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_STRIPE_PUBLISHABLE_KEY` |
+| `apps/native/.env` | `EXPO_PUBLIC_SERVER_URL`, `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` |
+| `apps/server/.env` | `CLERK_SECRET_KEY`, `STRIPE_SECRET_KEY`, `CORS_ORIGIN` |
+| `packages/infra/.env` | Deployment secrets |
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `bun run dev` | Start all apps in dev mode |
+| `bun run dev:web` | Web app only |
+| `bun run dev:native` | Mobile app only |
+| `bun run dev:server` | API server only |
+| `bun run dev:stress` | Stress predictor service |
+| `bun run build` | Build all apps |
+| `bun run check-types` | TypeScript type checking |
+| `bun run db:push` | Push Drizzle schema to DB |
+| `bun run db:generate` | Generate Drizzle migrations |
+| `bun run stripe:listen` | Listen for Stripe webhooks |
+| `bun run deploy` | Deploy to Cloudflare via Alchemy |
+| `bun run destroy` | Tear down Cloudflare resources |
+| `bun x ultracite check` | Lint & format check |
+| `bun x ultracite fix` | Auto-fix lint & format |
+
+## Deployment
+
+Infrastructure is managed as code via [Alchemy](https://alchemy.run/) (`packages/infra/`). Targets Cloudflare Workers with D1 database, R2 storage, KV namespaces, and AI bindings.
+
+```bash
+bun run deploy   # Deploy server + web
+bun run destroy  # Teardown
+```
+
+## Design System
+
+- **Mobile**: Neo-brutalist – thick black borders, offset shadows, red (#a22a2a)/black/white palette, Satoshi font, bold outlined icons
+- **Web**: Clean dashboard – OKLCH color tokens, Figtree font, dense layouts optimized for laptop/tablet
+
+## Auth & Roles
+
+Clerk-powered with `publicMetadata.role` — `user`, `doctor`, `admin`, `pending-doctor`. Token bridge component injects Clerk session into oRPC client headers. Protected procedures enforce auth via `requireAuth` middleware.
+
+## Product Rules
+
+- Users are anonymous by default (alias-based identity)
+- Mobile is patients only; doctors use web
+- Doctor onboarding on web; patient onboarding on mobile
+- Crisis handling is conservative, fast, and auditable
+- `user_id` is the Clerk user ID — primary key to prevent duplicates
