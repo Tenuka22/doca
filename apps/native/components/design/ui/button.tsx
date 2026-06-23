@@ -1,7 +1,7 @@
 "use client";
 
 import { ImpactFeedbackStyle, impactAsync } from "expo-haptics";
-import { router, type Href } from "expo-router";
+import { type Href, router } from "expo-router";
 import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, {

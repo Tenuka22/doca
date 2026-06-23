@@ -18,7 +18,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { Participant } from "livekit-client";
 import {
-  ChevronLeft,
   Loader2,
   ShieldCheck as ShieldCheckIcon,
   Users as UsersIcon,

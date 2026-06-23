@@ -12,15 +12,19 @@ import {
   VideoOff,
 } from "lucide-react-native";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import { Button } from "@/components/design/ui/button";
-import { Input } from "@/components/design/ui/input";
-import { Screen } from "@/components/design/ui/screen";
-import { ToggleGroup } from "@/components/design/ui/toggle-group";
+import {
+  ActivityIndicator,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { useLiveKitRoom } from "@/hooks/use-livekit-room";
 import { orpc } from "@/utils/orpc";
 
 type Role = "patient" | "doctor" | "admin";
+
+const ROLE_OPTIONS: Role[] = ["patient", "doctor", "admin"];
 
 function TestVideoRoom({
   lk,
@@ -34,9 +38,9 @@ function TestVideoRoom({
   onDisconnect: () => void;
 }) {
   return (
-    <View className="flex-1 bg-background">
+    <View className="min-h-full flex-1 justify-between px-7 pt-8 pb-6">
       <Stack.Screen options={{ headerShown: false }} />
-      <View className="flex-1">
+      <View className="flex-1 gap-xxl bg-background px-lg pt-12">
         <View className="flex-1 items-center justify-center bg-foreground/5">
           {lk.remoteParticipants.length > 0 ? (
             <View className="w-full flex-1 gap-2 p-4">
@@ -92,7 +96,7 @@ function TestVideoRoom({
         ) : null}
 
         <View className="gap-4 border-border/50 border-t bg-background-elevated px-6 py-6">
-          <View className="items-center gap-1">
+          <View className="size-full items-center gap-1">
             <Text className="font-poppins-medium text-foreground-muted text-sm">
               {lk.isConnecting
                 ? "Connecting..."
@@ -211,17 +215,17 @@ export default function TestSessionsScreen() {
   return (
     <View className="flex-1 bg-background">
       <Stack.Screen options={{ headerShown: false }} />
-      <Screen contentClassName="gap-6 px-6 py-8">
+      <View className="flex-1 gap-6 px-6 py-8">
         {/* Header */}
         <View className="items-center gap-4 pt-4">
           <View className="rounded-full bg-accent/10 p-4">
             <Shield className="text-accent" size={28} />
           </View>
-          <View className="items-center gap-1">
+          <View className="items-center gap-1 size-full">
             <Text className="font-serif text-2xl text-primary">
               Test Sessions
             </Text>
-            <Text className="max-w-xs text-center font-sans text-foreground-muted text-sm">
+            <Text className="text-center font-sans text-foreground-muted text-sm leading-normal">
               Generate or enter a session ID to test 2-way video calling.
             </Text>
           </View>
@@ -232,78 +236,96 @@ export default function TestSessionsScreen() {
           <Text className="font-poppins-medium text-caption text-foreground-muted uppercase tracking-widest">
             Join as
           </Text>
-          <ToggleGroup
-            items={[
-              { label: "Patient", value: "patient" },
-              { label: "Doctor", value: "doctor" },
-              { label: "Admin", value: "admin" },
-            ]}
-            onValueChange={setSelectedRole}
-            value={selectedRole}
-          />
-        </View>
-
-        {/* Generate session */}
-        <View className="gap-3">
-          <Text className="font-poppins-medium text-caption text-foreground-muted uppercase tracking-widest">
-            Generate session
-          </Text>
-          <Button
-            disabled={createSession.isPending}
-            onPress={() => createSession.mutate()}
-          >
-            {createSession.isPending ? "Creating..." : "Generate Session ID"}
-          </Button>
-          {generatedSessionId ? (
-            <View className="flex-row items-center gap-2 rounded-2xl border border-border/70 bg-background-elevated px-4 py-3">
-              <Text className="flex-1 break-all font-mono text-foreground text-xs">
-                {generatedSessionId}
-              </Text>
+          <View className="flex-row gap-2">
+            {ROLE_OPTIONS.map((role) => (
               <Pressable
-                className="rounded-full bg-foreground/5 p-2"
-                onPress={handleCopy}
+                className={`flex-1 rounded-full border px-4 py-3 ${selectedRole === role ? "border-primary bg-primary" : "border-border bg-background-elevated"}`}
+                key={role}
+                onPress={() => setSelectedRole(role)}
               >
-                <Copy className="text-foreground-muted" size={16} />
-              </Pressable>
-              {copied ? (
-                <Text className="font-poppins-medium text-emerald-600 text-xs">
-                  Copied!
+                <Text
+                  className={`text-center font-poppins-medium text-sm capitalize ${selectedRole === role ? "text-primary-foreground" : "text-foreground-muted"}`}
+                >
+                  {role}
                 </Text>
-              ) : null}
-            </View>
-          ) : null}
-        </View>
-
-        {/* Join session */}
-        <View className="gap-3">
-          <Text className="font-poppins-medium text-caption text-foreground-muted uppercase tracking-widest">
-            Join session
-          </Text>
-          <Input
-            onChangeText={setSessionId}
-            placeholder="Paste or type session ID..."
-            value={sessionId}
-          />
-          <View className="gap-2">
-            <Button
-              disabled={!sessionId || lk.isConnecting}
-              onPress={handleJoin}
-            >
-              {lk.isConnecting ? (
-                <ActivityIndicator
-                  className="text-primary-foreground"
-                  size="small"
-                />
-              ) : (
-                `Join as ${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}`
-              )}
-            </Button>
-            <Button onPress={handleMockSimulation} variant="secondary">
-              Mock Simulation (Save Credits)
-            </Button>
+              </Pressable>
+            ))}
           </View>
         </View>
-      </Screen>
+
+        {/* Generate + Join side by side on wider screens */}
+        <View className="gap-6 md:flex-row md:gap-6">
+          {/* Generate session */}
+          <View className="gap-3 md:flex-1">
+            <Text className="font-poppins-medium text-caption text-foreground-muted uppercase tracking-widest">
+              Generate session
+            </Text>
+            <Pressable
+              className={`items-center rounded-full px-6 py-4 ${createSession.isPending ? "bg-primary/60" : "bg-primary"}`}
+              disabled={createSession.isPending}
+              onPress={() => createSession.mutate({})}
+            >
+              <Text className="font-poppins-medium text-body text-primary-foreground">
+                {createSession.isPending ? "Creating..." : "Generate Session ID"}
+              </Text>
+            </Pressable>
+            {generatedSessionId ? (
+              <View className="flex-row items-center gap-2 rounded-2xl border border-border/70 bg-background-elevated px-4 py-3">
+                <Text className="flex-1 break-all font-mono text-foreground text-xs">
+                  {generatedSessionId}
+                </Text>
+                <Pressable className="rounded-full bg-foreground/5 p-2" onPress={handleCopy}>
+                  <Copy className="text-foreground-muted" size={16} />
+                </Pressable>
+                {copied ? (
+                  <Text className="font-poppins-medium text-emerald-600 text-xs">
+                    Copied!
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
+          </View>
+
+          {/* Join session */}
+          <View className="gap-3 md:flex-1">
+            <Text className="font-poppins-medium text-caption text-foreground-muted uppercase tracking-widest">
+              Join session
+            </Text>
+            <View className="rounded-xl border-2 border-input bg-background-elevated px-4 py-4">
+              <TextInput
+                className="font-sans text-body text-foreground outline-none"
+                onChangeText={setSessionId}
+                placeholder="Paste or type session ID..."
+                placeholderTextColor="rgba(255,255,255,0.45)"
+                value={sessionId}
+              />
+            </View>
+            <View className="gap-2">
+              <Pressable
+                className={`items-center rounded-full px-6 py-4 ${!sessionId || lk.isConnecting ? "bg-primary/60" : "bg-primary"}`}
+                disabled={!sessionId || lk.isConnecting}
+                onPress={handleJoin}
+              >
+                {lk.isConnecting ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text className="font-poppins-medium text-body text-primary-foreground">
+                    {`Join as ${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}`}
+                  </Text>
+                )}
+              </Pressable>
+              <Pressable
+                className="items-center rounded-full border border-border bg-background-elevated px-6 py-4"
+                onPress={handleMockSimulation}
+              >
+                <Text className="font-poppins-medium text-body text-foreground">
+                  Mock Simulation (Save Credits)
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </View>
     </View>
   );
 }
