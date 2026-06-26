@@ -14,6 +14,25 @@ const config = defineConfig(({ command }) => ({
     ...(command === "build" ? [alchemy() as PluginOption] : []),
     tanstackStart(),
     viteReact(),
+    ...(command === "build"
+      ? [
+          {
+            name: "generate-seo-files",
+            buildStart() {
+              console.log("\n🗺️  Generating sitemap and robots...");
+              try {
+                execSync("bun scripts/generate-sitemap.ts", {
+                  stdio: "inherit",
+                });
+              } catch {
+                console.error(
+                  "⚠️  SEO file generation failed, continuing without it."
+                );
+              }
+            },
+          } satisfies PluginOption,
+        ]
+      : []),
     {
       name: "optimize-images",
       buildStart() {

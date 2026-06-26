@@ -16,9 +16,11 @@ function HomeRoute() {
   return (
     <div className="size-full flex-1">
       <header className="sticky top-0 z-50 border-border/40 border-b bg-background/20 backdrop-blur-xl">
-        <div className="flex h-16 items-center justify-between px-8">
-          <img className="size-12" src="/Logo.png" />
-          <nav className="hidden items-center gap-2 sm:flex">
+        <div className="grid h-16 grid-cols-3 items-center px-8">
+          <div className="flex justify-start">
+            <img className="size-12" src="/Logo.png" />
+          </div>
+          <nav className="hidden justify-center gap-2 sm:flex">
             {user.isLoaded && user.user && (
               <Button
                 onPress={() => navigate({ to: "/doctor", search: { page: 1 } })}
@@ -49,7 +51,7 @@ function HomeRoute() {
               </Button>
             )}
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-end gap-3">
             {user.isLoaded && user.user ? (
               <>
                 <span className="hidden text-muted-foreground text-sm sm:inline">

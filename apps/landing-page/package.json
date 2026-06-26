@@ -6,6 +6,7 @@
     "#/*": "./src/*"
   },
   "scripts": {
+    "generate-sitemap": "bun scripts/generate-sitemap.ts",
     "prebuild": "bun scripts/optimize-images.ts",
     "dev:bare": "vite dev --port 3000",
     "generate-routes": "tsr generate",
