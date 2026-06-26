@@ -7,8 +7,11 @@ import {
 import { QueryClientProvider } from "@tanstack/react-query";
 
 import { LenisProvider } from "../components/lenis-provider";
+import { SITE_NAME, resolveSiteUrl } from "../lib/seo";
 import { queryClient } from "../utils/orpc";
 import appCss from "../styles.css?url";
+
+const siteUrl = resolveSiteUrl(import.meta.env.VITE_WEB_URL);
 
 export const Route = createRootRoute({
   head: () => ({
@@ -20,14 +23,9 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Suwa — Anonymous health consultations, on your terms." },
-      {
-        name: "description",
-        content:
-          "Anonymous health consultations with licensed professionals and anonymity built in from the start.",
-      },
       { name: "theme-color", content: "#faf7f2" },
-      { property: "og:image", content: "/logo.png" },
+      { property: "og:site_name", content: SITE_NAME },
+      { property: "og:image", content: new URL("/logo.png", siteUrl).toString() },
     ],
   }),
   component: RootDocument,
