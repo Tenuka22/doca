@@ -62,16 +62,43 @@ function parseSchedule(schedule: string | null): string {
     return "";
   }
   try {
-    const parsed = JSON.parse(schedule) as ScheduleSlot[];
-    if (!Array.isArray(parsed)) {
-      return schedule;
+    const parsed = JSON.parse(schedule) as
+      | Record<string, string>
+      | ScheduleSlot[];
+
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map((s) => `${DAYS[s.dayOfWeek] ?? "?"} ${s.startTime}-${s.endTime}`)
+        .join(", ");
     }
-    return parsed
-      .map((s) => `${DAYS[s.dayOfWeek] ?? "?"} ${s.startTime}-${s.endTime}`)
-      .join(", ");
+
+    const labelMap: Record<string, string> = {
+      weekdays: "Weekdays",
+      monday: "Monday",
+      tuesday: "Tuesday",
+      wednesday: "Wednesday",
+      thursday: "Thursday",
+      friday: "Friday",
+      saturday: "Saturday",
+      sunday: "Sunday",
+    };
+
+    return Object.entries(parsed)
+      .filter(([, value]) => Boolean(value))
+      .map(([key, value]) => `${labelMap[key] ?? key}: ${value}`)
+      .join(" • ");
   } catch {
     return schedule;
   }
+}
+
+function formatCreatedAt(createdAt: string): string {
+  const date = new Date(createdAt);
+  return date.toLocaleDateString(undefined, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 export const Route = createFileRoute("/tenant/$tenantId/clinics/")({
@@ -331,20 +358,33 @@ function TenantClinicsPage() {
                 )}
               </CardHeader>
               <CardContent className="flex flex-1 flex-col gap-2">
-                {clinic.schedule && (
-                  <div className="flex items-start gap-1.5">
-                    <ClockIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-                    <p className="text-muted-foreground text-sm">
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline">
+                    <ClockIcon className="size-3" />
+                    Schedule
+                  </Badge>
+                  <Badge variant="secondary">Created {formatCreatedAt(clinic.createdAt)}</Badge>
+                </div>
+
+                {clinic.schedule ? (
+                  <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
+                    <div className="mb-2 flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wide">
+                      <ClockIcon className="size-3.5" />
+                      Hours
+                    </div>
+                    <p className="text-sm leading-relaxed text-foreground">
                       {parseSchedule(clinic.schedule)}
                     </p>
                   </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm">
+                    No schedule set yet.
+                  </p>
                 )}
-                <p className="text-muted-foreground text-xs">
-                  Created {new Date(clinic.createdAt).toLocaleDateString()}
-                </p>
+
                 <div className="mt-auto pt-3">
                   <Link
-                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-4 py-2 font-medium text-foreground text-xs hover:bg-muted"
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2 font-medium text-primary-foreground text-xs shadow-sm transition-colors hover:bg-primary/90"
                     params={{ tenantId, clinicId: clinic.id }}
                     to="/tenant/$tenantId/clinics/$clinicId/attendance"
                   >
