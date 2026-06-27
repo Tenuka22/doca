@@ -118,8 +118,10 @@ function MoodSlider({
     <View className="gap-md rounded-[28px] border border-border bg-background-elevated px-xl py-lg shadow-sm">
       <View className="flex-row items-end justify-between">
         <View>
-          <Text className="font-serif text-[24px] text-foreground">How are you feeling?</Text>
-          <Text className="font-sans text-caption text-foreground-muted">
+          <Text selectable={false} className="font-serif text-[24px] text-foreground">
+            How are you feeling?
+          </Text>
+          <Text selectable={false} className="font-sans text-caption text-foreground-muted">
             Slide to choose your mood for today
           </Text>
         </View>
@@ -360,6 +362,8 @@ export default function HomeScreen() {
     router.push({ pathname: "/(patient)/ai", params: { message } });
   };
 
+  const hasMessage = input.trim().length > 0;
+
   const toggleMic = () => {
     if (!speechSupported) {
       showToast({
@@ -439,15 +443,17 @@ export default function HomeScreen() {
                 <View className="shrink-0">
                   <VoiceOrb isListening={isListening} onPress={toggleMic} />
                 </View>
-                <Pressable
-                  accessibilityLabel="Search"
-                  hitSlop={8}
-                  onPress={handleSubmit}
-                >
-                  <View className="h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary">
-                    <ChevronRight color="#fffdf9" size={19} />
-                  </View>
-                </Pressable>
+                {hasMessage ? (
+                  <Pressable
+                    accessibilityLabel="Search"
+                    hitSlop={8}
+                    onPress={handleSubmit}
+                  >
+                    <View className="h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary">
+                      <ChevronRight color="#fffdf9" size={19} />
+                    </View>
+                  </Pressable>
+                ) : null}
               </View>
             }
             value={input}
