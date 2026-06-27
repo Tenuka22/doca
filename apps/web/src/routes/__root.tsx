@@ -73,7 +73,7 @@ function RootDocument() {
     >
       <ClerkApiAuthBridge />
       <TooltipProvider>
-        <html className="dark" lang="en">
+        <html className="light" lang="en">
           <head>
             <HeadContent />
           </head>
