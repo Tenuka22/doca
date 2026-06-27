@@ -18,7 +18,7 @@ export function Navbar() {
       <header>
         <nav
           aria-label="Main navigation"
-          className="page-shell grid h-[104px] grid-cols-2 xl:grid-cols-[1fr_auto_1fr] items-center max-xl:h-[86px] max-xl:justify-between"
+          className="page-shell grid h-[104px] grid-cols-2 items-center xl:grid-cols-[1fr_auto_1fr] max-xl:h-[86px] max-xl:justify-between max-sm:h-[72px]"
         >
           <div className="justify-self-start">
             <Wordmark aria-label="Suwa home" href="#top" />
@@ -38,7 +38,7 @@ export function Navbar() {
               </a>
             ))}
           </div>
-          <div className="flex items-center justify-end gap-[34px] justify-self-end whitespace-nowrap text-[13px]">
+          <div className="flex items-center justify-end gap-[34px] justify-self-end whitespace-nowrap text-[13px] max-sm:gap-[12px] max-sm:text-[12px]">
             <span className="flex items-center gap-[9px] max-xl:hidden">
               <ShieldCheck aria-hidden="true" size={19} strokeWidth={1.7} />
               Private by design

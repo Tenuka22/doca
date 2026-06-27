@@ -13,10 +13,10 @@ const heroProof = [
 export function Hero() {
   return (
     <section
-      className="grid h-[550px] grid-cols-[45.5%_54.5%] max-xl:h-auto max-xl:grid-cols-1"
+      className="relative grid h-[550px] grid-cols-[45.5%_54.5%] max-xl:h-auto max-xl:min-h-[760px] max-xl:grid-cols-1"
       id="top"
     >
-      <div className="relative z-[2] pt-[48px] pl-[28px] max-xl:px-[26px] max-xl:pt-[41px] xl:pl-[10px]">
+      <div className="relative z-[2] pt-[48px] pl-[28px] max-xl:px-[26px] max-xl:pt-[41px] xl:pl-[40px]">
         <span className="mb-[13px] block font-medium text-[11px] text-accent uppercase tracking-[0.12em] max-xl:text-[9px]">
           Private online care without stigma
         </span>
@@ -71,14 +71,15 @@ export function Hero() {
       </div>
       <div
         aria-hidden="true"
-        className="pointer-events-none relative z-[1] after:absolute after:inset-x-[-20px] after:bottom-[-5px] after:h-[48px] after:bg-gradient-to-b after:from-transparent after:to-background max-xl:h-[480px] max-xl:h-[360px]"
+        className="pointer-events-none relative z-[1] after:absolute after:inset-x-[-20px] after:bottom-[-5px] after:h-[48px] after:bg-gradient-to-b after:from-transparent after:to-background max-xl:absolute max-xl:inset-x-0 max-xl:top-[180px] max-xl:h-[580px] max-xl:overflow-hidden"
       >
         <OptimizedImage
           alt=""
           height={1024}
           priority
           src="/images/gen/suwa-hero-watercolor.png"
-          style={{ height: "100%", aspectRatio: undefined, opacity: 0.98 }}
+          className="max-xl:scale-[1.08] max-xl:opacity-60"
+          style={{ height: "100%", aspectRatio: undefined }}
           width={1536}
         />
       </div>
