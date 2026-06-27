@@ -12,11 +12,11 @@ export function SectionHeading({
   description,
 }: SectionHeadingProps) {
   return (
-    <div className="mx-auto mb-[47px] max-w-[620px] text-center">
+    <div className="mx-auto mb-[47px] max-w-[620px] px-[8px] text-center max-sm:mb-[32px]">
       <span className="block font-medium text-[12px] text-accent uppercase tracking-[0.12em]">
         {eyebrow}
       </span>
-      <h2 className="mt-[11px] mb-[13px] font-normal font-serif text-[clamp(38px,4vw,54px)] text-clamp leading-[1.08] tracking-[-0.04em]">
+      <h2 className="mt-[11px] mb-[13px] font-normal font-serif text-[clamp(38px,4vw,54px)] text-clamp leading-[1.08] tracking-[-0.04em] max-sm:text-[clamp(30px,9.5vw,36px)]">
         {title}
       </h2>
       {description ? (

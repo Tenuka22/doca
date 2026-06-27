@@ -8,7 +8,7 @@ interface H1Props {
 export function H1({ children, className = "" }: H1Props) {
   return (
     <h1
-      className={`font-normal font-serif text-[clamp(49px,3.75vw,58px)] leading-[1.03] tracking-[-0.04em] max-xl:text-[clamp(39px,11vw,53px)] xl:text-[49px] ${className}`}
+      className={`font-normal font-serif text-[clamp(49px,3.75vw,58px)] leading-[1.03] tracking-[-0.04em] max-xl:text-[clamp(39px,11vw,53px)] max-sm:text-[clamp(34px,12vw,40px)] xl:text-[49px] ${className}`}
     >
       {children}
     </h1>
@@ -23,7 +23,7 @@ interface H2Props {
 export function H2({ children, className = "" }: H2Props) {
   return (
     <h2
-      className={`font-normal font-serif text-[clamp(38px,3.6vw,52px)] leading-[1.08] tracking-[-0.04em] ${className}`}
+      className={`font-normal font-serif text-[clamp(38px,3.6vw,52px)] max-sm:text-[clamp(30px,9.5vw,36px)] leading-[1.08] tracking-[-0.04em] ${className}`}
     >
       {children}
     </h2>

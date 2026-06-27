@@ -9,6 +9,7 @@ import { HowItWorks } from "./sections/how-it-works";
 import { ProblemSolution } from "./sections/problem-solution";
 import { ProofBar } from "./sections/proof-bar";
 import { Services } from "./sections/services";
+import { Team } from "./sections/team";
 import { Testimonials } from "./sections/testimonials";
 import { TrustStrip } from "./sections/trust-strip";
 import { WaysToConnect } from "./sections/ways-to-connect";
@@ -48,11 +49,14 @@ export function LandingPage() {
         <Appear delay={0.48}>
           <Faq />
         </Appear>
-        <Appear delay={0.54}>
+        <Appear delay={0.52}>
+          <Team />
+        </Appear>
+        <Appear delay={0.58}>
           <ClosingCallout />
         </Appear>
       </main>
-      <Appear delay={0.6}>
+      <Appear delay={0.66}>
         <Footer />
       </Appear>
     </div>

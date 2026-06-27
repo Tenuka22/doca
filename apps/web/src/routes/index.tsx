@@ -1,8 +1,16 @@
 import { UserButton, useUser } from "@clerk/tanstack-react-start";
-import { Button, Card, Chip, Separator } from "@heroui/react";
 import { APP_DISPLAY_NAME } from "@suwa/app-info";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRightIcon, Building2Icon, StethoscopeIcon } from "lucide-react";
+import { Badge } from "@suwa/ui/components/badge";
+import { buttonVariants } from "@suwa/ui/components/button";
+import { Card, CardContent } from "@suwa/ui/components/card";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  ArrowRightIcon,
+  CalendarClockIcon,
+  ShieldIcon,
+  StethoscopeIcon,
+  UsersIcon,
+} from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: HomeRoute,
@@ -10,271 +18,194 @@ export const Route = createFileRoute("/")({
 
 function HomeRoute() {
   const user = useUser();
-  const navigate = useNavigate();
   const name = user.user?.fullName ?? user.user?.username;
+  const role = user.user?.publicMetadata?.role;
+  const primaryHref =
+    role === "admin" ? "/admin" : role === "doctor" ? "/doctor" : "/sign-up";
 
   return (
-    <div className="size-full flex-1">
-      <header className="sticky top-0 z-50 border-border/40 border-b bg-background/20 backdrop-blur-xl">
-        <div className="grid h-16 grid-cols-3 items-center px-8">
-          <div className="flex justify-start">
-            <img className="size-12" src="/Logo.png" />
-          </div>
-          <nav className="hidden justify-center gap-2 sm:flex">
-            {user.isLoaded && user.user && (
-              <Button
-                onPress={() => navigate({ to: "/doctor", search: { page: 1 } })}
-                size="sm"
-                variant="outline"
+    <div className="min-h-svh bg-gradient-to-b from-background via-background to-muted/20">
+      <div className="mx-auto flex min-h-svh w-full max-w-6xl flex-col px-4 py-4 sm:px-6 lg:px-8">
+        <header className="flex h-14 items-center justify-between rounded-2xl border bg-card/70 px-4 shadow-sm backdrop-blur-md sm:px-6">
+          <div className="flex items-center gap-4">
+            <span className="font-semibold text-lg tracking-tight">
+              {APP_DISPLAY_NAME}
+            </span>
+            <nav className="hidden items-center gap-2 md:flex">
+              <Link
+                className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                search={{ page: 1 }}
+                to="/doctor"
               >
                 Doctor
-              </Button>
-            )}
-            {user.isLoaded && user.user && (
-              <Button
-                onPress={() => navigate({ to: "/tenant" })}
-                size="sm"
-                variant="outline"
-              >
-                Tenant
-              </Button>
-            )}
-            {user.isLoaded && user.user?.publicMetadata?.role === "admin" && (
-              <Button
-                onPress={() =>
-                  navigate({ to: "/admin", search: { page: 1, query: "" } })
-                }
-                size="sm"
-                variant="outline"
-              >
-                Admin
-              </Button>
-            )}
-          </nav>
-          <div className="flex items-center justify-end gap-3">
+              </Link>
+              {user.isLoaded && user.user ? (
+                <Link
+                  className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  to="/tenant"
+                >
+                  Tenant
+                </Link>
+              ) : null}
+              {role === "admin" ? (
+                <Link
+                  className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  search={{ page: 1, query: "" }}
+                  to="/admin"
+                >
+                  Admin
+                </Link>
+              ) : null}
+            </nav>
+          </div>
+          <div className="flex items-center gap-2">
             {user.isLoaded && user.user ? (
-              <>
+              <div className="flex items-center gap-3">
                 <span className="hidden text-muted-foreground text-sm sm:inline">
                   {name}
                 </span>
                 <UserButton />
-              </>
+              </div>
             ) : (
-              <>
-                <Button
-                  onPress={() => navigate({ to: "/sign-in" })}
-                  size="sm"
-                  variant="tertiary"
+              <div className="flex items-center gap-2">
+                <Link
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                  to="/sign-in"
                 >
                   Sign In
-                </Button>
-                <Button onPress={() => navigate({ to: "/sign-up" })} size="sm">
+                </Link>
+                <Link
+                  className={buttonVariants({ variant: "default", size: "sm" })}
+                  to="/sign-up"
+                >
                   Sign Up
-                </Button>
-              </>
+                </Link>
+              </div>
             )}
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="size-full flex-1">
-        <section className="bg-gradient-to-b from-accent/5 via-accent/[2%] to-background px-6 pb-20 pt-16">
-          <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-            <div className="flex flex-col items-center gap-3 text-center">
-              <Chip color="accent" variant="soft">
-                Doctor and Tenant Workspace
-              </Chip>
-              <h1 className="max-w-3xl pt-2 font-light text-4xl tracking-tight sm:text-5xl lg:text-6xl">
-                Welcome to {APP_DISPLAY_NAME}
-              </h1>
-              <p className="max-w-2xl font-light text-lg text-muted-foreground sm:text-xl">
-                A simple home for doctors and tenants to manage profiles,
-                access dashboards, and get started fast.
-              </p>
+        <main className="flex flex-1 items-center py-10 sm:py-16">
+          <section className="grid w-full gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary">Doctor onboarding</Badge>
+                <Badge variant="outline">Admin review</Badge>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                <h1 className="max-w-2xl font-semibold text-4xl tracking-tight sm:text-5xl">
+                  One place to manage doctors, schedules, and approvals.
+                </h1>
+                <p className="max-w-2xl text-balance text-muted-foreground text-base leading-7 sm:text-lg">
+                  {APP_DISPLAY_NAME} streamlines doctor setup, admin review,
+                  clinic operations, and booking readiness without extra admin
+                  noise.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  className={buttonVariants({
+                    className: "gap-2",
+                    size: "lg",
+                    variant: user.isLoaded && user.user ? "default" : "default",
+                  })}
+                  to={primaryHref}
+                >
+                  {user.isLoaded && user.user ? "Go to dashboard" : "Get started"}
+                  <ArrowRightIcon className="size-4" />
+                </Link>
+                <Link
+                  className={buttonVariants({ size: "lg", variant: "outline" })}
+                  to="/sign-in"
+                >
+                  Sign In
+                </Link>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                {[
+                  {
+                    icon: StethoscopeIcon,
+                    title: "Doctor Portal",
+                    desc: "Profiles, plans, files, and availability.",
+                  },
+                  {
+                    icon: ShieldIcon,
+                    title: "Admin Console",
+                    desc: "Review approvals and platform activity.",
+                  },
+                  {
+                    icon: CalendarClockIcon,
+                    title: "Clinic Ops",
+                    desc: "Attendance and schedule management.",
+                  },
+                ].map(({ icon: Icon, title, desc }) => (
+                  <Card className="rounded-2xl border-border/60 bg-card/70" key={title}>
+                    <CardContent className="flex items-start gap-3">
+                      <div className="rounded-xl border bg-muted/40 p-2.5 text-muted-foreground">
+                        <Icon className="size-5" />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <p className="font-medium text-sm">{title}</p>
+                        <p className="text-muted-foreground text-xs leading-5">
+                          {desc}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card className="border-border/60 bg-background/80 shadow-sm backdrop-blur-sm">
-                <Card.Content className="flex flex-col gap-4 p-6">
-                  <div className="flex size-12 items-center justify-center rounded-xl bg-accent/10 text-accent">
-                    <StethoscopeIcon className="size-6" />
+            <div className="grid gap-4">
+              <Card className="overflow-hidden rounded-[2rem] border-border/60 bg-gradient-to-br from-card via-card to-muted/30 shadow-lg">
+                <CardContent className="flex flex-col gap-5">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="secondary">Quick access</Badge>
+                    <UsersIcon className="size-5 text-muted-foreground" />
                   </div>
-                  <div className="space-y-2">
-                    <h2 className="font-medium text-2xl">For doctors</h2>
-                    <p className="text-muted-foreground text-sm">
-                      Manage your profile, verify your identity, and continue to
-                      your doctor dashboard.
+
+                  <div className="flex flex-col gap-2">
+                    <p className="font-medium text-sm text-muted-foreground uppercase tracking-wider">
+                      Signed in as
                     </p>
-                  </div>
-                  <Button
-                    onPress={() => navigate({ to: "/doctor", search: { page: 1 } })}
-                    size="sm"
-                    variant="outline"
-                  >
-                    Open doctor area
-                    <ArrowRightIcon />
-                  </Button>
-                </Card.Content>
-              </Card>
-
-              <Card className="border-border/60 bg-background/80 shadow-sm backdrop-blur-sm">
-                <Card.Content className="flex flex-col gap-4 p-6">
-                  <div className="flex size-12 items-center justify-center rounded-xl bg-accent/10 text-accent">
-                    <Building2Icon className="size-6" />
-                  </div>
-                  <div className="space-y-2">
-                    <h2 className="font-medium text-2xl">For tenants</h2>
-                    <p className="text-muted-foreground text-sm">
-                      View your workspace and continue to tenant tools and
-                      administrative pages.
+                    <p className="font-semibold text-2xl tracking-tight">
+                      {user.isLoaded && user.user ? name : "Guest"}
                     </p>
-                  </div>
-                  <Button onPress={() => navigate({ to: "/tenant" })} size="sm" variant="outline">
-                    Open tenant area
-                    <ArrowRightIcon />
-                  </Button>
-                </Card.Content>
-              </Card>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-3">
-              <Card className="border-border/60 bg-background/70">
-                <Card.Content className="flex flex-col gap-2 p-5">
-                  <Chip color="accent" size="sm" variant="soft">
-                    Fast setup
-                  </Chip>
-                  <p className="font-medium">Get in, update your profile, and move on.</p>
-                  <p className="text-muted-foreground text-sm">
-                    Doctors can review their profile details and verify identity.
-                    Tenants can jump straight into the workspace tools.
-                  </p>
-                </Card.Content>
-              </Card>
-
-              <Card className="border-border/60 bg-background/70">
-                <Card.Content className="flex flex-col gap-2 p-5">
-                  <Chip color="accent" size="sm" variant="soft">
-                    Clear roles
-                  </Chip>
-                  <p className="font-medium">The right tools for each account type.</p>
-                  <p className="text-muted-foreground text-sm">
-                    Doctors get a profile-focused dashboard. Tenants get access
-                    to tenant operations and administrative screens.
-                  </p>
-                </Card.Content>
-              </Card>
-
-              <Card className="border-border/60 bg-background/70">
-                <Card.Content className="flex flex-col gap-2 p-5">
-                  <Chip color="accent" size="sm" variant="soft">
-                    Support ready
-                  </Chip>
-                  <p className="font-medium">A simple starting point for teams.</p>
-                  <p className="text-muted-foreground text-sm">
-                    Use this page to orient new users before they enter the main
-                    app areas.
-                  </p>
-                </Card.Content>
-              </Card>
-            </div>
-
-            <Separator />
-
-            <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-              <Card className="border-border/60 bg-background/80">
-                <Card.Content className="flex flex-col gap-4 p-6">
-                  <div className="space-y-2">
-                    <Chip color="accent" variant="soft">
-                      What you can do here
-                    </Chip>
-                    <h2 className="font-medium text-2xl">A quick landing zone</h2>
-                    <p className="text-muted-foreground text-sm">
-                      This page is a lightweight entry point for doctors and
-                      tenants. It points each person to the right place without
-                      making them hunt through the app.
+                    <p className="text-muted-foreground text-sm leading-6">
+                      {role === "admin"
+                        ? "Jump straight into admin review and operations."
+                        : role === "doctor"
+                          ? "Continue your onboarding and manage your practice."
+                          : "Create an account to access doctor and tenant tools."}
                     </p>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-xl border border-border/60 bg-background p-4">
-                      <p className="font-medium">Doctors</p>
-                      <p className="text-muted-foreground text-sm">
-                        Manage profile data, face verification, and doctor
-                        dashboard access.
-                      </p>
-                    </div>
-                    <div className="rounded-xl border border-border/60 bg-background p-4">
-                      <p className="font-medium">Tenants</p>
-                      <p className="text-muted-foreground text-sm">
-                        Continue into tenant operations, admin flows, and shared
-                        workspace tools.
-                      </p>
-                    </div>
+                    <Link
+                      className={buttonVariants({ className: "w-full justify-start gap-2", variant: "outline" })}
+                      search={{ page: 1 }}
+                      to="/doctor"
+                    >
+                      <StethoscopeIcon className="size-4" />
+                      Doctor area
+                    </Link>
+                    <Link
+                      className={buttonVariants({ className: "w-full justify-start gap-2", variant: "outline" })}
+                      to="/tenant"
+                    >
+                      <CalendarClockIcon className="size-4" />
+                      Tenant area
+                    </Link>
                   </div>
-                </Card.Content>
-              </Card>
-
-              <Card className="border-border/60 bg-background/80">
-                <Card.Content className="flex flex-col gap-4 p-6">
-                  <div className="space-y-2">
-                    <Chip color="accent" variant="soft">
-                      Quick path
-                    </Chip>
-                    <h2 className="font-medium text-2xl">Where to go next</h2>
-                  </div>
-
-                  <div className="flex flex-col gap-3 text-sm text-muted-foreground">
-                    <p>• New doctor? Open the doctor area and finish your profile.</p>
-                    <p>• Existing tenant? Head straight to tenant tools.</p>
-                    <p>• Admin user? Use the dashboard button after signing in.</p>
-                  </div>
-
-                  <Button
-                    onPress={() => navigate({ to: "/sign-up" })}
-                    size="sm"
-                    variant="outline"
-                  >
-                    Create an account
-                    <ArrowRightIcon />
-                  </Button>
-                </Card.Content>
+                </CardContent>
               </Card>
             </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-              {user.isLoaded && user.user ? (
-                <Button
-                  onPress={() =>
-                    navigate({
-                      to:
-                        user.user.publicMetadata?.role === "admin"
-                          ? "/admin"
-                          : "/doctor",
-                    })
-                  }
-                  size="sm"
-                >
-                  Go to Dashboard
-                  <ArrowRightIcon />
-                </Button>
-              ) : (
-                <>
-                  <Button onPress={() => navigate({ to: "/sign-up" })} size="sm">
-                    Get Started
-                  </Button>
-                  <Button
-                    onPress={() => navigate({ to: "/sign-in" })}
-                    size="sm"
-                    variant="tertiary"
-                  >
-                    Sign In
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </section>
-      </main>
+          </section>
+        </main>
+      </div>
     </div>
   );
 }

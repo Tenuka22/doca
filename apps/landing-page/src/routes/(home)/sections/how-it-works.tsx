@@ -39,7 +39,7 @@ export function HowItWorks() {
             eyebrow="A safer first step"
             title="Getting help should not feel exposing."
           />
-          <div className="mx-auto grid max-w-[1000px] grid-cols-3 gap-[18px] max-xl:max-w-[410px] max-xl:grid-cols-1 max-xl:gap-[12px]">
+          <div className="flex flex-row flex-wrap gap-8 items-center justify-center">
             {steps.map(({ description, icon: Icon, number, title }) => (
               <article
                 className="relative min-h-[250px] overflow-hidden rounded-[24px] border border-[rgb(225_224_210_/_80%)] bg-[rgb(255_253_248_/_75%)] p-[36px] max-xl:p-[26px]"

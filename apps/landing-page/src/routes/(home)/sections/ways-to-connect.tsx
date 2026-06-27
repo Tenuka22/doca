@@ -40,7 +40,7 @@ export function WaysToConnect() {
             eyebrow="Flexible by design"
             title="Choose how you connect."
           />
-          <div className="mx-auto grid max-w-[1000px] grid-cols-3 gap-[18px] max-xl:max-w-[410px] max-xl:grid-cols-1 max-xl:gap-[12px]">
+          <div className="mx-auto flex flex-row flex-wrap gap-8 items-center justify-center">
             {connectModes.map(({ description, icon: Icon, title }, i) => (
               <article
                 className="min-h-[220px] rounded-[24px] border border-[rgb(225_224_210_/_80%)] bg-[rgb(255_253_248_/_75%)] p-[36px] max-xl:p-[26px]"

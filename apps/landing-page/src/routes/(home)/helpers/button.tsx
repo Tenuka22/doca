@@ -7,23 +7,23 @@ const button = cva(
     variants: {
       variant: {
         primary: [
-          "h-[53px] w-[288px] justify-between py-[5px] pr-[6px] pl-[42px] font-medium text-[13px] text-white",
+          "h-[53px] w-[288px] max-sm:h-[48px] max-sm:w-full max-sm:justify-center max-sm:gap-[10px] max-sm:px-[18px] max-sm:text-[12px] justify-between py-[5px] pr-[6px] pl-[42px] font-medium text-[13px] text-white",
           "bg-gradient-to-br from-[#29493f] to-[#3d6357]",
           "shadow-[0_8px_24px_rgb(37_70_60_/_10%)]",
           "hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgb(34_64_56_/_20%)]",
         ].join(" "),
         secondary: ["gap-[13px] font-medium text-[14px]"].join(" "),
         outline: [
-          "gap-[36px] border border-foreground px-[22px] py-[14px] font-medium text-[13px] text-foreground",
+          "gap-[36px] border border-foreground px-[22px] py-[14px] max-sm:gap-[10px] max-sm:px-[16px] max-sm:py-[11px] max-sm:text-[12px] font-medium text-[13px] text-foreground",
           "hover:bg-foreground hover:text-white",
         ].join(" "),
         light: [
-          "gap-[26px] bg-white px-[22px] py-[14px] font-medium text-[12px] text-foreground",
+          "gap-[26px] bg-white px-[22px] py-[14px] max-sm:gap-[10px] max-sm:px-[16px] max-sm:py-[11px] max-sm:text-[12px] font-medium text-[12px] text-foreground",
           "shadow-[0_8px_24px_rgb(45_62_53_/_0.08)]",
           "hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgb(34_64_56_/_20%)]",
         ].join(" "),
         headerCta: [
-          "px-[29px] py-[17px] text-[13px] text-white",
+          "px-[29px] py-[17px] max-sm:px-[16px] max-sm:py-[12px] max-sm:text-[12px] text-[13px] text-white",
           "bg-gradient-to-br from-[#294a40] to-[#3f6256]",
           "shadow-[0_8px_22px_rgb(34_64_56_/_12%)]",
           "hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgb(34_64_56_/_20%)]",
@@ -72,4 +72,4 @@ export function RoundArrow({ size, children }: RoundArrowProps) {
 }
 
 export const playCircle =
-  "grid place-items-center size-[53px] rounded-full bg-[rgb(255_255_255_/_42%)] border border-border shadow-[inset_0_0_0_4px_rgb(255_255_255_/_28%)] transition-all duration-180 ease-default group-hover:bg-white group-hover:scale-104";
+  "grid place-items-center size-[53px] max-sm:size-[44px] rounded-full bg-[rgb(255_255_255_/_42%)] border border-border shadow-[inset_0_0_0_4px_rgb(255_255_255_/_28%)] transition-all duration-180 ease-default group-hover:bg-white group-hover:scale-104";

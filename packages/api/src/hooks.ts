@@ -126,7 +126,7 @@ export async function getDoctorWithClerkInfo(
   try {
     const clerkUser = await clerk.users.getUser(profile.userId);
     const nameParts = [clerkUser.firstName, clerkUser.lastName].filter(Boolean);
-    let name = clerkUser.fullName ?? null;
+    let name = profile.displayName ?? clerkUser.fullName ?? null;
     if (!name && nameParts.length > 0) {
       name = nameParts.join(" ");
     }
