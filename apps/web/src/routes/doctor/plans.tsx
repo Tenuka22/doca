@@ -18,7 +18,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@suwa/ui/components/dialog";
 import {
   Empty,
@@ -112,15 +111,11 @@ function CreatePlanDialog() {
   };
 
   return (
-    <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger
-        render={
-          <Button className="gap-2" size="sm">
-            <PlusIcon className="size-4" />
-            Create plan
-          </Button>
-        }
-      />
+      <Dialog onOpenChange={setOpen} open={open}>
+      <Button className="gap-2" onClick={() => setOpen(true)} size="sm">
+        <PlusIcon className="size-4" />
+        Create plan
+      </Button>
       <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
           <DialogTitle>Create plan</DialogTitle>
