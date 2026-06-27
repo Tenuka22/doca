@@ -4,13 +4,12 @@ import { Appear } from "../animations/appear";
 const team = [
   {
     name: "Hesandu Linal",
-    bio: "Automation, n8n, AI engineering, and prompt engineering.",
-    avatarSeed: "Hesandu Linal",
+    bio: "Entrepreneur, CEO of Suwa, and AI engineering.",
+    avatarSeed: "/hesandu.jpeg",
     href: undefined,
-    note: "Automation and AI workflows",
-    stack: ["n8n", "Automation", "AI Engineer", "Prompt Engineer"],
-    summary:
-      "Builds practical automation systems and prompt-driven AI workflows.",
+    note: "CEO of Suwa",
+    stack: ["Entrepreneur", "CEO", "n8n", "AI Engineer"],
+    summary: "Leading Suwa while building automation and AI workflows.",
   },
   {
     name: "Tenuka Omaljith",
@@ -33,7 +32,7 @@ const team = [
   {
     name: "Pasindu Mihiranga",
     bio: "Python developer working across IoT and applied software projects.",
-    avatarSeed: "Pasindu Mihiranga",
+    avatarSeed: "/pasindu.jpeg",
     href: undefined,
     note: "Python and IoT development",
     stack: ["Python", "IoT", "Automation"],
@@ -42,7 +41,7 @@ const team = [
   {
     name: "Kavija Anusara",
     bio: "Python, website building, and IoT projects with a hands-on approach.",
-    avatarSeed: "Kavija Anusara",
+    avatarSeed: "/kavija.jpeg",
     href: undefined,
     note: "Python, websites, and IoT",
     stack: ["Python", "Website", "IoT"],
