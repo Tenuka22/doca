@@ -2,6 +2,7 @@ import type { RouterClient } from "@orpc/server";
 
 import { adminRouter } from "./admin";
 import { aiRouter } from "./ai";
+import { authRouter } from "./auth";
 import { bookingRouter } from "./booking";
 import { doctorRouter } from "./doctor";
 import { doctorFilesRouter } from "./doctor-files";
@@ -18,6 +19,7 @@ import { tenantRouter } from "./tenant";
 
 export const appRouter = {
   ...publicRouter,
+  ...authRouter,
   ...doctorRouter,
   ...doctorFilesRouter,
   ...doctorMaterialsRouter,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@clerk/expo";
+import { authClient } from "@/utils/better-auth";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft } from "lucide-react-native";
@@ -22,12 +22,12 @@ import {
 export default function AppointmentSessionDetailScreen() {
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
   const router = useRouter();
-  const { user } = useUser();
-  const metadataRole = user?.publicMetadata?.role;
+  const { data: session } = authClient.useSession();
+  const role = (session?.user as { role?: string } | undefined)?.role;
   let userRole: "patient" | "doctor" | "admin" = "patient";
-  if (metadataRole === "admin") {
+  if (role === "admin") {
     userRole = "admin";
-  } else if (metadataRole === "doctor") {
+  } else if (role === "doctor") {
     userRole = "doctor";
   }
 

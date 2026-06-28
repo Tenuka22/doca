@@ -1,9 +1,7 @@
 "use client";
 
-import { useAuth, useOAuth, useSignIn, useSignUp } from "@clerk/expo";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createURL } from "expo-linking";
 import { Stack, useRouter } from "expo-router";
 import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react-native";
 import type { ReactNode } from "react";
@@ -30,7 +28,7 @@ import { Button } from "@/components/design/ui/button";
 import { Input } from "@/components/design/ui/input";
 import { Reveal } from "@/components/design/ui/reveal";
 import { ToggleGroup } from "@/components/design/ui/toggle-group";
-import { pushDecoratedUrl } from "@/utils/auth";
+import { authClient, setToken } from "@/utils/better-auth";
 import { orpc, queryClient } from "@/utils/orpc";
 import { encryptData, generateUserSecret, storeSecret } from "@/utils/privacy";
 
@@ -73,25 +71,19 @@ const patientSchema = z.object({
 
 type AuthMode = "sign-in" | "sign-up";
 type PatientForm = z.infer<typeof patientSchema>;
-type ProviderStrategy = "oauth_google" | "oauth_facebook";
 type Step = "start" | "auth" | "profile";
 type TransitionDirection = "back" | "forward";
 
 interface AuthStepProps {
   busy: boolean;
-  code: string;
-  codeError?: string;
   emailAddress: string;
   emailError?: string;
   mode: AuthMode;
-  needsCode: boolean;
   onBack: () => void;
-  onCodeChange: (value: string) => void;
   onEmailChange: (value: string) => void;
   onModeChange: (value: AuthMode) => void;
   onPasswordChange: (value: string) => void;
   onSubmit: () => void;
-  onVerify: () => void;
   password: string;
   passwordError?: string;
   statusMessage: string | null;
@@ -167,19 +159,19 @@ function ActionButton({
 
 function OAuthButton({
   label,
-  strategy,
+  provider,
 }: {
   label: string;
-  strategy: ProviderStrategy;
+  provider: "google" | "facebook";
 }) {
-  const { startOAuthFlow } = useOAuth({ strategy });
-
   const handlePress = async () => {
-    const { createdSessionId, setActive } = await startOAuthFlow({
-      redirectUrl: createURL("/", { scheme: "suwa" }),
+    const { data } = await authClient.signIn.social({
+      provider,
+      callbackURL: "suwa://callback",
     });
-    if (createdSessionId && setActive) {
-      await setActive({ session: createdSessionId });
+    if (data?.url) {
+      // The URL will be opened by the system browser
+      // Better Auth handles the redirect and session creation
     }
   };
 
@@ -187,8 +179,8 @@ function OAuthButton({
     <Button
       icon={
         <FontAwesome6
-          color={strategy === "oauth_google" ? "#4285F4" : "#1877F2"}
-          name={strategy === "oauth_google" ? "google" : "facebook-f"}
+          color={provider === "google" ? "#4285F4" : "#1877F2"}
+          name={provider === "google" ? "google" : "facebook-f"}
           size={17}
         />
       }
@@ -267,19 +259,14 @@ function StartStep({ onStart }: { onStart: () => void }) {
 
 function AuthStep({
   busy,
-  code,
-  codeError,
   emailAddress,
   emailError,
   mode,
-  needsCode,
   onBack,
-  onCodeChange,
   onEmailChange,
   onModeChange,
   onPasswordChange,
   onSubmit,
-  onVerify,
   password,
   passwordError,
   statusMessage,
@@ -334,19 +321,8 @@ function AuthStep({
             {statusMessage}
           </Text>
         ) : null}
-        {needsCode ? (
-          <Input
-            autoComplete="one-time-code"
-            error={codeError}
-            keyboardType="numeric"
-            label="Verification code"
-            onChangeText={onCodeChange}
-            placeholder="000000"
-            value={code}
-          />
-        ) : null}
-        <ActionButton disabled={busy} onPress={needsCode ? onVerify : onSubmit}>
-          {needsCode ? "Verify" : actionLabel}
+        <ActionButton disabled={busy} onPress={onSubmit}>
+          {actionLabel}
         </ActionButton>
       </Reveal>
       <Reveal className="gap-lg" delay={260}>
@@ -358,11 +334,8 @@ function AuthStep({
           <View className="h-px flex-1 bg-border" />
         </View>
         <View className="gap-md">
-          <OAuthButton label="Continue with Google" strategy="oauth_google" />
-          <OAuthButton
-            label="Continue with Facebook"
-            strategy="oauth_facebook"
-          />
+          <OAuthButton label="Continue with Google" provider="google" />
+          <OAuthButton label="Continue with Facebook" provider="facebook" />
         </View>
       </Reveal>
     </View>
@@ -507,25 +480,16 @@ function LandingFrame({
 
 export default function LandingScreen() {
   const router = useRouter();
-  const { isLoaded, isSignedIn } = useAuth();
-  const {
-    signIn,
-    errors: signInErrors,
-    fetchStatus: signInStatus,
-  } = useSignIn();
-  const {
-    signUp,
-    errors: signUpErrors,
-    fetchStatus: signUpStatus,
-  } = useSignUp();
+  const { data: session, isPending } = authClient.useSession();
+  const isSignedIn = !!session;
   const [step, setStep] = useState<Step>("start");
   const [transitionDirection, setTransitionDirection] =
     useState<TransitionDirection>("forward");
   const [mode, setMode] = useState<AuthMode>("sign-in");
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
-  const [code, setCode] = useState("");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const [patientForm, setPatientForm] = useState<PatientForm>({
     address: "",
     alias: "",
@@ -537,15 +501,15 @@ export default function LandingScreen() {
   });
 
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
+    if (!isPending && isSignedIn) {
       setTransitionDirection("forward");
       setStep("profile");
     }
-  }, [isLoaded, isSignedIn]);
+  }, [isPending, isSignedIn]);
 
   useQuery(
     orpc.getPatientProfile.queryOptions({
-      enabled: isLoaded && isSignedIn,
+      enabled: !isPending && isSignedIn,
       meta: { ignoreError: true },
       retry: false,
     })
@@ -565,91 +529,37 @@ export default function LandingScreen() {
     setStep(nextStep);
   };
 
-  const needsCode =
-    mode === "sign-up"
-      ? signUp.status === "missing_requirements" &&
-        signUp.unverifiedFields.includes("email_address") &&
-        signUp.missingFields.length === 0
-      : signIn.status === "needs_second_factor" ||
-        signIn.status === "needs_client_trust";
-  const busy =
-    (mode === "sign-in" ? signInStatus : signUpStatus) === "fetching";
-  const emailError =
-    mode === "sign-in"
-      ? signInErrors.fields.identifier?.message
-      : signUpErrors.fields.emailAddress?.message;
-  const passwordError =
-    mode === "sign-in"
-      ? signInErrors.fields.password?.message
-      : signUpErrors.fields.password?.message;
-  const codeError =
-    mode === "sign-in"
-      ? signInErrors.fields.code?.message
-      : signUpErrors.fields.code?.message;
-
   const submitAuth = async () => {
     setStatusMessage(null);
-    const result =
-      mode === "sign-in"
-        ? await signIn.password({ emailAddress, password })
-        : await signUp.password({ emailAddress, password });
-    if (result.error) {
-      setStatusMessage(
-        result.error.longMessage ?? `Unable to ${mode.replace("-", " ")}.`
-      );
-      return;
-    }
-    if (mode === "sign-up") {
-      await signUp.verifications.sendEmailCode();
-      setStatusMessage("We sent a verification code to your email.");
-      return;
-    }
-    if (signIn.status === "complete") {
-      await signIn.finalize({
-        navigate: ({ session, decorateUrl }) => {
-          if (!session?.currentTask) {
-            pushDecoratedUrl(router, decorateUrl, "/");
-          }
-        },
-      });
-    }
-  };
-
-  const verifyCode = async () => {
-    setStatusMessage(null);
-    if (mode === "sign-in") {
-      const result = await signIn.mfa.verifyEmailCode({ code });
-      if (result.error) {
-        setStatusMessage(result.error.longMessage ?? "That code did not work.");
-        return;
-      }
-      if (signIn.status === "complete") {
-        await signIn.finalize({
-          navigate: ({ session, decorateUrl }) => {
-            if (!session?.currentTask) {
-              pushDecoratedUrl(router, decorateUrl, "/");
-            }
-          },
+    setBusy(true);
+    try {
+      if (mode === "sign-in") {
+        const { error } = await authClient.signIn.email({
+          email: emailAddress,
+          password,
         });
+        if (error) {
+          setStatusMessage(error.message ?? "Unable to sign in.");
+          return;
+        }
+      } else {
+        const { error } = await authClient.signUp.email({
+          email: emailAddress,
+          password,
+        });
+        if (error) {
+          setStatusMessage(error.message ?? "Unable to sign up.");
+          return;
+        }
       }
-      return;
+      navigateStep("profile", "forward");
+    } catch (err) {
+      setStatusMessage(
+        err instanceof Error ? err.message : "An unexpected error occurred."
+      );
+    } finally {
+      setBusy(false);
     }
-    const result = await signUp.verifications.verifyEmailCode({ code });
-    if (result.error) {
-      setStatusMessage(result.error.longMessage ?? "That code did not work.");
-      return;
-    }
-    if (signUp.status === "complete") {
-      await signUp.finalize({
-        navigate: ({ session }) => {
-          if (!session?.currentTask) {
-            navigateStep("profile", "forward");
-          }
-        },
-      });
-      return;
-    }
-    navigateStep("profile", "forward");
   };
 
   const submitOnboarding = async () => {
@@ -678,6 +588,9 @@ export default function LandingScreen() {
     setPatientForm((currentForm) => ({ ...currentForm, [field]: value }));
   };
 
+  const emailError: string | undefined = undefined;
+  const passwordError: string | undefined = undefined;
+
   let stepContent: ReactNode;
   if (step === "start") {
     stepContent = <StartStep onStart={() => navigateStep("auth", "forward")} />;
@@ -685,14 +598,10 @@ export default function LandingScreen() {
     stepContent = (
       <AuthStep
         busy={busy}
-        code={code}
-        codeError={codeError}
         emailAddress={emailAddress}
         emailError={emailError}
         mode={mode}
-        needsCode={needsCode}
         onBack={() => navigateStep("start", "back")}
-        onCodeChange={setCode}
         onEmailChange={setEmailAddress}
         onModeChange={(value) => {
           setMode(value);
@@ -700,7 +609,6 @@ export default function LandingScreen() {
         }}
         onPasswordChange={setPassword}
         onSubmit={submitAuth}
-        onVerify={verifyCode}
         password={password}
         passwordError={passwordError}
         statusMessage={statusMessage}

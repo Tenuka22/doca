@@ -1,0 +1,29 @@
+import * as schema from "@suwa/db/schema/auth";
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { admin, multiSession } from "better-auth/plugins";
+
+const auth = betterAuth({
+  database: drizzleAdapter({} as any, {
+    provider: "sqlite",
+    schema: schema,
+  }),
+  plugins: [admin(), multiSession()],
+  emailAndPassword: {
+    enabled: true,
+  },
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        required: false,
+        defaultValue: "user",
+        input: true,
+      },
+    },
+  },
+  secret: "cli-only",
+  baseURL: "http://localhost:3000",
+});
+
+export { auth };

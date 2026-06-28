@@ -1,9 +1,8 @@
-import { UserButton, useUser } from "@clerk/tanstack-react-start";
 import { APP_DISPLAY_NAME } from "@suwa/app-info";
 import { Badge } from "@suwa/ui/components/badge";
 import { buttonVariants } from "@suwa/ui/components/button";
 import { Card, CardContent } from "@suwa/ui/components/card";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRightIcon,
   CalendarClockIcon,
@@ -11,17 +10,26 @@ import {
   StethoscopeIcon,
   UsersIcon,
 } from "lucide-react";
+import { Button } from "@suwa/ui/components/button";
+import { authClient } from "@/utils/auth";
 
 export const Route = createFileRoute("/")({
   component: HomeRoute,
 });
 
 function HomeRoute() {
-  const user = useUser();
-  const name = user.user?.fullName ?? user.user?.username;
-  const role = user.user?.publicMetadata?.role;
+  const navigate = useNavigate();
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
+  const name = user?.name ?? user?.email;
+  const role = (user as any)?.role;
   const primaryHref =
     role === "admin" ? "/admin" : role === "doctor" ? "/doctor" : "/sign-up";
+
+  const handleSignOut = async () => {
+    await authClient.signOut();
+    navigate({ to: "/" });
+  };
 
   return (
     <div className="min-h-svh bg-gradient-to-b from-background via-background to-muted/20">
@@ -32,14 +40,16 @@ function HomeRoute() {
               {APP_DISPLAY_NAME}
             </span>
             <nav className="hidden items-center gap-2 md:flex">
-              <Link
-                className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                search={{ page: 1 }}
-                to="/doctor"
-              >
-                Doctor
-              </Link>
-              {user.isLoaded && user.user ? (
+              {role === "doctor" || role === "pending-doctor" ? (
+                <Link
+                  className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  search={{ page: 1 }}
+                  to="/doctor"
+                >
+                  Doctor
+                </Link>
+              ) : null}
+              {role === "tenant-admin" ? (
                 <Link
                   className="rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   to="/tenant"
@@ -59,12 +69,14 @@ function HomeRoute() {
             </nav>
           </div>
           <div className="flex items-center gap-2">
-            {user.isLoaded && user.user ? (
+            {session ? (
               <div className="flex items-center gap-3">
                 <span className="hidden text-muted-foreground text-sm sm:inline">
                   {name}
                 </span>
-                <UserButton />
+                <Button onClick={handleSignOut} size="sm" variant="outline">
+                  Sign out
+                </Button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
@@ -109,11 +121,11 @@ function HomeRoute() {
                   className={buttonVariants({
                     className: "gap-2",
                     size: "lg",
-                    variant: user.isLoaded && user.user ? "default" : "default",
+                    variant: session ? "default" : "default",
                   })}
                   to={primaryHref}
                 >
-                  {user.isLoaded && user.user ? "Go to dashboard" : "Get started"}
+                  {session ? "Go to dashboard" : "Get started"}
                   <ArrowRightIcon className="size-4" />
                 </Link>
                 <Link
@@ -172,8 +184,13 @@ function HomeRoute() {
                       Signed in as
                     </p>
                     <p className="font-semibold text-2xl tracking-tight">
-                      {user.isLoaded && user.user ? name : "Guest"}
+                      {session ? name : "Guest"}
                     </p>
+                    {role ? (
+                      <Badge className="w-fit capitalize" variant="secondary">
+                        {role.replace("-", " ")}
+                      </Badge>
+                    ) : null}
                     <p className="text-muted-foreground text-sm leading-6">
                       {role === "admin"
                         ? "Jump straight into admin review and operations."
@@ -184,21 +201,25 @@ function HomeRoute() {
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Link
-                      className={buttonVariants({ className: "w-full justify-start gap-2", variant: "outline" })}
-                      search={{ page: 1 }}
-                      to="/doctor"
-                    >
-                      <StethoscopeIcon className="size-4" />
-                      Doctor area
-                    </Link>
-                    <Link
-                      className={buttonVariants({ className: "w-full justify-start gap-2", variant: "outline" })}
-                      to="/tenant"
-                    >
-                      <CalendarClockIcon className="size-4" />
-                      Tenant area
-                    </Link>
+                    {role === "doctor" || role === "pending-doctor" ? (
+                      <Link
+                        className={buttonVariants({ className: "w-full justify-start gap-2", variant: "outline" })}
+                        search={{ page: 1 }}
+                        to="/doctor"
+                      >
+                        <StethoscopeIcon className="size-4" />
+                        Doctor area
+                      </Link>
+                    ) : null}
+                    {role === "tenant-admin" ? (
+                      <Link
+                        className={buttonVariants({ className: "w-full justify-start gap-2", variant: "outline" })}
+                        to="/tenant"
+                      >
+                        <CalendarClockIcon className="size-4" />
+                        Tenant area
+                      </Link>
+                    ) : null}
                   </div>
                 </CardContent>
               </Card>

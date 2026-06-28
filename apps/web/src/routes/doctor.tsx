@@ -1,4 +1,3 @@
-import { SignInButton as ClerkSignInButton } from "@clerk/tanstack-react-start";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -29,18 +28,16 @@ import {
   useMatches,
 } from "@tanstack/react-router";
 import { StethoscopeIcon } from "lucide-react";
+import { Button } from "@suwa/ui/components/button";
 
 import { DoctorSidebar } from "@/components/doctor-sidebar";
-import { getServerSession } from "@/utils/clerk-auth";
+import { requireAuth } from "@/utils/auth";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/doctor")({
   beforeLoad: async ({ context, location }) => {
-    const session = await getServerSession();
-
-    if (!session) {
-      return { session: null };
-    }
+    const session = await requireAuth(["doctor", "pending-doctor"]).catch(() => null);
+    if (!session) return { session: null };
 
     if (location.pathname === "/doctor/profile") {
       return { session };
@@ -118,12 +115,14 @@ function DoctorLayoutRoute() {
             <div className="flex flex-col gap-2">
               <CardTitle>Unauthorized</CardTitle>
               <CardDescription>
-                You are not authorized to access this page.
+                You need a doctor account to access this page.
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <ClerkSignInButton />
+            <Button asChild variant="outline">
+              <Link to="/sign-in">Sign in</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

@@ -2,7 +2,7 @@ import { doctorProfiles } from "@suwa/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import {
-  getDoctorWithClerkInfo,
+  getDoctorInfo,
   paginateItems,
   requireAdmin,
 } from "../../../hooks";
@@ -36,9 +36,8 @@ export const adminApprovedDoctorsRoute = protectedProcedure
 
     const items = await Promise.all(
       rows.map(async (profile) => {
-        const info = await getDoctorWithClerkInfo(
+        const info = await getDoctorInfo(
           context.db,
-          context.clerk,
           profile
         );
         const q = input.query.toLowerCase();

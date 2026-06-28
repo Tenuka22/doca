@@ -2,6 +2,13 @@ import { env } from "@suwa/env/server";
 import { drizzle } from "drizzle-orm/d1";
 
 import {
+  user as userTable,
+  session as sessionTable,
+  account as accountTable,
+  verification as verificationTable,
+} from "./schema/auth";
+
+import {
   type ClinicAttendanceRecord as ClinicAttendanceSchema,
   type Clinic as ClinicSchema,
   clinicAttendance as clinicAttendanceTable,
@@ -117,6 +124,11 @@ export const tenantNotifications = tenantNotificationsTable;
 export const conversations = conversationsTable;
 export const messages = messagesTable;
 
+export const users = userTable;
+export const sessions = sessionTable;
+export const accounts = accountTable;
+export const verifications = verificationTable;
+
 export type DoctorProfile = DoctorProfileSchema;
 export type DoctorFile = DoctorFileSchema;
 export type DoctorSession = DoctorSessionSchema;
@@ -151,8 +163,12 @@ export type TenantAuditLog = TenantAuditLogSchema;
 export type TenantNotification = TenantNotificationSchema;
 
 export function createDb() {
-  return drizzle(env.DB, {
+    return drizzle(env.DB, {
     schema: {
+      users,
+      sessions,
+      accounts,
+      verifications,
       doctorProfiles,
       doctorFiles,
       doctorSessions,

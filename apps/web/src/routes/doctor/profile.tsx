@@ -1,4 +1,3 @@
-import { useUser } from "@clerk/tanstack-react-start";
 import { Avatar, AvatarFallback } from "@suwa/ui/components/avatar";
 import { Badge } from "@suwa/ui/components/badge";
 import { Button } from "@suwa/ui/components/button";
@@ -26,6 +25,7 @@ import { toast } from "sonner";
 import { FaceCaptureDialog } from "@/components/face-detection";
 import { DoctorFilesPanel, DoctorProfileCard } from "@/components/doctors";
 import { useSaveDoctorProfile } from "@/hooks/queries/doctor";
+import { authClient } from "@/utils/auth";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/doctor/profile")({
@@ -48,7 +48,8 @@ export const Route = createFileRoute("/doctor/profile")({
 });
 
 function DoctorProfileRoute() {
-  const user = useUser();
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
   const queryClient = useQueryClient();
   const saveDoctorProfile = useSaveDoctorProfile();
   const [faceDialogOpen, setFaceDialogOpen] = useState(false);
@@ -83,8 +84,8 @@ function DoctorProfileRoute() {
   const profile = profileData?.profile ?? null;
 
   const canManageFiles = profile?.permanent ?? false;
-  const name = user.user?.fullName ?? user.user?.username ?? "Doctor";
-  const doctorId = user.user?.id ?? "";
+  const name = user?.name ?? "Doctor";
+  const doctorId = user?.id ?? "";
 
   const handleCopyDoctorId = () => {
     void navigator.clipboard.writeText(doctorId);
@@ -386,7 +387,7 @@ function DoctorProfileRoute() {
         </CardContent>
       </Card>
 
-      {user.user ? (
+      {user ? (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -405,7 +406,7 @@ function DoctorProfileRoute() {
           <CardContent>
             <DoctorFilesPanel
               canManage={canManageFiles}
-              doctorId={user.user.id}
+              doctorId={user.id}
               isPermanent={profile?.permanent ?? false}
             />
           </CardContent>

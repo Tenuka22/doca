@@ -1,4 +1,5 @@
 import { createDb } from "@suwa/db";
+import { seedAdmin } from "./admin";
 import { seedCashouts } from "./cashouts";
 import { seedChats } from "./chats";
 import { seedDoctors } from "./doctors";
@@ -68,6 +69,8 @@ export interface SeedSummary {
 
 export async function runSeed(env?: SeedEnv): Promise<SeedSummary> {
   const db = createDb();
+
+  await seedAdmin();
 
   const { doctorIds, patientIds } = await resolveUsers(db);
 

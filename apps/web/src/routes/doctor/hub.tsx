@@ -1,4 +1,3 @@
-import { useUser } from "@clerk/tanstack-react-start";
 import {
   Avatar,
   AvatarFallback,
@@ -40,6 +39,7 @@ import {
   useHubChannels,
   useHubMaterials,
 } from "@/hooks/hub/use-hub";
+import { authClient } from "@/utils/auth";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/doctor/hub")({
@@ -61,7 +61,8 @@ type FilterTab = "all" | "videos" | "audio" | "uploading";
 type SortOption = "newest" | "oldest" | "title";
 
 function DoctorHubPage() {
-  const { user } = useUser();
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
   const { materials: initialMaterials, channels: initialChannels } =
     Route.useLoaderData();
 
@@ -142,7 +143,7 @@ function DoctorHubPage() {
     }
   });
 
-  const name = user?.fullName ?? user?.username ?? "Doctor";
+  const name = user?.name ?? "Doctor";
   const initials = name
     .split(" ")
     .map((part) => part[0])
@@ -171,7 +172,7 @@ function DoctorHubPage() {
       <div className="relative z-10 -mt-12 px-6">
         <div className="flex items-end gap-5">
           <Avatar className="size-24 border-4 border-background shadow-xl">
-            <AvatarImage src={user?.imageUrl} />
+            <AvatarImage src={user?.image ?? undefined} />
             <AvatarFallback className="text-xl">{initials}</AvatarFallback>
           </Avatar>
 

@@ -1,4 +1,3 @@
-import { useUser } from "@clerk/tanstack-react-start";
 import {
   Avatar,
   AvatarFallback,
@@ -31,6 +30,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { EditMaterialDialog } from "@/components/hub";
+import { authClient } from "@/utils/auth";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/doctor/hub/$materialId")({
@@ -45,10 +45,11 @@ export const Route = createFileRoute("/doctor/hub/$materialId")({
 
 function HubMaterialDetailPage() {
   const { material } = Route.useLoaderData();
-  const { user } = useUser();
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
   const [editOpen, setEditOpen] = useState(false);
 
-  const name = user?.fullName ?? user?.username ?? "Doctor";
+  const name = user?.name ?? "Doctor";
   const timeAgo = formatDistanceToNow(new Date(material.createdAt), {
     addSuffix: true,
   });

@@ -1,4 +1,3 @@
-import { SignInButton as ClerkSignInButton } from "@clerk/tanstack-react-start";
 import {
   Card,
   CardContent,
@@ -11,20 +10,16 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@suwa/ui/components/sidebar";
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
 import { ShieldIcon } from "lucide-react";
+import { Button } from "@suwa/ui/components/button";
 
 import { AdminSidebar } from "@/components/admin-sidebar";
-import { getServerSession } from "@/utils/clerk-auth";
+import { requireAuth } from "@/utils/auth";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async () => {
-    const session = await getServerSession();
-
-    if (!session || session.role !== "admin") {
-      return { session: null };
-    }
-
+    const session = await requireAuth(["admin"]).catch(() => null);
     return { session };
   },
   loader: ({ context }) => ({ session: context.session }),
@@ -50,7 +45,9 @@ function AdminLayoutRoute() {
             </div>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <ClerkSignInButton />
+            <Button asChild variant="outline">
+              <Link to="/sign-in">Sign in</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

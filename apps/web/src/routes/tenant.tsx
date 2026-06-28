@@ -1,4 +1,3 @@
-import { SignInButton as ClerkSignInButton } from "@clerk/tanstack-react-start";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -27,13 +26,14 @@ import {
   useMatches,
 } from "@tanstack/react-router";
 import { BuildingIcon } from "lucide-react";
+import { Button } from "@suwa/ui/components/button";
 
 import { TenantSidebar } from "@/components/tenant-sidebar";
-import { getServerSession } from "@/utils/clerk-auth";
+import { requireAuth } from "@/utils/auth";
 
 export const Route = createFileRoute("/tenant")({
   beforeLoad: async () => {
-    const session = await getServerSession();
+    const session = await requireAuth(["tenant-admin"]).catch(() => null);
     return { session };
   },
   loader: ({ context }) => ({ session: context.session }),
@@ -51,6 +51,7 @@ function Breadcrumbs() {
         const href = `/${segments.slice(0, index + 1).join("/")}`;
         const isLast = index === segments.length - 1;
         const label = segment.charAt(0).toUpperCase() + segment.slice(1);
+
         return { href, label, isLast };
       });
     })
@@ -102,7 +103,9 @@ function TenantLayoutRoute() {
             </div>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <ClerkSignInButton />
+            <Button asChild variant="outline">
+              <Link to="/sign-in">Sign in</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@clerk/expo";
+import { authClient } from "@/utils/better-auth";
 import { consumeEventIterator } from "@orpc/client";
 import { useMutation } from "@tanstack/react-query";
 import { Stack } from "expo-router";
@@ -52,8 +52,8 @@ function generateMockSample(): number[] {
 }
 
 export default function HealthHubScreen() {
-  const { user } = useUser();
-  const userId = user?.id;
+  const { data: session } = authClient.useSession();
+  const userId = session?.user?.id;
 
   const [streaming, setStreaming] = useState(getSimulationState);
   const [streamLoading, setStreamLoading] = useState(true);
