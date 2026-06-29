@@ -28,7 +28,7 @@ import { Button } from "@/components/design/ui/button";
 import { Input } from "@/components/design/ui/input";
 import { Reveal } from "@/components/design/ui/reveal";
 import { ToggleGroup } from "@/components/design/ui/toggle-group";
-import { authClient, setToken } from "@/utils/better-auth";
+import { authClient, getOAuthCallbackURL } from "@/utils/better-auth";
 import { orpc, queryClient } from "@/utils/orpc";
 import { encryptData, generateUserSecret, storeSecret } from "@/utils/privacy";
 
@@ -167,7 +167,7 @@ function OAuthButton({
   const handlePress = async () => {
     const { data } = await authClient.signIn.social({
       provider,
-      callbackURL: "suwa://callback",
+      callbackURL: getOAuthCallbackURL(),
     });
     if (data?.url) {
       // The URL will be opened by the system browser
@@ -546,6 +546,7 @@ export default function LandingScreen() {
         const { error } = await authClient.signUp.email({
           email: emailAddress,
           password,
+          name: emailAddress.split("@")[0] ?? "User",
         });
         if (error) {
           setStatusMessage(error.message ?? "Unable to sign up.");
@@ -619,7 +620,10 @@ export default function LandingScreen() {
       <ProfileStep
         form={patientForm}
         isPending={completeOnboarding.isPending}
-        onBack={() => navigateStep("auth", "back")}
+        onBack={async () => {
+          await authClient.signOut();
+          navigateStep("start", "back");
+        }}
         onChange={changePatientForm}
         onSubmit={submitOnboarding}
       />
