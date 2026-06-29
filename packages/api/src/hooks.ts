@@ -32,7 +32,7 @@ export function requireAuth(context: AuthContext): WithAuth {
 
 export function requireAdmin(context: AuthContext): WithAuth {
   const auth = requireAuth(context);
-  if (auth.auth.sessionClaims?.metadata?.role !== "admin") {
+  if (auth.auth.user?.role !== "admin") {
     throw new ORPCError("FORBIDDEN", { message: "Admin access required" });
   }
   return auth;
@@ -43,7 +43,7 @@ export async function requireDoctorOrAdmin(
 ): Promise<WithAuth> {
   const auth = requireAuth(context);
 
-  const role = auth.auth.sessionClaims?.metadata?.role;
+  const role = auth.auth.user?.role;
   if (role === "admin") {
     return auth;
   }
@@ -87,7 +87,7 @@ export function resolveDoctorId(
   context: AuthContext,
   inputDoctorId?: string
 ): string {
-  const role = context.auth?.sessionClaims?.metadata?.role;
+  const role = context.auth?.user?.role;
   if (role === "admin" && inputDoctorId) {
     return inputDoctorId;
   }
@@ -118,52 +118,21 @@ export function mapDoctorProfile(profile: typeof doctorProfiles.$inferSelect) {
   };
 }
 
-export async function getDoctorWithClerkInfo(
+export async function getDoctorInfo(
   _db: DbOnly["db"],
-  clerk: Context["clerk"],
   profile: DoctorProfile
 ) {
-  try {
-    const clerkUser = await clerk.users.getUser(profile.userId);
-    const nameParts = [clerkUser.firstName, clerkUser.lastName].filter(Boolean);
-    let name = profile.displayName ?? clerkUser.fullName ?? null;
-    if (!name && nameParts.length > 0) {
-      name = nameParts.join(" ");
-    }
-    if (!name) {
-      name =
-        clerkUser.username ??
-        clerkUser.emailAddresses[0]?.emailAddress ??
-        clerkUser.phoneNumbers[0]?.phoneNumber ??
-        "Doctor";
-    }
-    const email = clerkUser.emailAddresses[0]?.emailAddress ?? null;
-    const phone = clerkUser.phoneNumbers[0]?.phoneNumber ?? null;
-
-    return {
-      userId: profile.userId,
-      name,
-      email,
-      phone,
-      imageUrl: clerkUser.imageUrl ?? null,
-      bio: profile.bio,
-      licenseNumber: profile.licenseNumber,
-      permanent: profile.permanent,
-      role: profile.permanent ? "doctor" : "pending-doctor",
-    };
-  } catch {
-    return {
-      userId: profile.userId,
-      name: "Doctor",
-      email: null,
-      phone: null,
-      imageUrl: null,
-      bio: profile.bio,
-      licenseNumber: profile.licenseNumber,
-      permanent: profile.permanent,
-      role: profile.permanent ? "doctor" : "pending-doctor",
-    };
-  }
+  return {
+    userId: profile.userId,
+    name: profile.displayName ?? "Doctor",
+    email: null,
+    phone: null,
+    imageUrl: null,
+    bio: profile.bio,
+    licenseNumber: profile.licenseNumber,
+    permanent: profile.permanent,
+    role: profile.permanent ? "doctor" : "pending-doctor",
+  };
 }
 
 export function paginateItems<T>(
@@ -199,7 +168,7 @@ export async function requireTenantAdmin(
   const auth = requireAuth(context);
 
   // Platform admins can manage any tenant
-  if (auth.auth.sessionClaims?.metadata?.role === "admin") {
+  if (auth.auth.user?.role === "admin") {
     return auth;
   }
 

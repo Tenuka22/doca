@@ -184,24 +184,25 @@ function TenantClinicsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-semibold text-lg tracking-tight">Clinics</h1>
-          <p className="text-muted-foreground">
-            Manage clinics within this public hospital.
-          </p>
-        </div>
+      <div className="rounded-[2rem] border border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-semibold text-lg tracking-tight">Clinics</h1>
+            <p className="text-muted-foreground">
+              Manage clinics within this public hospital.
+            </p>
+          </div>
 
-        <Dialog onOpenChange={setDialogOpen} open={dialogOpen}>
-          <DialogTrigger
-            render={
-              <Button>
-                <PlusIcon className="size-4" />
-                Create Clinic
-              </Button>
-            }
-          />
-          <DialogContent className="sm:max-w-lg">
+          <Dialog onOpenChange={setDialogOpen} open={dialogOpen}>
+            <DialogTrigger
+              render={
+                <Button className="rounded-full">
+                  <PlusIcon className="size-4" />
+                  Create Clinic
+                </Button>
+              }
+            />
+          <DialogContent className="sm:max-w-lg rounded-[2rem]">
             <DialogHeader>
               <DialogTitle>Create New Clinic</DialogTitle>
             </DialogHeader>
@@ -209,6 +210,7 @@ function TenantClinicsPage() {
               <div className="flex flex-col gap-2">
                 <Label>Clinic Name *</Label>
                 <Input
+                  className="rounded-full"
                   onChange={(e) => setClinicName(e.target.value)}
                   placeholder="e.g., Cardiology OPD"
                   value={clinicName}
@@ -217,6 +219,7 @@ function TenantClinicsPage() {
               <div className="flex flex-col gap-2">
                 <Label>Specialization</Label>
                 <Input
+                  className="rounded-full"
                   onChange={(e) => setSpecialization(e.target.value)}
                   placeholder="e.g., Cardiology"
                   value={specialization}
@@ -240,14 +243,14 @@ function TenantClinicsPage() {
                               {slot.startTime}-{slot.endTime}
                             </span>
                           </div>
-                          <Button
-                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                            onClick={() => removeSlot(i)}
-                            size="icon"
-                            variant="ghost"
-                          >
-                            <TrashIcon className="size-3" />
-                          </Button>
+                    <Button
+                      className="h-6 w-6 rounded-full text-muted-foreground hover:text-destructive"
+                      onClick={() => removeSlot(i)}
+                      size="icon"
+                      variant="ghost"
+                    >
+                      <TrashIcon className="size-3" />
+                    </Button>
                         </div>
                       ))}
                     </div>
@@ -259,7 +262,7 @@ function TenantClinicsPage() {
                         onValueChange={(v) => setNewDay(v ?? "1")}
                         value={newDay}
                       >
-                        <SelectTrigger className="w-20">
+                        <SelectTrigger className="w-20 rounded-full">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -277,7 +280,7 @@ function TenantClinicsPage() {
                         onValueChange={(v) => setNewStart(v ?? "09:00")}
                         value={newStart}
                       >
-                        <SelectTrigger className="w-20">
+                        <SelectTrigger className="w-20 rounded-full">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -295,7 +298,7 @@ function TenantClinicsPage() {
                         onValueChange={(v) => setNewEnd(v ?? "10:00")}
                         value={newEnd}
                       >
-                        <SelectTrigger className="w-20">
+                        <SelectTrigger className="w-20 rounded-full">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -308,7 +311,7 @@ function TenantClinicsPage() {
                       </Select>
                     </div>
                     <Button
-                      className="h-8"
+                      className="h-8 rounded-full"
                       onClick={addSlot}
                       size="sm"
                       variant="outline"
@@ -320,21 +323,22 @@ function TenantClinicsPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={() => setDialogOpen(false)} variant="outline">
+              <Button className="rounded-full" onClick={() => setDialogOpen(false)} variant="outline">
                 Cancel
               </Button>
-              <Button disabled={createClinic.isPending} onClick={handleCreate}>
+              <Button className="rounded-full" disabled={createClinic.isPending} onClick={handleCreate}>
                 {createClinic.isPending ? "Creating..." : "Create Clinic"}
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
+      </div>
 
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <Card key={i}>
+            <Card className="rounded-[2rem] border-border/50 bg-card/60 backdrop-blur-sm" key={i}>
               <CardHeader>
                 <Skeleton className="h-5 w-40" />
               </CardHeader>
@@ -347,7 +351,7 @@ function TenantClinicsPage() {
       ) : data?.clinics?.length ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {data.clinics.map((clinic) => (
-            <Card className="flex flex-col" key={clinic.id}>
+            <Card className="flex flex-col rounded-[2rem] border-border/50 bg-card/60 backdrop-blur-sm" key={clinic.id}>
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <StethoscopeIcon className="size-4 text-primary" />
@@ -359,11 +363,11 @@ function TenantClinicsPage() {
               </CardHeader>
               <CardContent className="flex flex-1 flex-col gap-2">
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">
+                  <Badge className="rounded-full" variant="outline">
                     <ClockIcon className="size-3" />
                     Schedule
                   </Badge>
-                  <Badge variant="secondary">Created {formatCreatedAt(clinic.createdAt)}</Badge>
+                  <Badge className="rounded-full" variant="secondary">Created {formatCreatedAt(clinic.createdAt)}</Badge>
                 </div>
 
                 {clinic.schedule ? (
@@ -384,7 +388,7 @@ function TenantClinicsPage() {
 
                 <div className="mt-auto pt-3">
                   <Link
-                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2 font-medium text-primary-foreground text-xs shadow-sm transition-colors hover:bg-primary/90"
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2 font-medium text-primary-foreground text-xs shadow-sm transition-colors hover:bg-primary/90"
                     params={{ tenantId, clinicId: clinic.id }}
                     to="/tenant/$tenantId/clinics/$clinicId/attendance"
                   >
@@ -397,13 +401,13 @@ function TenantClinicsPage() {
           ))}
         </div>
       ) : (
-        <Card className="flex flex-col items-center justify-center">
+        <Card className="flex flex-col items-center justify-center rounded-[2rem] border-border/50 bg-card/60 backdrop-blur-sm">
           <StethoscopeIcon className="size-12 text-muted-foreground/40" />
           <CardTitle>No clinics yet</CardTitle>
           <CardDescription className="text-center">
             Create clinics to organize doctor attendance within this hospital.
           </CardDescription>
-          <Button onClick={() => setDialogOpen(true)}>
+          <Button className="rounded-full" onClick={() => setDialogOpen(true)}>
             <PlusIcon className="size-4" />
             Create Clinic
           </Button>

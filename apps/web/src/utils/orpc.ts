@@ -7,8 +7,6 @@ import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { getClerkAuthToken } from "@/utils/clerk-auth";
-
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
@@ -24,9 +22,11 @@ export const queryClient = new QueryClient({
 
 const link = new RPCLink({
   url: `${env.VITE_SERVER_URL}/rpc`,
-  headers: async () => {
-    const token = await getClerkAuthToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
+  fetch(url, options) {
+    return fetch(url, {
+      ...options,
+      credentials: "include",
+    });
   },
 });
 

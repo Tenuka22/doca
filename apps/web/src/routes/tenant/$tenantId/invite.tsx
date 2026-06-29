@@ -72,7 +72,7 @@ function TenantInvitePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
+      <div className="rounded-[2rem] border border-border/50 bg-card/60 p-6 backdrop-blur-sm">
         <h1 className="font-semibold text-lg tracking-tight">Invite Doctor</h1>
         <p className="text-muted-foreground">
           Send invitations to doctors to join this hospital.
@@ -80,7 +80,7 @@ function TenantInvitePage() {
       </div>
 
       {/* Invite Form */}
-      <Card>
+      <Card className="rounded-[2rem] border-border/50 bg-card/60 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="text-base">Send New Invitation</CardTitle>
           <CardDescription>
@@ -91,6 +91,7 @@ function TenantInvitePage() {
           <div className="flex flex-col gap-2">
             <Label htmlFor="doctorId">Doctor ID *</Label>
             <Input
+              className="rounded-full"
               id="doctorId"
               onChange={(e) => setDoctorId(e.target.value)}
               placeholder="Enter doctor's user ID..."
@@ -100,6 +101,7 @@ function TenantInvitePage() {
           <div className="flex flex-col gap-2">
             <Label htmlFor="message">Message (optional)</Label>
             <Textarea
+              className="rounded-[2rem]"
               id="message"
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Add a personal message to the invitation..."
@@ -107,7 +109,7 @@ function TenantInvitePage() {
               value={message}
             />
           </div>
-          <Button disabled={inviteDoctor.isPending} onClick={handleInvite}>
+          <Button className="rounded-full" disabled={inviteDoctor.isPending} onClick={handleInvite}>
             <SendIcon className="size-4" />
             {inviteDoctor.isPending ? "Sending..." : "Send Invitation"}
           </Button>
@@ -115,7 +117,7 @@ function TenantInvitePage() {
       </Card>
 
       {/* Invitation History */}
-      <Card>
+      <Card className="rounded-[2rem] border-border/50 bg-card/60 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-base">Invitation History</CardTitle>
@@ -127,7 +129,7 @@ function TenantInvitePage() {
             onValueChange={(v) => setFilterStatus(v ?? "ALL")}
             value={filterStatus}
           >
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-[140px] rounded-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -152,14 +154,14 @@ function TenantInvitePage() {
             <div className="flex flex-col gap-2">
               {filteredInvitations.map((inv) => (
                 <div
-                  className="flex items-center justify-between rounded-lg border p-3"
+                  className="flex items-center justify-between rounded-[2rem] border border-border/50 bg-card/40 p-3"
                   key={inv.id}
                 >
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-sm">{inv.doctorName}</p>
                       <Badge
-                        className="text-[10px]"
+                        className="rounded-full text-[10px]"
                         variant={
                           inv.status === "ACCEPTED"
                             ? "default"

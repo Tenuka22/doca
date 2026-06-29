@@ -2,8 +2,6 @@
 
 import "../global.css";
 
-import { ClerkProvider, useAuth } from "@clerk/expo";
-import { tokenCache } from "@clerk/expo/token-cache";
 import { env } from "@suwa/env/native";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
@@ -19,22 +17,24 @@ import {
   useErrorDialog,
 } from "@/components/design/ui/error-dialog";
 import { showToast } from "@/components/design/ui/toast";
-import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
+import { authClient, setToken } from "@/utils/better-auth";
 import { orpc, queryClient, setQueryErrorHandler } from "@/utils/orpc";
 import { StripePaymentProvider } from "@/utils/stripe";
 
 maybeCompleteAuthSession();
 
-function ClerkApiAuthBridge() {
-  const { getToken } = useAuth();
+function AuthBridge() {
+  const { data: session } = authClient.useSession();
 
   useEffect(() => {
-    setClerkAuthTokenGetter(getToken);
-
-    return () => {
-      setClerkAuthTokenGetter(null);
-    };
-  }, [getToken]);
+    if (session?.session) {
+      setToken(session.session.token ?? null);
+    } else if (session === undefined) {
+      setToken(null);
+    } else {
+      setToken(null);
+    }
+  }, [session]);
 
   return null;
 }
@@ -88,11 +88,12 @@ function getOnboardingRedirect({
 
 function OnboardingCheck() {
   const pathname = usePathname();
-  const { isLoaded, isSignedIn } = useAuth();
+  const { data: session, isPending } = authClient.useSession();
+  const isSignedIn = !!session;
 
   const patientProfileQuery = useQuery(
     orpc.getPatientProfile.queryOptions({
-      enabled: isLoaded && isSignedIn,
+      enabled: !isPending && isSignedIn,
       retry: false,
       meta: { ignoreError: true },
     })
@@ -102,7 +103,7 @@ function OnboardingCheck() {
 
   // Prefetch HomeLanding data once profile is confirmed to eliminate loading states
   useEffect(() => {
-    if (isLoaded && isSignedIn && isProfileLoaded) {
+    if (!isPending && isSignedIn && isProfileLoaded) {
       const patientData = patientProfileQuery.data;
 
       const needsRepair =
@@ -112,9 +113,9 @@ function OnboardingCheck() {
         queryClient.prefetchQuery(orpc.listPatientSessions.queryOptions());
       }
     }
-  }, [isLoaded, isSignedIn, isProfileLoaded, patientProfileQuery.data]);
+  }, [isPending, isSignedIn, isProfileLoaded, patientProfileQuery.data]);
 
-  if (!isLoaded) {
+  if (isPending) {
     return (
       <View className="absolute inset-0 z-50 flex-1 items-center justify-center bg-background">
         <ActivityIndicator className="text-primary" size="large" />
@@ -122,7 +123,7 @@ function OnboardingCheck() {
     );
   }
 
-  if (isLoaded && isSignedIn && !isProfileLoaded) {
+  if (!isPending && isSignedIn && !isProfileLoaded) {
     return (
       <View className="absolute inset-0 z-50 flex-1 items-center justify-center bg-background">
         <ActivityIndicator className="text-primary" size="large" />
@@ -205,11 +206,8 @@ function LayoutContent() {
   }, []);
 
   return (
-    <ClerkProvider
-      publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
-      tokenCache={tokenCache}
-    >
-      <ClerkApiAuthBridge />
+    <>
+      <AuthBridge />
       <QueryClientProvider client={queryClient}>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <StripePaymentProvider>
@@ -241,7 +239,7 @@ function LayoutContent() {
         </GestureHandlerRootView>
       </QueryClientProvider>
       <ErrorDialog {...dialogProps} />
-    </ClerkProvider>
+    </>
   );
 }
 

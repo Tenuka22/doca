@@ -1,4 +1,4 @@
-import { useUser } from "@clerk/tanstack-react-start";
+import { authClient } from "@/utils/auth";
 import {
   doctorConsultationModeValues,
   doctorFocusAreaValues,
@@ -129,7 +129,7 @@ type DoctorProfileFormInput = z.input<typeof doctorProfileFormSchema>;
 type DoctorProfileFormValues = z.output<typeof doctorProfileFormSchema>;
 
 export function DoctorProfileCard() {
-  const user = useUser();
+  const { data: session } = authClient.useSession();
   const [open, setOpen] = useState(false);
   const [approachSteps, setApproachSteps] = useState<ApproachStep[]>([]);
   const [educationRows, setEducationRows] = useState<EducationRow[]>([]);
@@ -267,8 +267,8 @@ export function DoctorProfileCard() {
               className="size-16 border-2 border-primary/20 shadow-md"
               size="lg"
             >
-              {user.user?.imageUrl ? (
-                <AvatarImage alt={displayName} src={user.user.imageUrl} />
+              {session?.user?.image ? (
+                <AvatarImage alt={displayName} src={session.user.image} />
               ) : null}
               <AvatarFallback className="bg-primary/10 text-lg text-primary">
                 {displayName.slice(0, 2).toUpperCase()}

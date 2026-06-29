@@ -1,8 +1,8 @@
 interface FallbackEnv {
   AI: Ai;
+  BETTER_AUTH_SECRET: string;
+  BETTER_AUTH_URL: string;
   CHAT_MESSAGES_KV: KVNamespace;
-  CLERK_PUBLISHABLE_KEY: string;
-  CLERK_SECRET_KEY: string;
   CORS_ORIGIN: string;
   DB: D1Database;
   DOCTOR_MATERIALS_KV: KVNamespace;

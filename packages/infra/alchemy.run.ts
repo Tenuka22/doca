@@ -82,12 +82,12 @@ export const server = await Worker("server", {
     UPSTASH_REDIS_REST_TOKEN:
       // redis.restToken,
       "gQAAAAAAATmIAAIgcDI0ZGNjODgzNzc2ZmQ0MTA3YTgzNmQ2MTY1YmM4ZWE5OA",
-    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
+    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
+    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
     LANGSMITH_TRACING: alchemy.secret.env.LANGSMITH_TRACING!,
     LANGSMITH_ENDPOINT: alchemy.secret.env.LANGSMITH_ENDPOINT!,
     LANGSMITH_API_KEY: alchemy.secret.env.LANGSMITH_API_KEY!,
     LANGSMITH_PROJECT: alchemy.secret.env.LANGSMITH_PROJECT!,
-    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
     STRESS_PREDICTOR_URL: alchemy.env.STRESS_PREDICTOR_URL!,
     GEMINI_API_KEY: alchemy.env.GEMINI_API_KEY!,
     STRESS_PREDICTOR_SECRET: alchemy.secret.env.STRESS_PREDICTOR_SECRET!,
@@ -112,8 +112,6 @@ export const web = await TanStackStart("web", {
     VITE_SERVER_URL: server.url!,
     VITE_WEB_URL: alchemy.env.VITE_WEB_URL!,
     DOCTOR_MATERIALS_KV: doctorMaterialsKv,
-    CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
-    VITE_CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
     VITE_STRIPE_PUBLISHABLE_KEY: alchemy.env.VITE_STRIPE_PUBLISHABLE_KEY!,
   },
   observability: {
@@ -130,7 +128,6 @@ export const landingPage = await TanStackStart("landing-page", {
     VITE_WEB_URL: alchemy.env.VITE_WEB_URL!,
     VITE_MOBILE_WEB_URL: alchemy.env.VITE_MOBILE_WEB_URL!,
     VITE_SERVER_URL: server.url!,
-    VITE_CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
     CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
   },
   domains: [

@@ -98,145 +98,180 @@ function TenantSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-6">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-96 w-full" />
+      <div className="relative min-h-svh overflow-hidden bg-background text-foreground">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,color-mix(in_oklch,var(--secondary)_28%,transparent),transparent_28%),radial-gradient(circle_at_88%_16%,color-mix(in_oklch,var(--muted-foreground)_22%,transparent),transparent_30%),linear-gradient(180deg,var(--background)_0%,var(--muted)_56%,var(--background)_100%)]"
+        />
+        <div className="relative mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+          <Skeleton className="h-8 w-64 rounded-full" />
+          <Skeleton className="h-96 w-full rounded-[2rem]" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <div>
-        <h1 className="font-semibold text-lg tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your hospital tenant profile and branding.
-        </p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Hospital Profile</CardTitle>
-          <CardDescription>Edit tenant details and services.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <Label>Hospital Name</Label>
-              <Input onChange={(e) => setName(e.target.value)} value={name} />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label>Status</Label>
-              <Select
-                onValueChange={(v) => setStatus(v ?? "ACTIVE")}
-                value={status}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="SUSPENDED">Suspended</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
+    <div className="relative min-h-svh overflow-hidden bg-background text-foreground">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,color-mix(in_oklch,var(--secondary)_28%,transparent),transparent_28%),radial-gradient(circle_at_88%_16%,color-mix(in_oklch,var(--muted-foreground)_22%,transparent),transparent_30%),linear-gradient(180deg,var(--background)_0%,var(--muted)_56%,var(--background)_100%)]"
+      />
+      <div className="relative mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-3 rounded-[1.4rem] border border-border/90 bg-card/80 p-5 shadow-[0_14px_40px_color-mix(in_oklch,var(--foreground)_8%,transparent)] backdrop-blur-md sm:p-6">
+          <Badge className="h-7 w-fit rounded-full bg-primary px-3 text-primary-foreground">
+            Hospital settings
+          </Badge>
           <div className="flex flex-col gap-2">
-            <Label>Address</Label>
-            <Input
-              onChange={(e) => setAddress(e.target.value)}
-              value={address}
-            />
+            <h1 className="font-semibold text-3xl tracking-tight sm:text-4xl">
+              Settings
+            </h1>
+            <p className="max-w-[58ch] text-base text-muted-foreground leading-7">
+              Manage your hospital tenant profile, services, and branding.
+            </p>
           </div>
+        </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <Label>Phone</Label>
-              <Input onChange={(e) => setPhone(e.target.value)} value={phone} />
+        <Card className="overflow-hidden rounded-[2rem] border-border/95 bg-card/82 shadow-[0_24px_70px_color-mix(in_oklch,var(--foreground)_10%,transparent)] backdrop-blur-md">
+          <CardHeader>
+            <CardTitle className="tracking-tight">Hospital Profile</CardTitle>
+            <CardDescription>Edit tenant details and services.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-2">
+                <Label>Hospital Name</Label>
+                <Input
+                  className="rounded-full"
+                  onChange={(e) => setName(e.target.value)}
+                  value={name}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label>Status</Label>
+                <Select
+                  onValueChange={(v) => setStatus(v ?? "ACTIVE")}
+                  value={status}
+                >
+                  <SelectTrigger className="w-full rounded-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ACTIVE">Active</SelectItem>
+                    <SelectItem value="INACTIVE">Inactive</SelectItem>
+                    <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+
             <div className="flex flex-col gap-2">
-              <Label>Website</Label>
+              <Label>Address</Label>
               <Input
-                onChange={(e) => setWebsite(e.target.value)}
-                value={website}
+                className="rounded-full"
+                onChange={(e) => setAddress(e.target.value)}
+                value={address}
               />
             </div>
-          </div>
 
-          <div className="flex flex-col gap-2">
-            <Label>Additional Contact Info</Label>
-            <Input
-              onChange={(e) => setContactInfo(e.target.value)}
-              value={contactInfo}
-            />
-          </div>
-        </CardContent>
-      </Card>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-2">
+                <Label>Phone</Label>
+                <Input
+                  className="rounded-full"
+                  onChange={(e) => setPhone(e.target.value)}
+                  value={phone}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label>Website</Label>
+                <Input
+                  className="rounded-full"
+                  onChange={(e) => setWebsite(e.target.value)}
+                  value={website}
+                />
+              </div>
+            </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Services Offered</CardTitle>
-          <CardDescription>
-            Select which services this hospital provides.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {HOSPITAL_SERVICES.map((service) => (
-              <Badge
-                className="cursor-pointer text-xs transition-colors"
-                key={service}
-                onClick={() => toggleService(service)}
-                variant={
-                  selectedServices.includes(service) ? "default" : "outline"
-                }
-              >
-                {service}
-              </Badge>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            <div className="flex flex-col gap-2">
+              <Label>Additional Contact Info</Label>
+              <Input
+                className="rounded-full"
+                onChange={(e) => setContactInfo(e.target.value)}
+                value={contactInfo}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Admins */}
-      {data?.admins && data.admins.length > 0 && (
-        <Card>
+        <Card className="overflow-hidden rounded-[2rem] border-border/95 bg-card/82 shadow-[0_24px_70px_color-mix(in_oklch,var(--foreground)_10%,transparent)] backdrop-blur-md">
           <CardHeader>
-            <CardTitle className="text-base">Tenant Admins</CardTitle>
+            <CardTitle className="tracking-tight">Services Offered</CardTitle>
             <CardDescription>
-              Users who can manage this hospital.
+              Select which services this hospital provides.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col gap-2">
-              {data.admins.map((admin) => (
-                <div
-                  className="flex items-center justify-between rounded-lg border"
-                  key={admin.id}
+            <div className="flex flex-wrap gap-2">
+              {HOSPITAL_SERVICES.map((service) => (
+                <Badge
+                  className="h-7 cursor-pointer rounded-full px-3 text-xs transition-all hover:-translate-y-0.5"
+                  key={service}
+                  onClick={() => toggleService(service)}
+                  variant={
+                    selectedServices.includes(service) ? "default" : "outline"
+                  }
                 >
-                  <span className="text-sm">{admin.userId}</span>
-                  <span className="text-muted-foreground text-xs">
-                    Since {new Date(admin.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
+                  {service}
+                </Badge>
               ))}
             </div>
           </CardContent>
         </Card>
-      )}
 
-      <div className="flex justify-between">
-        <Button
-          onClick={() => navigate({ to: `/tenant/${tenantId}` })}
-          variant="outline"
-        >
-          Back to Dashboard
-        </Button>
-        <Button disabled={updateTenant.isPending} onClick={handleSave}>
-          {updateTenant.isPending ? "Saving..." : "Save Changes"}
-        </Button>
+        {/* Admins */}
+        {data?.admins && data.admins.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Tenant Admins</CardTitle>
+              <CardDescription>
+                Users who can manage this hospital.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-2">
+                {data.admins.map((admin) => (
+                  <div
+                    className="flex items-center justify-between rounded-lg border"
+                    key={admin.id}
+                  >
+                    <span className="text-sm">{admin.userId}</span>
+                    <span className="text-muted-foreground text-xs">
+                      Since {new Date(admin.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="flex justify-between">
+          <Button
+            className="h-12 rounded-full border-border bg-card px-5 text-foreground hover:bg-muted"
+            onClick={() => navigate({ to: `/tenant/${tenantId}` })}
+            variant="outline"
+          >
+            Back to Dashboard
+          </Button>
+          <Button
+            className="h-12 rounded-full bg-primary px-5 text-primary-foreground shadow-[0_10px_28px_color-mix(in_oklch,var(--primary)_18%,transparent)] hover:-translate-y-0.5 hover:bg-primary/90"
+            disabled={updateTenant.isPending}
+            onClick={handleSave}
+          >
+            {updateTenant.isPending ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ const proofItems = [
   { label: "identity required publicly", value: "0" },
   { label: "ways to consult", value: "3" },
   { label: "care roles supported", value: "3" },
-  { label: "session length", value: "50 min" },
+  { label: "session length", value: "60" },
 ] as const;
 
 export function ProofBar() {
@@ -21,8 +21,8 @@ export function ProofBar() {
             }`}
             key={label}
           >
-            <strong className="font-normal font-serif text-[29px] tracking-[-0.04em]">
-              {value}
+            <strong className="font-normal font-serif text-[29px] tracking-[-0.04em] whitespace-nowrap">
+              {value}{label === "session length" && <span className="text-[11px]">min</span>}
             </strong>
             <span className="max-w-[105px] text-[9px] text-foreground-muted uppercase leading-[1.45]">
               {label}

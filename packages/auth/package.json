@@ -1,0 +1,29 @@
+{
+  "name": "@suwa/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./client": {
+      "default": "./src/client.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@suwa/db": "workspace:*",
+    "@suwa/env": "workspace:*",
+    "better-auth": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@better-auth/cli": "^1.4.21",
+    "@libsql/client": "^0.17.4",
+    "@suwa/config": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "typescript": "^6"
+  }
+}

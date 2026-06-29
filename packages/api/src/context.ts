@@ -1,52 +1,40 @@
-import "./globals.d.ts";
+import { createAuth } from "@suwa/auth";
+import { createDb } from "@suwa/db";
+import { env } from "@suwa/env/server";
+import type { Context as HonoContext } from "hono";
 
-export interface ClerkContextAuth {
-  sessionClaims: CustomJwtSessionClaims | null;
+export interface AuthContext {
   userId: string | null;
+  session: {
+    id: string;
+    expiresAt: Date;
+    token: string;
+    createdAt: Date;
+    updatedAt: Date;
+    ipAddress?: string;
+    userAgent?: string;
+    userId: string;
+  } | null;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    image?: string | null;
+    emailVerified: boolean;
+    role: string;
+    banned: boolean | null;
+  } | null;
 }
 
-export interface ClerkRequestContext {
+export interface RequestContext {
   ai: Ai;
-  auth: ClerkContextAuth | null;
+  auth: AuthContext;
   chatMessagesKv: KVNamespace;
-  clerk: typeof clerkClient;
   db: ReturnType<typeof createDb>;
   faceEmbeddingsKv: KVNamespace;
   faceVideosKv: KVNamespace;
   geminiApiKey: string;
-  session: null;
 }
-
-function toClerkContextAuth(
-  auth: {
-    userId: string | null;
-    sessionClaims?: CustomJwtSessionClaims | null;
-  } | null
-): ClerkContextAuth | null {
-  return auth
-    ? { userId: auth.userId, sessionClaims: auth.sessionClaims ?? null }
-    : null;
-}
-
-import { createClerkClient } from "@clerk/backend";
-import { createDb } from "@suwa/db";
-import { env } from "@suwa/env/server";
-
-const clerkClient = createClerkClient({
-  secretKey: env.CLERK_SECRET_KEY,
-  publishableKey: env.CLERK_PUBLISHABLE_KEY,
-});
-
-async function authenticateClerkRequest(
-  request: Request
-): Promise<ClerkContextAuth | null> {
-  const requestState = await clerkClient.authenticateRequest(request, {
-    authorizedParties: env.CORS_ORIGIN.split(","),
-  });
-  return toClerkContextAuth(requestState.toAuth());
-}
-
-import type { Context as HonoContext } from "hono";
 
 export interface CreateContextOptions {
   context: HonoContext;
@@ -55,13 +43,19 @@ export interface CreateContextOptions {
 
 export async function createContext({
   context,
-}: CreateContextOptions): Promise<ClerkRequestContext> {
-  const clerkAuth = await authenticateClerkRequest(context.req.raw);
+}: CreateContextOptions): Promise<RequestContext> {
+  const betterAuth = createAuth();
+  const session = await betterAuth.api.getSession({
+    headers: context.req.raw.headers,
+  });
+
   return {
-    auth: clerkAuth,
-    session: null,
+    auth: {
+      userId: session?.user?.id ?? null,
+      session: session?.session ?? null,
+      user: session?.user ?? null,
+    },
     db: createDb(),
-    clerk: clerkClient,
     chatMessagesKv: env.CHAT_MESSAGES_KV,
     faceEmbeddingsKv: env.FACE_EMBEDDINGS_KV,
     faceVideosKv: env.FACE_VIDEOS_KV,

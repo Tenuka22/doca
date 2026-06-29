@@ -4,6 +4,7 @@ import { onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { RPCHandler as WebSocketRPCHandler } from "@orpc/server/websocket";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
+import { createAuth } from "@suwa/auth";
 import { createContext } from "@suwa/api/context";
 import { appRouter, wsAppRouter } from "@suwa/api/routers/index";
 import { env } from "@suwa/env/server";
@@ -22,7 +23,12 @@ app.use(
     origin: env.CORS_ORIGIN.split(","),
     allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
+);
+
+app.on(["POST", "GET"], "/api/auth/*", (c) =>
+  createAuth().handler(c.req.raw)
 );
 
 export const apiHandler = new OpenAPIHandler(appRouter, {

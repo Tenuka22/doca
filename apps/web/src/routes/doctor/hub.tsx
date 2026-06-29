@@ -1,4 +1,3 @@
-import { useUser } from "@clerk/tanstack-react-start";
 import {
   Avatar,
   AvatarFallback,
@@ -40,6 +39,7 @@ import {
   useHubChannels,
   useHubMaterials,
 } from "@/hooks/hub/use-hub";
+import { authClient } from "@/utils/auth";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/doctor/hub")({
@@ -61,7 +61,8 @@ type FilterTab = "all" | "videos" | "audio" | "uploading";
 type SortOption = "newest" | "oldest" | "title";
 
 function DoctorHubPage() {
-  const { user } = useUser();
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
   const { materials: initialMaterials, channels: initialChannels } =
     Route.useLoaderData();
 
@@ -142,7 +143,7 @@ function DoctorHubPage() {
     }
   });
 
-  const name = user?.fullName ?? user?.username ?? "Doctor";
+  const name = user?.name ?? "Doctor";
   const initials = name
     .split(" ")
     .map((part) => part[0])
@@ -161,17 +162,22 @@ function DoctorHubPage() {
   ).length;
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="relative min-h-svh overflow-hidden bg-background text-foreground">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,color-mix(in_oklch,var(--secondary)_28%,transparent),transparent_28%),radial-gradient(circle_at_88%_16%,color-mix(in_oklch,var(--muted-foreground)_22%,transparent),transparent_30%),linear-gradient(180deg,var(--background)_0%,var(--muted)_56%,var(--background)_100%)]"
+      />
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
       {/* Channel Header Banner */}
-      <div className="relative h-40 overflow-hidden bg-gradient-to-r from-primary/20 via-primary/10 to-background md:h-52">
+      <div className="relative h-40 overflow-hidden rounded-[1.4rem] bg-gradient-to-r from-primary/20 via-primary/10 to-background md:h-52">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(120,119,198,0.15),transparent_50%)]" />
       </div>
 
       {/* Channel Info */}
-      <div className="relative z-10 -mt-12 px-6">
+      <div className="relative z-10 -mt-12">
         <div className="flex items-end gap-5">
           <Avatar className="size-24 border-4 border-background shadow-xl">
-            <AvatarImage src={user?.imageUrl} />
+            <AvatarImage src={user?.image ?? undefined} />
             <AvatarFallback className="text-xl">{initials}</AvatarFallback>
           </Avatar>
 
@@ -210,7 +216,7 @@ function DoctorHubPage() {
 
           <div className="flex items-center gap-2 pb-2">
             <Button
-              className="gap-2 rounded-full"
+              className="h-12 gap-2 rounded-full border-border bg-card px-5 text-foreground hover:bg-muted"
               onClick={() => setCreateChannelOpen(true)}
               variant="outline"
             >
@@ -218,7 +224,7 @@ function DoctorHubPage() {
               Channel
             </Button>
             <Button
-              className="gap-2 rounded-full"
+              className="h-12 gap-2 rounded-full bg-primary px-5 text-primary-foreground shadow-[0_10px_28px_color-mix(in_oklch,var(--primary)_18%,transparent)] hover:-translate-y-0.5 hover:bg-primary/90"
               onClick={() => setUploadOpen(true)}
             >
               <UploadIcon className="size-4" />
@@ -230,7 +236,7 @@ function DoctorHubPage() {
 
       {/* Channel Tabs (YouTube-style horizontal scroll) */}
       {allChannels.length > 0 && (
-        <div className="px-6">
+        <div>
           <div className="scrollbar-hide flex items-center gap-2 overflow-x-auto pb-2">
             <Button
               className="shrink-0 rounded-full"
@@ -257,7 +263,7 @@ function DoctorHubPage() {
       )}
 
       {/* Main Content Area */}
-      <div className="flex flex-1 flex-col gap-4 px-6">
+      <div className="flex flex-1 flex-col gap-4">
         {/* Toolbar */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex max-w-md flex-1 items-center gap-3">
@@ -390,7 +396,7 @@ function DoctorHubPage() {
             </p>
             {!searchQuery && activeTab !== "uploading" && (
               <Button
-                className="gap-2 rounded-full"
+                className="h-12 gap-2 rounded-full bg-primary px-5 text-primary-foreground shadow-[0_10px_28px_color-mix(in_oklch,var(--primary)_18%,transparent)] hover:-translate-y-0.5 hover:bg-primary/90"
                 onClick={() => setUploadOpen(true)}
               >
                 <UploadIcon className="size-4" />
@@ -439,7 +445,7 @@ function DoctorHubPage() {
           <div className="flex flex-col gap-2">
             {sortedMaterials.map((material) => (
               <div
-                className="flex items-center gap-4 rounded-xl transition-colors hover:bg-muted/30"
+                className="flex items-center gap-4 rounded-[1.2rem] border border-border/90 bg-card/80 p-3 shadow-sm backdrop-blur-md transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_50px_color-mix(in_oklch,var(--foreground)_12%,transparent)]"
                 key={material.id}
               >
                 <div className="relative flex aspect-video w-40 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/40 bg-muted/20">
@@ -526,6 +532,7 @@ function DoctorHubPage() {
         onOpenChange={setCreateChannelOpen}
         open={createChannelOpen}
       />
+      </div>
     </div>
   );
 }

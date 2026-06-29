@@ -1,6 +1,4 @@
-import { ClerkProvider, useAuth } from "@clerk/tanstack-react-start";
 import { APP_DISPLAY_NAME, LOGO_PATH } from "@suwa/app-info";
-import { env } from "@suwa/env/web";
 import { Toaster } from "@suwa/ui/components/sonner";
 import { TooltipProvider } from "@suwa/ui/components/tooltip";
 import type { QueryClient } from "@tanstack/react-query";
@@ -12,26 +10,9 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import { useEffect } from "react";
-import { setClerkAuthTokenGetter } from "@/utils/clerk-auth";
-
+import type { orpc } from "@/utils/orpc";
 import appCss from "../index.css?url";
 
-function ClerkApiAuthBridge() {
-  const { getToken } = useAuth();
-
-  useEffect(() => {
-    setClerkAuthTokenGetter(getToken);
-
-    return () => {
-      setClerkAuthTokenGetter(null);
-    };
-  }, [getToken]);
-
-  return null;
-}
-
-import type { orpc } from "@/utils/orpc";
 export interface RouterAppContext {
   orpc: typeof orpc;
   queryClient: QueryClient;
@@ -65,30 +46,30 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 });
 
 function RootDocument() {
+  const showDevtools =
+    import.meta.env.DEV && import.meta.env.VITE_SHOW_DEVTOOLS === "true";
+
   return (
-    <ClerkProvider
-      publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}
-      signInUrl="/sign-in"
-      signUpUrl="/sign-up"
-    >
-      <ClerkApiAuthBridge />
-      <TooltipProvider>
-        <html className="light" lang="en">
-          <head>
-            <HeadContent />
-          </head>
-          <body>
-            <Outlet />
-            <Toaster richColors />
-            <TanStackRouterDevtools position="bottom-left" />
-            <ReactQueryDevtools
-              buttonPosition="bottom-right"
-              position="bottom"
-            />
-            <Scripts />
-          </body>
-        </html>
-      </TooltipProvider>
-    </ClerkProvider>
+    <TooltipProvider>
+      <html className="light" lang="en">
+        <head>
+          <HeadContent />
+        </head>
+        <body>
+          <Outlet />
+          <Toaster richColors />
+          {showDevtools ? (
+            <>
+              <TanStackRouterDevtools position="bottom-left" />
+              <ReactQueryDevtools
+                buttonPosition="bottom-right"
+                position="bottom"
+              />
+            </>
+          ) : null}
+          <Scripts />
+        </body>
+      </html>
+    </TooltipProvider>
   );
 }

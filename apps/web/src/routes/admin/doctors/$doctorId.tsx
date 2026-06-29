@@ -1,4 +1,3 @@
-import { SignInButton, useUser } from "@clerk/tanstack-react-start";
 import {
   Avatar,
   AvatarFallback,
@@ -43,6 +42,7 @@ import {
   parseApproachSteps,
   parseEducationRows,
 } from "@/utils/doctor/profile-utils";
+import { authClient } from "@/utils/auth";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/admin/doctors/$doctorId")({
@@ -56,7 +56,7 @@ export const Route = createFileRoute("/admin/doctors/$doctorId")({
 });
 
 function AdminDoctorDetailRoute() {
-  const user = useUser();
+  const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
   const params = Route.useParams();
   const data = Route.useLoaderData();
@@ -89,7 +89,7 @@ function AdminDoctorDetailRoute() {
     [profile?.education]
   );
 
-  if (!user.isLoaded) {
+  if (isPending) {
     return (
       <div className="flex flex-col gap-6 p-6">
         <Skeleton className="h-24 rounded-[2rem]" />
@@ -97,10 +97,12 @@ function AdminDoctorDetailRoute() {
       </div>
     );
   }
-  if (!user.user) {
+  if (!session) {
     return (
       <div className="p-6">
-        <SignInButton />
+        <Button onClick={() => router.navigate({ to: "/sign-in" })}>
+          Sign in
+        </Button>
       </div>
     );
   }

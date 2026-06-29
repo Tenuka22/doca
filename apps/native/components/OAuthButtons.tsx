@@ -1,40 +1,39 @@
 "use client";
 
-import { useOAuth } from "@clerk/expo";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import React from "react";
 import { Button } from "@/components/design/ui/button";
+import { authClient } from "@/utils/better-auth";
 import { OAUTH_STRATEGIES } from "@/utils/auth";
 
 WebBrowser.maybeCompleteAuthSession();
 
 function OAuthButton({
-  strategy,
+  provider,
   label,
   icon: Icon,
   disabled,
 }: {
-  strategy: (typeof OAUTH_STRATEGIES)[number]["strategy"];
+  provider: "google" | "facebook";
   label: string;
   icon: any;
   disabled?: boolean;
 }) {
-  const { startOAuthFlow } = useOAuth({ strategy });
-
   const onPress = React.useCallback(async () => {
     try {
-      const { createdSessionId, setActive } = await startOAuthFlow({
-        redirectUrl: Linking.createURL("/", { scheme: "suwa" }),
+      const { data } = await authClient.signIn.social({
+        provider,
+        callbackURL: Linking.createURL("/", { scheme: "suwa" }),
       });
 
-      if (createdSessionId && setActive) {
-        await setActive({ session: createdSessionId });
+      if (data?.url) {
+        await WebBrowser.openAuthSessionAsync(data.url, "suwa://callback");
       }
     } catch (err) {
-      console.error(`OAuth error with ${strategy}`, err);
+      console.error(`OAuth error with ${provider}`, err);
     }
-  }, [startOAuthFlow, strategy]);
+  }, [provider]);
 
   return (
     <Button
@@ -57,7 +56,7 @@ export function OAuthButtons({ disabled }: { disabled?: boolean }) {
           icon={provider.icon}
           key={provider.strategy}
           label={provider.label}
-          strategy={provider.strategy}
+          provider={provider.strategy as "google" | "facebook"}
         />
       ))}
     </>

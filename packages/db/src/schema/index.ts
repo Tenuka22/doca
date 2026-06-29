@@ -393,6 +393,15 @@ export type {
   StressPrediction,
 } from "./stress-predictions";
 export { stressPredictions } from "./stress-predictions";
+export {
+  user,
+  session,
+  account,
+  verification,
+  userRelations,
+  sessionRelations,
+  accountRelations,
+} from "./auth";
 export type {
   Clinic,
   ClinicAttendance as ClinicAttendanceRecord,

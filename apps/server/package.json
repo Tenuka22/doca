@@ -9,13 +9,15 @@
     "stripe:listen": "stripe listen --forward-to localhost:3000/stripe/webhook"
   },
   "dependencies": {
+    "@faker-js/faker": "^9.6.0",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
     "@suwa/api": "workspace:*",
+    "@suwa/auth": "workspace:*",
     "@suwa/db": "workspace:*",
     "@suwa/env": "workspace:*",
-    "@faker-js/faker": "^9.6.0",
+    "bcryptjs": "^3.0.3",
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.2",
     "hono": "catalog:",

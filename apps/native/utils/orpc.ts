@@ -7,7 +7,7 @@ import type { AppRouterClient } from "@suwa/api/routers/index";
 import { env } from "@suwa/env/native";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 
-import { getClerkAuthToken } from "@/utils/clerk-auth";
+import { getToken } from "@/utils/better-auth";
 
 let globalQueryErrorHandler: ((error: unknown) => void) | null = null;
 
@@ -28,7 +28,7 @@ export const queryClient = new QueryClient({
 export const _link = new RPCLink({
   url: `${env.EXPO_PUBLIC_SERVER_URL}/rpc`,
   headers: async () => {
-    const token = await getClerkAuthToken();
+    const token = getToken();
     return token ? { Authorization: `Bearer ${token}` } : {};
   },
 });

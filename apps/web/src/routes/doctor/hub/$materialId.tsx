@@ -1,4 +1,3 @@
-import { useUser } from "@clerk/tanstack-react-start";
 import {
   Avatar,
   AvatarFallback,
@@ -31,6 +30,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { EditMaterialDialog } from "@/components/hub";
+import { authClient } from "@/utils/auth";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/doctor/hub/$materialId")({
@@ -45,10 +45,11 @@ export const Route = createFileRoute("/doctor/hub/$materialId")({
 
 function HubMaterialDetailPage() {
   const { material } = Route.useLoaderData();
-  const { user } = useUser();
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
   const [editOpen, setEditOpen] = useState(false);
 
-  const name = user?.fullName ?? user?.username ?? "Doctor";
+  const name = user?.name ?? "Doctor";
   const timeAgo = formatDistanceToNow(new Date(material.createdAt), {
     addSuffix: true,
   });
@@ -56,7 +57,12 @@ function HubMaterialDetailPage() {
   const isVideo = material.fileType === "video";
 
   return (
-    <div className="mx-auto max-w-[1400px] px-6 py-6">
+    <div className="relative min-h-svh overflow-hidden bg-background text-foreground">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,color-mix(in_oklch,var(--secondary)_28%,transparent),transparent_28%),radial-gradient(circle_at_88%_16%,color-mix(in_oklch,var(--muted-foreground)_22%,transparent),transparent_30%),linear-gradient(180deg,var(--background)_0%,var(--muted)_56%,var(--background)_100%)]"
+      />
+      <div className="relative mx-auto max-w-[1400px] px-6 py-6">
       <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
         {/* Main Content */}
         <div className="flex flex-col gap-4">
@@ -70,7 +76,7 @@ function HubMaterialDetailPage() {
           </Link>
 
           {/* Video/Audio Player Area */}
-          <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-2xl border border-border/40 bg-black/5">
+          <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-[2rem] border border-border/40 bg-black/5">
             {isVideo ? (
               <FilmIcon className="size-16 text-muted-foreground/30" />
             ) : (
@@ -130,7 +136,7 @@ function HubMaterialDetailPage() {
 
               <div className="flex items-center gap-2">
                 <Button
-                  className="gap-2 rounded-full"
+                  className="h-12 gap-2 rounded-full border-border bg-card px-5 text-foreground hover:bg-muted"
                   size="sm"
                   variant="outline"
                 >
@@ -189,7 +195,7 @@ function HubMaterialDetailPage() {
 
           {/* Description */}
           {material.description && (
-            <Card className="rounded-xl">
+            <Card className="overflow-hidden rounded-[1.2rem] border-border/90 bg-card/80 shadow-sm backdrop-blur-md">
               <CardContent>
                 <p className="whitespace-pre-wrap text-sm">
                   {material.description}
@@ -214,7 +220,7 @@ function HubMaterialDetailPage() {
 
         {/* Sidebar - Related/Playlists */}
         <div className="flex flex-col gap-4">
-          <Card className="rounded-xl">
+          <Card className="overflow-hidden rounded-[2rem] border-border/95 bg-card/82 shadow-[0_24px_70px_color-mix(in_oklch,var(--foreground)_10%,transparent)] backdrop-blur-md">
             <CardHeader className="pb-3">
               <h3 className="font-medium text-sm">Details</h3>
             </CardHeader>
@@ -264,7 +270,7 @@ function HubMaterialDetailPage() {
             </CardContent>
           </Card>
 
-          <Card className="rounded-xl">
+          <Card className="overflow-hidden rounded-[2rem] border-border/95 bg-card/82 shadow-[0_24px_70px_color-mix(in_oklch,var(--foreground)_10%,transparent)] backdrop-blur-md">
             <CardHeader className="pb-3">
               <h3 className="font-medium text-sm">Content Notes</h3>
             </CardHeader>
@@ -298,6 +304,7 @@ function HubMaterialDetailPage() {
         onOpenChange={setEditOpen}
         open={editOpen}
       />
+      </div>
     </div>
   );
 }

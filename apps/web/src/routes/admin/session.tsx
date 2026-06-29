@@ -1,4 +1,3 @@
-import { useUser } from "@clerk/tanstack-react-start";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -26,6 +25,7 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "@suwa/ui/com
 import { Textarea } from "@suwa/ui/components/textarea";
 import { Toggle } from "@suwa/ui/components/toggle";
 import { useLiveKitRoomWeb } from "@/hooks/use-livekit-room";
+import { authClient } from "@/utils/auth";
 import { orpc } from "@/utils/orpc";
 import {
   createSessionKeyPair,
@@ -499,7 +499,8 @@ function SessionFullscreen({
 }
 
 function AdminSessionPage() {
-  const { user } = useUser();
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
   const [sessionId, setSessionId] = useState("");
   const [generatedSessionId, setGeneratedSessionId] = useState("");
   const [copied, setCopied] = useState(false);
@@ -509,7 +510,7 @@ function AdminSessionPage() {
   const [selectedRole, setSelectedRole] = useState<"patient" | "doctor">("doctor");
 
   if (!user) return null;
-  if (user.publicMetadata?.role !== "admin") {
+  if ((user as any).role !== "admin") {
     return (
       <div className="flex min-h-[70vh] items-center justify-center">
         <Card className="w-full max-w-sm">
