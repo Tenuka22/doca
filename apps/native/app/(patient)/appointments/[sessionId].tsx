@@ -22,8 +22,8 @@ import {
 export default function AppointmentSessionDetailScreen() {
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
   const router = useRouter();
-  const { data: session } = authClient.useSession();
-  const role = (session?.user as { role?: string } | undefined)?.role;
+  const { data: authSession } = authClient.useSession();
+  const role = (authSession?.user as { role?: string } | undefined)?.role;
   let userRole: "patient" | "doctor" | "admin" = "patient";
   if (role === "admin") {
     userRole = "admin";
