@@ -159,14 +159,12 @@ function ActionButton({
 
 function OAuthButton({
   label,
-  provider,
 }: {
   label: string;
-  provider: "google" | "facebook";
 }) {
   const handlePress = async () => {
     const { data } = await authClient.signIn.social({
-      provider,
+      provider: "google",
       callbackURL: getOAuthCallbackURL(),
     });
     if (data?.url) {
@@ -179,8 +177,8 @@ function OAuthButton({
     <Button
       icon={
         <FontAwesome6
-          color={provider === "google" ? "#4285F4" : "#1877F2"}
-          name={provider === "google" ? "google" : "facebook-f"}
+          color="#4285F4"
+          name="google"
           size={17}
         />
       }
@@ -334,8 +332,7 @@ function AuthStep({
           <View className="h-px flex-1 bg-border" />
         </View>
         <View className="gap-md">
-          <OAuthButton label="Continue with Google" provider="google" />
-          <OAuthButton label="Continue with Facebook" provider="facebook" />
+          <OAuthButton label="Continue with Google" />
         </View>
       </Reveal>
     </View>

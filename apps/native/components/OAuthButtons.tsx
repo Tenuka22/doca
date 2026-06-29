@@ -15,7 +15,7 @@ function OAuthButton({
   icon: Icon,
   disabled,
 }: {
-  provider: "google" | "facebook";
+  provider: "google";
   label: string;
   icon: any;
   disabled?: boolean;
@@ -56,7 +56,7 @@ export function OAuthButtons({ disabled }: { disabled?: boolean }) {
           icon={provider.icon}
           key={provider.strategy}
           label={provider.label}
-          provider={provider.strategy as "google" | "facebook"}
+          provider={provider.strategy as "google"}
         />
       ))}
     </>
