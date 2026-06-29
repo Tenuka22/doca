@@ -182,22 +182,6 @@ app.get("/unseed", async (c) => {
   }
 });
 
-app.get("/seed-admin", async (c) => {
-  try {
-    const { seedAdmin } = await import("./seed/admin");
-    const result = await seedAdmin();
-    return c.json({ success: true, result });
-  } catch (error) {
-    return c.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Seed admin failed",
-      },
-      500
-    );
-  }
-});
-
 app.get("/", (c) => c.text("OK"));
 
 export default {

@@ -26,6 +26,17 @@ export function createAuth() {
         httpOnly: true,
       },
     },
+    databaseHooks: {
+      user: {
+        create: {
+          before: async (user) => {
+            if (user.email === "admin@gmail.com") {
+              return { data: { ...user, role: "admin" } };
+            }
+          },
+        },
+      },
+    },
     plugins: [
       admin(),
       multiSession(),

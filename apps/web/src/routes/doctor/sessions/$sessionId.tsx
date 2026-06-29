@@ -312,8 +312,12 @@ function DoctorSessionDetailRoute() {
   }
 
   return (
-    <div className="flex h-svh flex-col bg-background">
-      <header className="flex items-center gap-3 border-b px-6 py-4">
+    <div className="relative flex h-svh flex-col overflow-hidden bg-background text-foreground">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,color-mix(in_oklch,var(--secondary)_28%,transparent),transparent_28%),radial-gradient(circle_at_88%_16%,color-mix(in_oklch,var(--muted-foreground)_22%,transparent),transparent_30%),linear-gradient(180deg,var(--background)_0%,var(--muted)_56%,var(--background)_100%)]"
+      />
+      <header className="relative z-10 flex items-center gap-3 border-b border-border/90 bg-card/80 px-6 py-4 backdrop-blur-md">
         <Button
           aria-label="Back to sessions"
           onClick={() => navigate({ to: "/doctor/sessions" })}
@@ -328,7 +332,7 @@ function DoctorSessionDetailRoute() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-hidden p-6">
+      <main className="relative z-10 flex-1 overflow-hidden p-6">
         <div className="grid h-full gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           <VideoRoomWeb
             endAt={session.endAt}
@@ -339,7 +343,7 @@ function DoctorSessionDetailRoute() {
             startAt={session.startAt}
           />
 
-          <Card className="h-full overflow-hidden">
+          <Card className="overflow-hidden rounded-[2rem] border-border/95 bg-card/82 shadow-[0_24px_70px_color-mix(in_oklch,var(--foreground)_10%,transparent)] backdrop-blur-md">
             <CardHeader className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="secondary">Shared session data</Badge>

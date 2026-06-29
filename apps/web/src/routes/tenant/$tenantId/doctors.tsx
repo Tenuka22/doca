@@ -32,27 +32,29 @@ function TenantDoctorsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-semibold text-lg tracking-tight">
-            Doctor Roster
-          </h1>
-          <p className="text-muted-foreground">
-            All doctors affiliated with this hospital.
-          </p>
+      <div className="rounded-[2rem] border border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-semibold text-lg tracking-tight">
+              Doctor Roster
+            </h1>
+            <p className="text-muted-foreground">
+              All doctors affiliated with this hospital.
+            </p>
+          </div>
+          <Link
+            className={`${buttonVariants({ size: "sm" })} rounded-full`}
+            params={{ tenantId }}
+            to="/tenant/$tenantId/invite"
+          >
+            <UserPlusIcon className="size-4" />
+            Invite Doctor
+          </Link>
         </div>
-        <Link
-          className={buttonVariants({ size: "sm" })}
-          params={{ tenantId }}
-          to="/tenant/$tenantId/invite"
-        >
-          <UserPlusIcon className="size-4" />
-          Invite Doctor
-        </Link>
       </div>
 
       {isLoading ? (
-        <Card>
+        <Card className="rounded-[2rem] border-border/50 bg-card/60 backdrop-blur-sm">
           <CardContent>
             <Skeleton className="h-8 w-full" />
             <Skeleton className="h-8 w-full" />
@@ -60,7 +62,7 @@ function TenantDoctorsPage() {
           </CardContent>
         </Card>
       ) : data?.affiliations?.length ? (
-        <Card>
+        <Card className="rounded-[2rem] border-border/50 bg-card/60 backdrop-blur-sm">
           <Table>
             <TableHeader>
               <TableRow>
@@ -83,6 +85,7 @@ function TenantDoctorsPage() {
                   </TableCell>
                   <TableCell>
                     <Badge
+                      className="rounded-full"
                       variant={
                         aff.status === "ACTIVE"
                           ? "default"
@@ -98,7 +101,7 @@ function TenantDoctorsPage() {
                     <div className="flex flex-wrap gap-1">
                       {aff.doctorSpecialties?.map((s) => (
                         <Badge
-                          className="text-[10px]"
+                          className="rounded-full text-[10px]"
                           key={s}
                           variant="outline"
                         >
@@ -128,13 +131,13 @@ function TenantDoctorsPage() {
           </Table>
         </Card>
       ) : (
-        <Card className="flex flex-col items-center justify-center">
+        <Card className="flex flex-col items-center justify-center rounded-[2rem] border-border/50 bg-card/60 backdrop-blur-sm">
           <CardTitle>No doctors yet</CardTitle>
           <CardDescription>
             Invite doctors to join this hospital.
           </CardDescription>
           <Link
-            className={buttonVariants({})}
+            className={`${buttonVariants({})} rounded-full`}
             params={{ tenantId }}
             to="/tenant/$tenantId/invite"
           >

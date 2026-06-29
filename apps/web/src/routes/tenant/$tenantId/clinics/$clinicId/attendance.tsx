@@ -102,7 +102,7 @@ function ClinicAttendancePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="rounded-[2rem] border border-border/50 bg-card/60 p-6 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <Link
             className="flex items-center gap-1 text-muted-foreground text-sm hover:text-foreground"
@@ -113,20 +113,19 @@ function ClinicAttendancePage() {
             Back to Clinics
           </Link>
         </div>
-      </div>
-
-      <div>
-        <h1 className="font-semibold text-lg tracking-tight">
-          {clinic?.name ? `Attendance - ${clinic.name}` : "Attendance"}
-        </h1>
-        <p className="text-muted-foreground">
-          Mark and view doctor attendance for this clinic.
-        </p>
+        <div className="mt-3">
+          <h1 className="font-semibold text-lg tracking-tight">
+            {clinic?.name ? `Attendance - ${clinic.name}` : "Attendance"}
+          </h1>
+          <p className="text-muted-foreground">
+            Mark and view doctor attendance for this clinic.
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="flex flex-col gap-4 lg:col-span-2">
-          <Card>
+          <Card className="rounded-[2rem] border-border/50 bg-card/60 backdrop-blur-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm">Mark Attendance</CardTitle>
@@ -135,7 +134,7 @@ function ClinicAttendancePage() {
                     <PopoverTrigger
                       render={
                         <Button
-                          className="justify-start text-left font-normal"
+                          className="justify-start text-left font-normal rounded-full"
                           size="sm"
                           variant="outline"
                         />
@@ -171,7 +170,7 @@ function ClinicAttendancePage() {
                     onValueChange={(v) => setAttendanceDoctorId(v ?? "")}
                     value={attendanceDoctorId}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full rounded-full">
                       <SelectValue placeholder="Select doctor..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -199,27 +198,27 @@ function ClinicAttendancePage() {
                       onValueChange={(v) => setArrivedAt(v ?? "")}
                       value={arrivedAt}
                     >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="--:--" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TIME_OPTIONS.map((t) => (
-                          <SelectItem key={t} value={t}>
-                            {t}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Label>Scheduled leave</Label>
-                    <Select
-                      onValueChange={(v) => setLeftAt(v ?? "")}
-                      value={leftAt}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="--:--" />
-                      </SelectTrigger>
+                       <SelectTrigger className="w-full rounded-full">
+                         <SelectValue placeholder="--:--" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         {TIME_OPTIONS.map((t) => (
+                           <SelectItem key={t} value={t}>
+                             {t}
+                           </SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
+                   </div>
+                   <div className="flex flex-col gap-2">
+                     <Label>Scheduled leave</Label>
+                     <Select
+                       onValueChange={(v) => setLeftAt(v ?? "")}
+                       value={leftAt}
+                     >
+                       <SelectTrigger className="w-full rounded-full">
+                         <SelectValue placeholder="--:--" />
+                       </SelectTrigger>
                       <SelectContent>
                         {TIME_OPTIONS.map((t) => (
                           <SelectItem key={t} value={t}>
@@ -232,6 +231,7 @@ function ClinicAttendancePage() {
                 </div>
 
                 <Button
+                  className="rounded-full"
                   disabled={markAttendance.isPending || !attendanceDoctorId}
                   onClick={handleMarkAttendance}
                 >
@@ -242,7 +242,7 @@ function ClinicAttendancePage() {
           </Card>
         </div>
 
-        <Card>
+        <Card className="rounded-[2rem] border-border/50 bg-card/60 backdrop-blur-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm">
               Records for{" "}

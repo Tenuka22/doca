@@ -10,10 +10,9 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-
+import type { orpc } from "@/utils/orpc";
 import appCss from "../index.css?url";
 
-import type { orpc } from "@/utils/orpc";
 export interface RouterAppContext {
   orpc: typeof orpc;
   queryClient: QueryClient;
@@ -47,6 +46,9 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 });
 
 function RootDocument() {
+  const showDevtools =
+    import.meta.env.DEV && import.meta.env.VITE_SHOW_DEVTOOLS === "true";
+
   return (
     <TooltipProvider>
       <html className="light" lang="en">
@@ -56,11 +58,15 @@ function RootDocument() {
         <body>
           <Outlet />
           <Toaster richColors />
-          <TanStackRouterDevtools position="bottom-left" />
-          <ReactQueryDevtools
-            buttonPosition="bottom-right"
-            position="bottom"
-          />
+          {showDevtools ? (
+            <>
+              <TanStackRouterDevtools position="bottom-left" />
+              <ReactQueryDevtools
+                buttonPosition="bottom-right"
+                position="bottom"
+              />
+            </>
+          ) : null}
           <Scripts />
         </body>
       </html>

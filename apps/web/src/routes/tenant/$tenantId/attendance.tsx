@@ -282,314 +282,354 @@ function TenantAttendancePage() {
   const isSaving = logEvent.isPending || updateEvent.isPending;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-semibold text-lg tracking-tight">Attendance</h1>
-          <p className="text-muted-foreground">
-            Track doctor attendance at this hospital.
-          </p>
-        </div>
-
-        <Dialog onOpenChange={setDialogOpen} open={dialogOpen}>
-          <DialogTrigger
-            render={
-              <Button
-                onClick={() => {
-                  setEditingEvent(null);
-                  setEventType("CHECKED_IN");
-                  setEventHour("09");
-                  setEventMinute("00");
-                  setEventNote("");
-                }}
-              >
-                <PlusIcon className="size-4" />
-                Log Event
-              </Button>
-            }
-          />
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>
-                {editingEvent
-                  ? "Edit Attendance Event"
-                  : "Log Attendance Event"}
-              </DialogTitle>
-              <DialogDescription>
-                {editingEvent
-                  ? "Update the attendance event details."
-                  : "Record a check-in, check-out, or other event for a doctor."}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Label>Doctor</Label>
-                <Select
-                  disabled={!!editingEvent}
-                  onValueChange={(v) => {
-                    setSelectedDoctorId(v ?? "");
-                    setEventHour("09");
-                    setEventMinute("00");
-                  }}
-                  value={selectedDoctorId}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select doctor..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {doctors
-                      .filter((d) => d.status === "ACTIVE")
-                      .map((d) => (
-                        <SelectItem key={d.doctorId} value={d.doctorId}>
-                          {d.doctorName}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {selectedDoctorId && selectedDoctorWindows.length > 0 && (
-                <div className="rounded-lg border border-border/50 bg-primary/5 p-3">
-                  <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
-                    <ClockIcon className="size-3" />
-                    Reserved time slots
-                  </div>
-                  <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    {selectedDoctorWindows.map((w, i) => (
-                      <Badge
-                        className="text-[10px]"
-                        key={i}
-                        variant="secondary"
-                      >
-                        {w}
-                      </Badge>
-                    ))}
-                  </div>
-                  <p className="mt-1 text-[10px] text-muted-foreground">
-                    Timestamp must fall within a reserved window
-                  </p>
-                </div>
-              )}
-
-              <div className="flex flex-col gap-2">
-                <Label>Event Type</Label>
-                <Select
-                  onValueChange={(v) => {
-                    if (v) {
-                      setEventType(v as (typeof EVENT_TYPES)[number]);
-                    }
-                  }}
-                  value={eventType}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {EVENT_TYPES.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type.replace(/_/g, " ")}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label>Timestamp</Label>
-                <div className="flex items-center gap-2">
-                  <div className="rounded-md border border-border bg-background px-3 py-2 text-sm">
-                    {format(selectedDate, "MMM d, yyyy")}
-                  </div>
-                  <Select
-                    onValueChange={(v) => setEventHour(v ?? "09")}
-                    value={eventHour}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {HOURS.map((h) => (
-                        <SelectItem key={h} value={h}>
-                          {h}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <span className="text-muted-foreground">:</span>
-                  <Select
-                    onValueChange={(v) => setEventMinute(v ?? "00")}
-                    value={eventMinute}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MINUTES.map((m) => (
-                        <SelectItem key={m} value={m}>
-                          {m}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label>Note (optional)</Label>
-                <Textarea
-                  onChange={(e) => setEventNote(e.target.value)}
-                  placeholder="Add a note..."
-                  rows={2}
-                  value={eventNote}
-                />
-              </div>
+    <div className="relative min-h-svh overflow-hidden bg-background text-foreground">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,color-mix(in_oklch,var(--secondary)_28%,transparent),transparent_28%),radial-gradient(circle_at_88%_16%,color-mix(in_oklch,var(--muted-foreground)_22%,transparent),transparent_30%),linear-gradient(180deg,var(--background)_0%,var(--muted)_56%,var(--background)_100%)]"
+      />
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex flex-col justify-between gap-6 rounded-[1.4rem] border border-border/90 bg-card/80 p-5 shadow-[0_14px_40px_color-mix(in_oklch,var(--foreground)_8%,transparent)] backdrop-blur-md sm:flex-row sm:items-center sm:p-6">
+          <div className="flex flex-col gap-3">
+            <Badge className="h-7 w-fit rounded-full bg-primary px-3 text-primary-foreground">
+              Attendance tracking
+            </Badge>
+            <div className="flex flex-col gap-2">
+              <h1 className="font-semibold text-3xl tracking-tight sm:text-4xl">
+                Attendance
+              </h1>
+              <p className="max-w-[58ch] text-base text-muted-foreground leading-7">
+                Track doctor attendance at this hospital.
+              </p>
             </div>
-            <DialogFooter>
-              <Button onClick={resetForm} variant="outline">
-                Cancel
-              </Button>
-              <Button
-                disabled={isSaving}
-                onClick={editingEvent ? handleUpdateEvent : handleLogEvent}
-              >
-                {isSaving
-                  ? "Saving..."
-                  : editingEvent
-                    ? "Update Event"
-                    : "Log Event"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+          </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs">Date</Label>
-          <Popover>
-            <PopoverTrigger
+          <Dialog onOpenChange={setDialogOpen} open={dialogOpen}>
+            <DialogTrigger
               render={
                 <Button
-                  className="w-[240px] justify-start text-left font-normal"
-                  variant="outline"
-                />
+                  className="h-12 rounded-full bg-primary px-5 text-primary-foreground shadow-[0_10px_28px_color-mix(in_oklch,var(--primary)_18%,transparent)] hover:-translate-y-0.5 hover:bg-primary/90"
+                  onClick={() => {
+                    setEditingEvent(null);
+                    setEventType("CHECKED_IN");
+                    setEventHour("09");
+                    setEventMinute("00");
+                    setEventNote("");
+                  }}
+                >
+                  <PlusIcon className="size-4" />
+                  Log Event
+                </Button>
               }
-            >
-              <CalendarIcon className="mr-2 size-4" />
-              {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-auto p-0">
-              <Calendar
-                mode="single"
-                onSelect={(date) => {
-                  if (date) {
-                    setSelectedDate(date);
-                  }
-                }}
-                selected={selectedDate}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-        <div className="flex flex-col gap-1">
-          <Label className="text-xs">Doctor</Label>
-          <Select
-            onValueChange={(v) => setSelectedDoctorId(v ?? "")}
-            value={selectedDoctorId}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="All doctors" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">All doctors</SelectItem>
-              {doctors
-                .filter((d) => d.status === "ACTIVE")
-                .map((d) => (
-                  <SelectItem key={d.doctorId} value={d.doctorId}>
-                    {d.doctorName}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+            />
+            <DialogContent className="rounded-[2rem] border-border/95 bg-card/82 shadow-[0_24px_70px_color-mix(in_oklch,var(--foreground)_12%,transparent)] backdrop-blur-md sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="tracking-tight">
+                  {editingEvent
+                    ? "Edit Attendance Event"
+                    : "Log Attendance Event"}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingEvent
+                    ? "Update the attendance event details."
+                    : "Record a check-in, check-out, or other event for a doctor."}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                  <Label>Doctor</Label>
+                  <Select
+                    disabled={!!editingEvent}
+                    onValueChange={(v) => {
+                      setSelectedDoctorId(v ?? "");
+                      setEventHour("09");
+                      setEventMinute("00");
+                    }}
+                    value={selectedDoctorId}
+                  >
+                    <SelectTrigger className="w-full rounded-full h-12">
+                      <SelectValue placeholder="Select doctor..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {doctors
+                        .filter((d) => d.status === "ACTIVE")
+                        .map((d) => (
+                          <SelectItem key={d.doctorId} value={d.doctorId}>
+                            {d.doctorName}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-      {/* Events Timeline */}
-      {isLoading ? (
-        <div className="flex flex-col gap-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton className="h-16 w-full" key={i} />
-          ))}
-        </div>
-      ) : events.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center py-12">
-          <CalendarCheckIcon className="size-8 text-muted-foreground/40" />
-          <CardTitle className="mt-3 text-base">
-            No events for this date
-          </CardTitle>
-          <CardDescription>
-            Log an attendance event to start tracking.
-          </CardDescription>
-        </Card>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {events.map((event) => {
-            const Icon = EVENT_ICONS[event.eventType] ?? CalendarCheckIcon;
-            const colorClass =
-              EVENT_COLORS[event.eventType] ?? "text-muted-foreground";
-            const doctor = doctors.find((d) => d.doctorId === event.doctorId);
-
-            return (
-              <Card key={event.id}>
-                <CardContent className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={`rounded-full border p-2 ${colorClass}`}>
-                      <Icon className="size-4" />
+                {selectedDoctorId && selectedDoctorWindows.length > 0 && (
+                  <div className="rounded-[1.2rem] border border-border/90 bg-background/72 p-4 text-sm">
+                    <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                      <ClockIcon className="size-3" />
+                      Reserved time slots
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium">
-                          {doctor?.doctorName ?? event.doctorId}
-                        </p>
-                        <Badge className="text-[10px]" variant="outline">
-                          {event.eventType.replace(/_/g, " ")}
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {selectedDoctorWindows.map((w) => (
+                        <Badge
+                          className="h-6 rounded-full px-3 text-[10px]"
+                          key={w}
+                          variant="secondary"
+                        >
+                          {w}
                         </Badge>
-                      </div>
-                      <p className="text-muted-foreground text-sm">
-                        {new Date(event.timestamp).toLocaleTimeString("en-US", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          timeZone: "Asia/Colombo",
-                        })}
-                        {event.note && ` — ${event.note}`}
-                      </p>
+                      ))}
                     </div>
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      Timestamp must fall within a reserved window
+                    </p>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      className="text-muted-foreground hover:text-foreground"
-                      onClick={() => handleEditEvent(event)}
-                      size="icon"
-                      variant="ghost"
+                )}
+
+                <div className="flex flex-col gap-2">
+                  <Label>Event Type</Label>
+                  <Select
+                    onValueChange={(v) => {
+                      if (v) {
+                        setEventType(v as (typeof EVENT_TYPES)[number]);
+                      }
+                    }}
+                    value={eventType}
+                  >
+                    <SelectTrigger className="w-full rounded-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EVENT_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type.replace(/_/g, " ")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label>Timestamp</Label>
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-full border border-border/90 bg-background/72 px-4 py-2 text-sm">
+                      {format(selectedDate, "MMM d, yyyy")}
+                    </div>
+                    <Select
+                      onValueChange={(v) => setEventHour(v ?? "09")}
+                      value={eventHour}
                     >
-                      <PencilIcon className="size-4" />
-                    </Button>
-                    <Button
-                      className="text-muted-foreground hover:text-destructive"
-                      onClick={() => handleDeleteEvent(event.id)}
-                      size="icon"
-                      variant="ghost"
+                      <SelectTrigger className="w-20 rounded-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {HOURS.map((h) => (
+                          <SelectItem key={h} value={h}>
+                            {h}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <span className="text-muted-foreground">:</span>
+                    <Select
+                      onValueChange={(v) => setEventMinute(v ?? "00")}
+                      value={eventMinute}
                     >
-                      <TrashIcon className="size-4" />
-                    </Button>
+                      <SelectTrigger className="w-20 rounded-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MINUTES.map((m) => (
+                          <SelectItem key={m} value={m}>
+                            {m}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label>Note (optional)</Label>
+                  <Textarea
+                    className="rounded-[1.2rem]"
+                    onChange={(e) => setEventNote(e.target.value)}
+                    placeholder="Add a note..."
+                    rows={2}
+                    value={eventNote}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button
+                  className="h-12 rounded-full border-border bg-card px-5 text-foreground hover:bg-muted"
+                  onClick={resetForm}
+                  variant="outline"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="h-12 rounded-full bg-primary px-5 text-primary-foreground shadow-[0_10px_28px_color-mix(in_oklch,var(--primary)_18%,transparent)] hover:-translate-y-0.5 hover:bg-primary/90"
+                  disabled={isSaving}
+                  onClick={editingEvent ? handleUpdateEvent : handleLogEvent}
+                >
+                  {isSaving
+                    ? "Saving..."
+                    : editingEvent
+                      ? "Update Event"
+                      : "Log Event"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
-      )}
+
+        {/* Filters */}
+        <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-muted-foreground text-xs uppercase tracking-[0.16em]">
+              Date
+            </Label>
+            <Popover>
+              <PopoverTrigger
+                render={
+                  <Button
+                    className="h-10 w-[240px] justify-start gap-2 rounded-full border-border bg-card px-4 text-left font-normal text-foreground hover:bg-muted"
+                    variant="outline"
+                  />
+                }
+              >
+                <CalendarIcon className="size-4" />
+                {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+              </PopoverTrigger>
+              <PopoverContent
+                align="start"
+                className="w-auto rounded-[1.5rem] border-border/95 bg-card/90 p-2 shadow-[0_14px_40px_color-mix(in_oklch,var(--foreground)_8%,transparent)] backdrop-blur-md"
+              >
+                <Calendar
+                  mode="single"
+                  onSelect={(date) => {
+                    if (date) {
+                      setSelectedDate(date);
+                    }
+                  }}
+                  selected={selectedDate}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-muted-foreground text-xs uppercase tracking-[0.16em]">
+              Doctor
+            </Label>
+            <Select
+              onValueChange={(v) => setSelectedDoctorId(v ?? "")}
+              value={selectedDoctorId}
+            >
+              <SelectTrigger className="h-12 w-full rounded-full border-border bg-card px-4 text-foreground">
+                <SelectValue placeholder="All doctors" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">All doctors</SelectItem>
+                {doctors
+                  .filter((d) => d.status === "ACTIVE")
+                  .map((d) => (
+                    <SelectItem key={d.doctorId} value={d.doctorId}>
+                      {d.doctorName}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Events Timeline */}
+        {isLoading ? (
+          <div className="flex flex-col gap-3">
+            {[1, 2, 3].map((i) => (
+              <Skeleton className="h-16 w-full rounded-[1.2rem]" key={i} />
+            ))}
+          </div>
+        ) : events.length === 0 ? (
+          <Card className="flex flex-col items-center justify-center gap-4 rounded-[2rem] border-border/95 bg-card/82 p-8 text-center shadow-[0_24px_70px_color-mix(in_oklch,var(--foreground)_10%,transparent)] backdrop-blur-md">
+            <div className="rounded-full border border-border bg-background p-4 text-muted-foreground">
+              <CalendarCheckIcon className="size-8" />
+            </div>
+            <CardTitle className="text-2xl tracking-tight">
+              No events for this date
+            </CardTitle>
+            <CardDescription className="max-w-md text-center text-muted-foreground leading-7">
+              Log an attendance event to start tracking.
+            </CardDescription>
+          </Card>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {events.map((event) => {
+              const Icon = EVENT_ICONS[event.eventType] ?? CalendarCheckIcon;
+              const colorClass =
+                EVENT_COLORS[event.eventType] ?? "text-muted-foreground";
+              const doctor = doctors.find((d) => d.doctorId === event.doctorId);
+
+              return (
+                <Card
+                  className="overflow-hidden rounded-[1.5rem] border-border/95 bg-card/82 shadow-[0_14px_40px_color-mix(in_oklch,var(--foreground)_8%,transparent)] backdrop-blur-md transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_50px_color-mix(in_oklch,var(--foreground)_12%,transparent)]"
+                  key={event.id}
+                >
+                  <CardContent className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`flex size-10 items-center justify-center rounded-full border border-border bg-background ${colorClass}`}
+                      >
+                        <Icon className="size-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-foreground">
+                            {doctor?.doctorName ?? event.doctorId}
+                          </p>
+                          <Badge
+                            className="h-6 rounded-full px-3 text-[10px]"
+                            variant="outline"
+                          >
+                            {event.eventType.replace(/_/g, " ")}
+                          </Badge>
+                        </div>
+                        <p className="text-muted-foreground text-sm">
+                          {new Date(event.timestamp).toLocaleTimeString(
+                            "en-US",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              timeZone: "Asia/Colombo",
+                            }
+                          )}
+                          {event.note && ` — ${event.note}`}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        className="rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                        onClick={() => handleEditEvent(event)}
+                        size="icon"
+                        variant="ghost"
+                      >
+                        <PencilIcon className="size-4" />
+                      </Button>
+                      <Button
+                        className="rounded-full text-muted-foreground hover:bg-muted hover:text-destructive"
+                        onClick={() => handleDeleteEvent(event.id)}
+                        size="icon"
+                        variant="ghost"
+                      >
+                        <TrashIcon className="size-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
