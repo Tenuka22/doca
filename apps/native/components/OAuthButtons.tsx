@@ -1,12 +1,9 @@
 "use client";
 
-import * as WebBrowser from "expo-web-browser";
 import React from "react";
 import { Button } from "@/components/design/ui/button";
-import { authClient, getOAuthCallbackURL } from "@/utils/better-auth";
+import { authClient } from "@/utils/better-auth";
 import { OAUTH_STRATEGIES } from "@/utils/auth";
-
-WebBrowser.maybeCompleteAuthSession();
 
 function OAuthButton({
   provider,
@@ -23,7 +20,6 @@ function OAuthButton({
     try {
       const { data } = await authClient.signIn.social({
         provider,
-        callbackURL: getOAuthCallbackURL(),
       });
 
       if (data?.url) {

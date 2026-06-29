@@ -39,7 +39,6 @@ function SignInPage() {
     setGoogleLoading(true);
     const { data } = await authClient.signIn.social({
       provider: "google",
-      callbackURL: `${import.meta.env.VITE_SERVER_URL}/api/auth/callback`,
     });
     if (data?.url) {
       window.location.href = data.url;

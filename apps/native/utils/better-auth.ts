@@ -35,13 +35,6 @@ const storage = isWeb()
       removeItem: SecureStore.deleteItemAsync,
     };
 
-export function getOAuthCallbackURL(): string {
-  if (isWeb()) {
-    return `${window.location.origin}/api/auth/callback`;
-  }
-  return "suwa://callback";
-}
-
 const isWebPlatform = isWeb();
 
 const plugins = [multiSessionClient()];

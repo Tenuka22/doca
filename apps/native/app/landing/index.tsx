@@ -28,7 +28,7 @@ import { Button } from "@/components/design/ui/button";
 import { Input } from "@/components/design/ui/input";
 import { Reveal } from "@/components/design/ui/reveal";
 import { ToggleGroup } from "@/components/design/ui/toggle-group";
-import { authClient, getOAuthCallbackURL } from "@/utils/better-auth";
+import { authClient } from "@/utils/better-auth";
 import { orpc, queryClient } from "@/utils/orpc";
 import { encryptData, generateUserSecret, storeSecret } from "@/utils/privacy";
 
@@ -165,7 +165,6 @@ function OAuthButton({
   const handlePress = async () => {
     const { data } = await authClient.signIn.social({
       provider: "google",
-      callbackURL: getOAuthCallbackURL(),
     });
     if (data?.url) {
       // The URL will be opened by the system browser
