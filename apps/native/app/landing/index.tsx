@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
 import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react-native";
 import type { ReactNode } from "react";
+import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import {
   Image,
@@ -167,8 +168,7 @@ function OAuthButton({
       provider: "google",
     });
     if (data?.url) {
-      // The URL will be opened by the system browser
-      // Better Auth handles the redirect and session creation
+      await WebBrowser.openAuthSessionAsync(data.url);
     }
   };
 

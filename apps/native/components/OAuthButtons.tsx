@@ -1,9 +1,12 @@
 "use client";
 
+import * as WebBrowser from "expo-web-browser";
 import React from "react";
 import { Button } from "@/components/design/ui/button";
 import { authClient } from "@/utils/better-auth";
 import { OAUTH_STRATEGIES } from "@/utils/auth";
+
+WebBrowser.maybeCompleteAuthSession();
 
 function OAuthButton({
   provider,
@@ -23,7 +26,7 @@ function OAuthButton({
       });
 
       if (data?.url) {
-        await WebBrowser.openAuthSessionAsync(data.url, "suwa://callback");
+        await WebBrowser.openAuthSessionAsync(data.url);
       }
     } catch (err) {
       console.error(`OAuth error with ${provider}`, err);
