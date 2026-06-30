@@ -482,10 +482,10 @@ export function VideoRoomBase(props: VideoRoomBaseProps) {
           )}
 
           {localStreamURL ? (
-            <View className="absolute right-5 top-5 h-32 w-24 overflow-hidden rounded-2xl border border-border bg-black shadow-lg">
+            <View className="absolute right-5 top-5 h-28 w-28 overflow-hidden rounded-2xl border-2 border-background-elevated bg-black shadow-lg">
               {renderStream(localStreamURL, true)}
-              <View className="absolute bottom-0 left-0 right-0 bg-black/45 px-2 py-1.5">
-                <Text className="font-poppins-medium text-xs text-white">
+              <View className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1">
+                <Text className="font-poppins-medium text-[10px] text-white">
                   {localPreviewLabel}
                 </Text>
               </View>

@@ -51,27 +51,34 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
     >
   >(new Map());
 
+  const captureLocalStreamURL = useCallback(
+    (mediaStreamTrack: MediaStreamTrack) => {
+      try {
+        const stream = new MediaStream([
+          mediaStreamTrack,
+        ] as unknown as RNMediaStreamTrack[]);
+        const url = stream.toURL();
+        if (url) {
+          setLocalStreamURL(url);
+        }
+      } catch {
+        // Ignore preview creation failures while tracks settle.
+      }
+    },
+    []
+  );
+
   const syncLocalPreview = useCallback((room: Room) => {
     for (const [, publication] of room.localParticipant.trackPublications) {
       if (
         publication.track?.kind === Track.Kind.Video &&
         publication.track.mediaStreamTrack
       ) {
-        try {
-          const stream = new MediaStream([
-            publication.track.mediaStreamTrack,
-          ] as unknown as RNMediaStreamTrack[]);
-          const url = stream.toURL();
-          if (url) {
-            setLocalStreamURL(url);
-            return;
-          }
-        } catch {
-          // Ignore preview creation failures while tracks settle.
-        }
+        captureLocalStreamURL(publication.track.mediaStreamTrack);
+        return;
       }
     }
-  }, []);
+  }, [captureLocalStreamURL]);
 
   const connect = useCallback(
     async (
@@ -212,6 +219,12 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
 
         room.on(RoomEvent.TrackSubscribed, (track, _pub, participant) => {
           if (participant.isLocal) {
+            if (
+              track.kind === Track.Kind.Video &&
+              track.mediaStreamTrack
+            ) {
+              captureLocalStreamURL(track.mediaStreamTrack);
+            }
             return;
           }
 
@@ -275,13 +288,22 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
         });
 
         room.on(RoomEvent.LocalTrackPublished, (publication) => {
-          syncLocalPreview(room);
+          if (
+            publication.track?.kind === Track.Kind.Video &&
+            publication.track.mediaStreamTrack
+          ) {
+            captureLocalStreamURL(publication.track.mediaStreamTrack);
+          }
         });
 
         await room.connect(url, token);
 
         await room.localParticipant.setCameraEnabled(cameraEnabled);
         await room.localParticipant.setMicrophoneEnabled(microphoneEnabled);
+
+        if (cameraEnabled) {
+          syncLocalPreview(room);
+        }
 
         roomRef.current = room;
         setRoom(room);
