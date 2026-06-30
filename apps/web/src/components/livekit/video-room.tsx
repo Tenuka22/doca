@@ -708,6 +708,13 @@ export function VideoRoomWeb({
   sidebar,
 }: VideoRoomProps & { compact?: boolean; content?: React.ReactNode; sidebar?: React.ReactNode }) {
   const liveKit = useLiveKitRoomWeb();
+  const {
+    isConnected: liveKitConnected,
+    isConnecting: liveKitConnecting,
+    connect: liveKitConnect,
+    disconnect: liveKitDisconnect,
+    room: liveKitRoom,
+  } = liveKit;
   const timing = useSessionTiming(startAt, endAt, role);
   const [tokenData, setTokenData] = useState<{
     token: string;
@@ -718,7 +725,7 @@ export function VideoRoomWeb({
   const [isFetchingToken, setIsFetchingToken] = useState(false);
 
   useAttendanceTracker({
-    isConnected: liveKit.isConnected,
+    isConnected: liveKitConnected,
     sessionId,
     endAt,
     role,
@@ -753,34 +760,33 @@ export function VideoRoomWeb({
   }, [open, timing.canJoin, tokenData, isFetchingToken, fetchToken]);
 
   useEffect(() => {
-    if (open && tokenData && !liveKit.isConnected && !liveKit.isConnecting) {
-      liveKit
-        .connect(tokenData.serverUrl, tokenData.token)
+    if (open && tokenData && !liveKitConnected && !liveKitConnecting) {
+      liveKitConnect(tokenData.serverUrl, tokenData.token)
         .catch(() => undefined);
     }
-  }, [open, tokenData, liveKit]);
+  }, [open, tokenData, liveKitConnected, liveKitConnecting, liveKitConnect]);
 
   const handleEndSession = useCallback(async () => {
     await orpc.recordAttendanceEvent
       .call({ sessionId, event: "leave" })
       .catch(() => undefined);
-    await liveKit.disconnect();
+    await liveKitDisconnect();
     setTokenData(null);
     setTokenError(null);
     onClose();
-  }, [liveKit, onClose, sessionId]);
+  }, [liveKitDisconnect, onClose, sessionId]);
 
   useEffect(() => {
-    if (timing.mustLeave && liveKit.isConnected) {
-      liveKit.disconnect().catch(() => undefined);
+    if (timing.mustLeave && liveKitConnected) {
+      liveKitDisconnect().catch(() => undefined);
     }
-  }, [timing.mustLeave, liveKit]);
+  }, [timing.mustLeave, liveKitConnected, liveKitDisconnect]);
 
   useEffect(() => {
-    if (!open && liveKit.isConnected) {
-      liveKit.disconnect().catch(() => undefined);
+    if (!open && liveKitConnected) {
+      liveKitDisconnect().catch(() => undefined);
     }
-  }, [open, liveKit]);
+  }, [open, liveKitConnected, liveKitDisconnect]);
 
   const statusBadge = useMemo(() => {
     if (!timing.canJoin) {

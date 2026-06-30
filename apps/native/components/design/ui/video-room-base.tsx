@@ -1,13 +1,19 @@
 "use client";
 
 import {
+  ChevronDown,
+  ChevronUp,
+  Eye,
   Mic,
   MicOff,
   PhoneOff,
   Shield,
+  Tag,
+  User,
   Video,
   VideoOff,
 } from "lucide-react-native";
+import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -251,6 +257,32 @@ export function VideoRoomBase(props: VideoRoomBaseProps) {
     requiresPrivacyChoice
   );
   const [joinError, setJoinError] = useState<string | null>(null);
+  const [showProfileDetails, setShowProfileDetails] = useState(false);
+
+  const profileQuery = useQuery(
+    orpc.getPatientProfile.queryOptions({
+      enabled: participantRole === "patient",
+    }) as any
+  );
+  const profileData = profileQuery.data as Record<string, any> | null | undefined;
+
+  const ageCategoryLabels: Record<string, string> = {
+    child: "Children",
+    teen: "Teenagers",
+    adult: "Adults",
+    senior: "Seniors",
+  };
+
+  const professionLabels: Record<string, string> = {
+    student: "Student",
+    teacher: "Teacher",
+    employed: "Employed",
+    self_employed: "Self-employed",
+    unemployed: "Unemployed",
+    retired: "Retired",
+    healthcare_worker: "Healthcare",
+    other: "Other",
+  };
 
   const liveKit = useLiveKitRoom({
     onDisconnected: () => {
@@ -270,6 +302,7 @@ export function VideoRoomBase(props: VideoRoomBaseProps) {
     isConnected,
     isConnecting,
     isMicEnabled,
+    localStreamAspectRatio,
     localStreamURL,
     remoteParticipants,
     toggleCamera,
@@ -449,11 +482,64 @@ export function VideoRoomBase(props: VideoRoomBaseProps) {
         className="flex-1 self-center"
         style={{ maxWidth: 840, width: "100%" }}
       >
-        <View className="rounded-2xl bg-accent/8 px-4 py-3">
-          <Text className="text-center font-poppins-medium text-sm text-foreground">
-            {sessionBadge}
-          </Text>
-        </View>
+        {participantRole === "patient" && privacyMode === "show-info" ? (
+          <View className="rounded-2xl bg-accent/8">
+            <Pressable
+              className="flex-row items-center justify-center gap-2 px-4 py-3"
+              onPress={() => setShowProfileDetails((v) => !v)}
+            >
+              <Text className="font-poppins-medium text-sm text-foreground">
+                Profile sharing enabled
+              </Text>
+              {showProfileDetails ? (
+                <ChevronUp className="text-foreground-muted" size={14} />
+              ) : (
+                <ChevronDown className="text-foreground-muted" size={14} />
+              )}
+            </Pressable>
+            {showProfileDetails && profileData ? (
+              <View className="border-t border-accent/20 px-4 py-3">
+                <View className="gap-2">
+                  <View className="flex-row items-center gap-2">
+                    <User className="text-accent" size={14} />
+                    <Text className="font-poppins-medium text-xs text-foreground">
+                      Alias
+                    </Text>
+                    <Text className="text-xs text-foreground-muted">
+                      {profileData.alias}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center gap-2">
+                    <Tag className="text-accent" size={14} />
+                    <Text className="font-poppins-medium text-xs text-foreground">
+                      Age category
+                    </Text>
+                    <Text className="text-xs text-foreground-muted">
+                      {ageCategoryLabels[profileData.ageCategory] ??
+                        profileData.ageCategory}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center gap-2">
+                    <Eye className="text-accent" size={14} />
+                    <Text className="font-poppins-medium text-xs text-foreground">
+                      Profession
+                    </Text>
+                    <Text className="text-xs text-foreground-muted">
+                      {professionLabels[profileData.profession] ??
+                        profileData.profession}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            ) : null}
+          </View>
+        ) : (
+          <View className="rounded-2xl bg-accent/8 px-4 py-3">
+            <Text className="text-center font-poppins-medium text-sm text-foreground">
+              {sessionBadge}
+            </Text>
+          </View>
+        )}
 
         <View className="mt-4 flex-1 overflow-hidden rounded-3xl border border-border bg-background-elevated p-3">
           {remoteParticipants.length > 0 ? (
@@ -482,7 +568,13 @@ export function VideoRoomBase(props: VideoRoomBaseProps) {
           )}
 
           {localStreamURL ? (
-            <View className="absolute right-5 top-5 h-28 w-28 overflow-hidden rounded-2xl border-2 border-background-elevated bg-black shadow-lg">
+            <View
+              className="absolute right-5 top-5 overflow-hidden rounded-2xl border-2 border-background-elevated bg-black shadow-lg"
+              style={{
+                height: 128,
+                aspectRatio: localStreamAspectRatio ?? 3 / 4,
+              }}
+            >
               {renderStream(localStreamURL, true)}
               <View className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1">
                 <Text className="font-poppins-medium text-[10px] text-white">

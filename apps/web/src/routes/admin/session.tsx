@@ -144,6 +144,7 @@ function SessionFullscreen({
   onEnd: () => void;
 }) {
   const liveKit = useLiveKitRoomWeb();
+  const { isConnected: liveKitConnected, isConnecting: liveKitConnecting, connect: liveKitConnect, disconnect: liveKitDisconnect, room: liveKitRoom, videoRef, localVideoRef, audioRef, attachParticipantTracks, detachParticipantTracks } = liveKit;
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [notesDraft, setNotesDraft] = useState("");
   const [notesSaved, setNotesSaved] = useState("");
@@ -247,7 +248,7 @@ function SessionFullscreen({
   }, [sessionKeyPair, sharedData]);
 
   useEffect(() => {
-    const room = liveKit.room;
+    const room = liveKitRoom;
     if (!room) return;
 
     const frame = () => {
@@ -262,34 +263,34 @@ function SessionFullscreen({
     return () => {
       if (animationFrame.current !== null) window.cancelAnimationFrame(animationFrame.current);
     };
-  }, [liveKit.room]);
+  }, [liveKitRoom]);
 
   useEffect(() => {
-    if (liveKit.isConnected || liveKit.isConnecting) return;
+    if (liveKitConnected || liveKitConnecting) return;
     orpc.getLiveKitToken.call({ sessionId }).then((tokenData) => {
-      liveKit.connect(tokenData.serverUrl, tokenData.token).catch(() => undefined);
+      liveKitConnect(tokenData.serverUrl, tokenData.token).catch(() => undefined);
     }).catch(() => undefined);
-  }, [liveKit, sessionId]);
+  }, [liveKitConnected, liveKitConnecting, liveKitConnect, sessionId]);
 
-  const remoteParticipants = liveKit.room
-    ? Array.from(liveKit.room.remoteParticipants.values()).filter(
+  const remoteParticipants = liveKitRoom
+    ? Array.from(liveKitRoom.remoteParticipants.values()).filter(
         (item) => isPatientIdentity(item.identity) || item.identity.startsWith("doctor_")
       )
     : [];
   const remoteParticipant = remoteParticipants.find((item) => isPatientIdentity(item.identity)) ?? null;
 
   useEffect(() => {
-    if (!liveKit.isConnected) return;
+    if (!liveKitConnected) return;
     const patientIdentity = remoteParticipant?.identity;
     if (patientIdentity) {
-      liveKit.attachParticipantTracks(patientIdentity);
+      attachParticipantTracks(patientIdentity);
     }
     return () => {
       if (patientIdentity) {
-        liveKit.detachParticipantTracks(patientIdentity);
+        detachParticipantTracks(patientIdentity);
       }
     };
-  }, [liveKit.isConnected, remoteParticipant?.identity, liveKit.attachParticipantTracks, liveKit.detachParticipantTracks]);
+  }, [liveKitConnected, remoteParticipant?.identity, attachParticipantTracks, detachParticipantTracks]);
   const sharedRows = useMemo(() => {
     const rows: Array<[string, string]> = [];
     if (!sharedPatientData) return rows;
@@ -307,7 +308,7 @@ function SessionFullscreen({
   }, [sharedPatientData]);
 
   const endSession = async () => {
-    await liveKit.disconnect();
+    await liveKitDisconnect();
     onEnd();
   };
 
@@ -341,12 +342,15 @@ function SessionFullscreen({
         <div className="grid min-h-0 grid-cols-[1fr_380px]">
           <div className="relative min-h-0 overflow-hidden bg-black">
             {remoteParticipant ? (
-              <video
-                autoPlay
-                className="h-full w-full object-cover"
-                playsInline
-                ref={liveKit.videoRef}
-              />
+              <>
+                <video
+                  autoPlay
+                  className="h-full w-full object-cover"
+                  playsInline
+                  ref={videoRef}
+                />
+                <audio autoPlay playsInline ref={audioRef} />
+              </>
             ) : (
               <div className="flex h-full items-center justify-center p-6">
                 <Card className="w-full max-w-sm border-border/60 bg-background/80">
@@ -367,7 +371,7 @@ function SessionFullscreen({
                 className="aspect-video w-full object-cover"
                 muted
                 playsInline
-                ref={liveKit.localVideoRef}
+                ref={localVideoRef}
               />
             </div>
 

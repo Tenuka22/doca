@@ -1,6 +1,9 @@
 import "@expo/metro-runtime";
-import { registerGlobals } from "react-native-webrtc";
+import { Platform } from "react-native";
 
-registerGlobals();
+if (Platform.OS !== "web") {
+  const { registerGlobals } = require("react-native-webrtc");
+  registerGlobals();
+}
 
 import "expo-router/entry";

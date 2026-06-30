@@ -38,6 +38,9 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
   const [localStreamURL, setLocalStreamURL] = useState<string | null>(null);
   const [isCameraEnabled, setIsCameraEnabled] = useState(true);
   const [isMicEnabled, setIsMicEnabled] = useState(true);
+  const [localStreamAspectRatio, setLocalStreamAspectRatio] = useState<
+    number | null
+  >(null);
   const [room, setRoom] = useState<Room | null>(null);
 
   const participantStreamsRef = useRef<
@@ -60,6 +63,13 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
         const url = stream.toURL();
         if (url) {
           setLocalStreamURL(url);
+        }
+
+        const settings = (mediaStreamTrack as any).getSettings?.();
+        if (settings?.width && settings?.height) {
+          setLocalStreamAspectRatio(settings.width / settings.height);
+        } else {
+          setLocalStreamAspectRatio(null);
         }
       } catch {
         // Ignore preview creation failures while tracks settle.
@@ -283,8 +293,44 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
           });
         });
 
-        room.on(RoomEvent.TrackUnsubscribed, (track) => {
-          track.detach();
+        room.on(RoomEvent.TrackUnsubscribed, (track, _pub, participant) => {
+          if (participant.isLocal) return;
+
+          const identity = participant.identity;
+          const map = participantStreamsRef.current;
+          const entry = map.get(identity);
+          if (!entry) return;
+
+          if (track.mediaStreamTrack) {
+            entry.audioTracks = entry.audioTracks.filter(
+              (t) => t !== track.mediaStreamTrack
+            );
+            entry.videoTracks = entry.videoTracks.filter(
+              (t) => t !== track.mediaStreamTrack
+            );
+          }
+
+          const allTracks = [...entry.audioTracks, ...entry.videoTracks];
+          let streamURL = "";
+          if (allTracks.length > 0) {
+            try {
+              const stream = new MediaStream(
+                allTracks as unknown as RNMediaStreamTrack[]
+              );
+              streamURL = stream.toURL() ?? "";
+              entry.streamURL = streamURL;
+            } catch {
+              streamURL = "";
+            }
+          } else {
+            entry.streamURL = "";
+          }
+
+          setRemoteParticipants((prev) =>
+            prev.map((p) =>
+              p.identity === identity ? { ...p, streamURL } : p
+            )
+          );
         });
 
         room.on(RoomEvent.LocalTrackPublished, (publication) => {
@@ -331,6 +377,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
     setIsConnected(false);
     setRemoteParticipants([]);
     setLocalStreamURL(null);
+    setLocalStreamAspectRatio(null);
     setIsCameraEnabled(true);
     setIsMicEnabled(true);
     setRoom(null);
@@ -345,6 +392,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
       setIsCameraEnabled(enabled);
       if (!enabled) {
         setLocalStreamURL(null);
+        setLocalStreamAspectRatio(null);
       } else {
         syncLocalPreview(room);
       }
@@ -380,6 +428,7 @@ export function useLiveKitRoom(options: UseLiveKitRoomOptions = {}) {
     error,
     remoteParticipants,
     localStreamURL,
+    localStreamAspectRatio,
     isCameraEnabled,
     isMicEnabled,
     toggleCamera,

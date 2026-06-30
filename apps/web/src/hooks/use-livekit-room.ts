@@ -28,9 +28,11 @@ export function useLiveKitRoomWeb(options: UseLiveKitRoomWebOptions = {}) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const attachedIdentityRef = useRef<string | null>(null);
 
   const attachParticipantTracks = useCallback(
     (identity: string) => {
+      attachedIdentityRef.current = identity;
       const room = roomRef.current;
       if (!room) return;
       const participant = room.remoteParticipants.get(identity);
@@ -53,6 +55,7 @@ export function useLiveKitRoomWeb(options: UseLiveKitRoomWebOptions = {}) {
   );
 
   const detachParticipantTracks = useCallback((identity: string) => {
+    attachedIdentityRef.current = null;
     const room = roomRef.current;
     if (!room) return;
     const participant = room.remoteParticipants.get(identity);
@@ -117,8 +120,23 @@ export function useLiveKitRoomWeb(options: UseLiveKitRoomWebOptions = {}) {
 
         room.on(
           RoomEvent.TrackSubscribed satisfies RoomEventType,
-          () => {
-            // Track attachment is handled by the component via attachParticipantTracks
+          (_track, _publication, participant) => {
+            if (participant.identity === attachedIdentityRef.current) {
+              const p = room.remoteParticipants.get(participant.identity);
+              if (!p) return;
+              for (const pub of p.videoTrackPublications.values()) {
+                if (pub.track?.kind === "video" && videoRef.current) {
+                  pub.track.attach(videoRef.current);
+                  break;
+                }
+              }
+              for (const pub of p.audioTrackPublications.values()) {
+                if (pub.track?.kind === "audio" && audioRef.current) {
+                  pub.track.attach(audioRef.current);
+                  break;
+                }
+              }
+            }
           }
         );
 
@@ -180,6 +198,7 @@ export function useLiveKitRoomWeb(options: UseLiveKitRoomWebOptions = {}) {
       await room.disconnect();
       roomRef.current = null;
     }
+    attachedIdentityRef.current = null;
     setIsConnected(false);
     setParticipantCount(0);
     setRoom(null);
@@ -187,6 +206,7 @@ export function useLiveKitRoomWeb(options: UseLiveKitRoomWebOptions = {}) {
 
   useEffect(
     () => () => {
+      attachedIdentityRef.current = null;
       const room = roomRef.current;
       if (room) {
         room.removeAllListeners();
