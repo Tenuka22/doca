@@ -6,11 +6,16 @@ import { getScreenTitle } from "@suwa/app-info";
 import {
   ArrowLeft,
   Building2,
+  Calendar,
+  Clock,
+  GraduationCap,
   ListIcon,
   LocateFixed,
   MapPin,
   Search,
   Star,
+  Stethoscope,
+  User,
   X,
 } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -18,7 +23,9 @@ import {
   ActivityIndicator,
   FlatList,
   Linking,
+  Modal,
   Pressable,
+  ScrollView,
   Text,
   TouchableOpacity,
   View,
@@ -32,17 +39,33 @@ import { hospitals as staticHospitals } from "@/data/hospitals";
 import { orpc } from "@/utils/orpc";
 import { useUserLocation } from "@/utils/use-user-location";
 
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 export default function MapScreen() {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
   const { location: userLocation, requestLocation } = useUserLocation();
 
+  useEffect(() => {
+    fetch("https://tiles.openfreemap.org/styles/liberty", { priority: "low" }).catch(() => {});
+  }, []);
+
+  // ── Search state ────────────────────────────────────────────────────
+  const [searchMode, setSearchMode] = useState<"hospitals" | "doctors">("hospitals");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isDebouncing, setIsDebouncing] = useState(false);
-  const [selectedHospital, setSelectedHospital] = useState<any>(null);
   const [listOpen, setListOpen] = useState(false);
 
+  // ── Hospital state ──────────────────────────────────────────────────
+  const [selectedHospital, setSelectedHospital] = useState<any>(null);
+  const [clinicInfoTenantId, setClinicInfoTenantId] = useState<string | null>(null);
+
+  // ── Doctor state ────────────────────────────────────────────────────
+  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+  const [doctorDetailId, setDoctorDetailId] = useState<string | null>(null);
+
+  // ── Debounce ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!search) {
       setDebouncedSearch("");
@@ -57,6 +80,97 @@ export default function MapScreen() {
     return () => clearTimeout(timer);
   }, [search]);
 
+  // ── Queries ─────────────────────────────────────────────────────────
+  const tenantsQuery = useQuery(orpc.listTenants.queryOptions({ input: {} }));
+  const tenants = tenantsQuery.data?.tenants ?? [];
+
+  const doctorSearchQuery = useQuery(
+    orpc.listDoctors.queryOptions({
+      input: { page: 1, pageSize: 12, search: debouncedSearch || "" },
+    })
+  );
+
+  const tenantDetailQuery = useQuery({
+    ...orpc.getTenantDetail.queryOptions({
+      input: { tenantId: clinicInfoTenantId ?? "" },
+    }),
+    enabled: !!clinicInfoTenantId,
+  });
+
+  const doctorDetailQuery = useQuery({
+    ...orpc.getDoctor.queryOptions({
+      input: { doctorId: doctorDetailId ?? "" },
+    }),
+    enabled: !!doctorDetailId,
+  });
+
+  // ── Computed ────────────────────────────────────────────────────────
+  const allHospitals = useMemo(() => {
+    const merged: any[] = [...staticHospitals];
+    for (const t of tenants) {
+      if (!merged.some((h: any) => h.name === t.name)) {
+        merged.push({
+          id: t.id,
+          name: t.name,
+          address: t.address,
+          rating: 4.5,
+          latitude: Number.parseFloat(t.latitude ?? "0"),
+          longitude: Number.parseFloat(t.longitude ?? "0"),
+          phone: t.phone,
+          category:
+            t.type === "PRIVATE_HOSPITAL"
+              ? "Private hospital"
+              : "Government hospital",
+        });
+      }
+    }
+    return merged;
+  }, [tenants]);
+
+  const filteredHospitals = useMemo(() => {
+    if (!debouncedSearch) {
+      return allHospitals;
+    }
+    const q = debouncedSearch.toLowerCase();
+    return allHospitals.filter(
+      (h: any) =>
+        h.name.toLowerCase().includes(q) ||
+        (h.address && h.address.toLowerCase().includes(q))
+    );
+  }, [allHospitals, debouncedSearch]);
+
+  // Doctor markers: doctors at their affiliated hospitals
+  const doctorMarkers = useMemo(() => {
+    const doctors = doctorSearchQuery.data?.doctors ?? [];
+    const markers: Array<{
+      doctorId: string;
+      doctorName: string;
+      headline: string | null;
+      latitude: number;
+      longitude: number;
+      tenantName: string;
+    }> = [];
+    for (const doc of doctors) {
+      for (const aff of doc.affiliations) {
+        const tenant = tenants.find((t: any) => t.id === aff.tenantId);
+        if (tenant?.latitude && tenant?.longitude) {
+          markers.push({
+            doctorId: doc.profile.userId,
+            doctorName: doc.profile.displayName ?? "Unknown",
+            headline: doc.profile.headline ?? null,
+            latitude: Number.parseFloat(tenant.latitude),
+            longitude: Number.parseFloat(tenant.longitude),
+            tenantName: aff.tenantName,
+          });
+        }
+      }
+    }
+    return markers;
+  }, [doctorSearchQuery.data, tenants]);
+
+  const doctorResults = doctorSearchQuery.data?.doctors ?? [];
+
+  // ── Callbacks ───────────────────────────────────────────────────────
   const centerOnUserLocation = useCallback(() => {
     if (userLocation) {
       mapRef.current?.animateToRegion(
@@ -75,6 +189,7 @@ export default function MapScreen() {
 
   const centerOnHospital = useCallback((hospital: any) => {
     setSelectedHospital(hospital);
+    setSelectedDoctor(null);
     setListOpen(false);
     setSearch("");
     mapRef.current?.animateToRegion(
@@ -88,7 +203,32 @@ export default function MapScreen() {
     );
   }, []);
 
-  const handleSearch = useCallback(() => {
+  const centerOnDoctorMarker = useCallback(
+    (doctorId: string) => {
+      const marker = doctorMarkers.find((m) => m.doctorId === doctorId);
+      if (!marker) return;
+      setSelectedDoctor(
+        doctorSearchQuery.data?.doctors.find(
+          (d: any) => d.profile.userId === doctorId
+        ) ?? null
+      );
+      setSelectedHospital(null);
+      setListOpen(false);
+      setSearch("");
+      mapRef.current?.animateToRegion(
+        {
+          latitude: marker.latitude,
+          longitude: marker.longitude,
+          latitudeDelta: 0.02,
+          longitudeDelta: 0.02,
+        },
+        400
+      );
+    },
+    [doctorMarkers, doctorSearchQuery.data]
+  );
+
+  const handleSearchSubmit = useCallback(() => {
     setListOpen(true);
   }, []);
 
@@ -96,55 +236,444 @@ export default function MapScreen() {
     setListOpen((prev) => !prev);
   }, []);
 
-  const tenantsQuery = useQuery(orpc.listTenants.queryOptions({ input: {} }));
-  const tenants = tenantsQuery.data?.tenants ?? [];
-
-  const allHospitals = useMemo(() => {
-    const merged = [...staticHospitals];
-    for (const t of tenants) {
-      if (!merged.some((h) => h.name === t.name)) {
-        merged.push({
-          name: t.name,
-          address: t.address,
-          rating: 4.5,
-          latitude: Number.parseFloat(t.latitude ?? "0"),
-          longitude: Number.parseFloat(t.longitude ?? "0"),
-          phone: t.phone,
-          category:
-            t.type === "PRIVATE_HOSPITAL"
-              ? "Private hospital"
-              : "Government hospital",
-        } as any);
-      }
-    }
-    return merged;
-  }, [tenants]);
-
-  const filteredForList = useMemo(() => {
-    if (!debouncedSearch) {
-      return allHospitals;
-    }
-    const q = debouncedSearch.toLowerCase();
-    return allHospitals.filter(
-      (h: any) =>
-        h.name.toLowerCase().includes(q) ||
-        (h.address && h.address.toLowerCase().includes(q))
-    );
-  }, [allHospitals, debouncedSearch]);
-
   const openMapsNavigation = (hospital: any) => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${hospital.latitude},${hospital.longitude}`;
     Linking.openURL(url);
   };
 
+  const openClinicInfo = useCallback((hospital: any) => {
+    const tenant = tenants.find((t: any) => t.name === hospital.name);
+    if (tenant) {
+      setClinicInfoTenantId(tenant.id);
+      setSelectedHospital(null);
+    }
+  }, [tenants]);
+
+  const openDoctorDetail = useCallback((doctorId: string) => {
+    setDoctorDetailId(doctorId);
+    setSelectedDoctor(null);
+  }, []);
+
+  const isTenantHospital = (hospital: any) =>
+    tenants.some((t: any) => t.name === hospital.name);
+
+  // ── Render helpers ──────────────────────────────────────────────────
+
+  const renderSearchToggle = () => (
+    <View className="flex-row gap-1.5 mb-2">
+      <Pressable
+        className={`flex-row items-center gap-1.5 rounded-full px-3 py-1.5 ${
+          searchMode === "hospitals"
+            ? "bg-primary shadow-sm"
+            : "bg-background-elevated/60 border border-border/50"
+        }`}
+        onPress={() => setSearchMode("hospitals")}
+      >
+        <Building2
+          size={14}
+          className={
+            searchMode === "hospitals"
+              ? "text-primary-foreground"
+              : "text-foreground-muted"
+          }
+        />
+        <Text
+          className={`font-poppins-medium text-xs ${
+            searchMode === "hospitals"
+              ? "text-primary-foreground"
+              : "text-foreground-muted"
+          }`}
+        >
+          Hospitals
+        </Text>
+      </Pressable>
+      <Pressable
+        className={`flex-row items-center gap-1.5 rounded-full px-3 py-1.5 ${
+          searchMode === "doctors"
+            ? "bg-primary shadow-sm"
+            : "bg-background-elevated/60 border border-border/50"
+        }`}
+        onPress={() => setSearchMode("doctors")}
+      >
+        <Stethoscope
+          size={14}
+          className={
+            searchMode === "doctors"
+              ? "text-primary-foreground"
+              : "text-foreground-muted"
+          }
+        />
+        <Text
+          className={`font-poppins-medium text-xs ${
+            searchMode === "doctors"
+              ? "text-primary-foreground"
+              : "text-foreground-muted"
+          }`}
+        >
+          Doctors
+        </Text>
+      </Pressable>
+    </View>
+  );
+
+  const renderClinicInfoModal = () => {
+    if (!clinicInfoTenantId) return null;
+    const { data, isLoading } = tenantDetailQuery;
+    return (
+      <Modal
+        animationType="slide"
+        onRequestClose={() => setClinicInfoTenantId(null)}
+        statusBarTranslucent
+        transparent
+        visible={!!clinicInfoTenantId}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="max-h-[82%] rounded-t-[32px] bg-background pb-8">
+            <View className="mt-sm h-1.5 w-12 self-center rounded-full bg-border" />
+            <View className="flex-row items-center justify-between px-6 pt-4 pb-2">
+              <Text className="font-serif text-title text-foreground flex-1 mr-4" numberOfLines={1}>
+                {data?.tenant?.name ?? "Hospital"}
+              </Text>
+              <Pressable
+                className="h-8 w-8 items-center justify-center rounded-full bg-background-subtle"
+                onPress={() => setClinicInfoTenantId(null)}
+              >
+                <X className="text-foreground-muted" size={16} />
+              </Pressable>
+            </View>
+
+            {isLoading ? (
+              <View className="items-center justify-center py-12">
+                <ActivityIndicator className="text-primary" size="large" />
+              </View>
+            ) : data ? (
+              <ScrollView className="px-6 pt-2" contentContainerClassName="gap-4 pb-6">
+                {/* Clinics */}
+                <View>
+                  <Text className="font-poppins-medium text-body text-foreground mb-2">
+                    🏥 Clinics
+                  </Text>
+                  {data.clinics.length === 0 ? (
+                    <Text className="font-sans text-caption text-foreground-muted">
+                      No clinics listed
+                    </Text>
+                  ) : (
+                    <View className="gap-2">
+                      {data.clinics.map((clinic: any) => (
+                        <View
+                          key={clinic.id}
+                          className="rounded-xl border border-border px-3 py-2.5"
+                        >
+                          <Text className="font-sans text-body text-primary">
+                            {clinic.name}
+                          </Text>
+                          {clinic.specialization && (
+                            <Text className="font-sans text-caption text-foreground-secondary mt-0.5">
+                              {clinic.specialization}
+                            </Text>
+                          )}
+                          {clinic.schedule && (
+                            <View className="flex-row items-center gap-1 mt-1">
+                              <Clock
+                                className="text-foreground-muted"
+                                size={11}
+                              />
+                              <Text className="font-sans text-caption text-foreground-muted">
+                                {clinic.schedule}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+
+                {/* Doctors */}
+                <View>
+                  <Text className="font-poppins-medium text-body text-foreground mb-2">
+                    👨‍⚕️ Affiliated Doctors
+                  </Text>
+                  {data.affiliatedDoctors.length === 0 ? (
+                    <Text className="font-sans text-caption text-foreground-muted">
+                      No doctors affiliated
+                    </Text>
+                  ) : (
+                    <View className="gap-2">
+                      {data.affiliatedDoctors.map((doc: any) => (
+                        <Pressable
+                          key={doc.affiliationId}
+                          className="rounded-xl border border-border px-3 py-2.5"
+                          onPress={() => {
+                            setClinicInfoTenantId(null);
+                            openDoctorDetail(doc.doctorId);
+                          }}
+                        >
+                          <View className="flex-row items-center gap-2">
+                            <View className="h-8 w-8 items-center justify-center rounded-full bg-primary-subtle">
+                              <User className="text-primary" size={16} />
+                            </View>
+                            <View className="flex-1">
+                              <Text className="font-sans text-body text-primary">
+                                {doc.profile.displayName}
+                              </Text>
+                              <View className="flex-row items-center gap-1">
+                                {doc.profile.specialties.length > 0 && (
+                                  <Text className="font-sans text-caption text-foreground-secondary">
+                                    {doc.profile.specialties.slice(0, 2).join(", ")}
+                                  </Text>
+                                )}
+                                {doc.availabilityWindows.length > 0 && (
+                                  <View className="flex-row items-center gap-1 ml-auto">
+                                    <Clock
+                                      className="text-foreground-muted"
+                                      size={10}
+                                    />
+                                    <Text className="font-sans text-caption text-foreground-muted">
+                                      {doc.availabilityWindows.length > 0
+                                        ? `${DAY_NAMES[doc.availabilityWindows[0].dayOfWeek]} ${doc.availabilityWindows[0].startTime.slice(0, 5)}`
+                                        : ""}
+                                    </Text>
+                                  </View>
+                                )}
+                              </View>
+                            </View>
+                          </View>
+                        </Pressable>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              </ScrollView>
+            ) : (
+              <View className="items-center justify-center py-12">
+                <Text className="font-sans text-caption text-foreground-muted">
+                  Could not load hospital details
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
+  const renderDoctorDetailModal = () => {
+    if (!doctorDetailId) return null;
+    const { data, isLoading } = doctorDetailQuery;
+    const doc =
+      data ??
+      doctorSearchQuery.data?.doctors.find(
+        (d: any) => d.profile.userId === doctorDetailId
+      );
+
+    return (
+      <Modal
+        animationType="slide"
+        onRequestClose={() => setDoctorDetailId(null)}
+        statusBarTranslucent
+        transparent
+        visible={!!doctorDetailId}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="max-h-[85%] rounded-t-[32px] bg-background pb-8">
+            <View className="mt-sm h-1.5 w-12 self-center rounded-full bg-border" />
+            <View className="flex-row items-center justify-between px-6 pt-4 pb-2">
+              <Text className="font-serif text-title text-foreground flex-1 mr-4" numberOfLines={1}>
+                {data?.profile?.displayName ?? doc?.profile?.displayName ?? "Doctor"}
+              </Text>
+              <Pressable
+                className="h-8 w-8 items-center justify-center rounded-full bg-background-subtle"
+                onPress={() => setDoctorDetailId(null)}
+              >
+                <X className="text-foreground-muted" size={16} />
+              </Pressable>
+            </View>
+
+            {isLoading && !doc ? (
+              <View className="items-center justify-center py-12">
+                <ActivityIndicator className="text-primary" size="large" />
+              </View>
+            ) : (
+              <ScrollView className="px-6 pt-2" contentContainerClassName="gap-4 pb-6">
+                {/* Profile */}
+                <View className="flex-row items-center gap-3">
+                  <View className="h-16 w-16 items-center justify-center rounded-full bg-primary-subtle">
+                    <User className="text-primary" size={28} />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="font-serif text-subtitle text-foreground">
+                      {data?.profile?.displayName ?? doc?.profile?.displayName ?? "Unknown"}
+                    </Text>
+                    {data?.profile?.headline && (
+                      <Text className="font-sans text-caption text-foreground-secondary mt-0.5">
+                        {data.profile.headline}
+                      </Text>
+                    )}
+                    {data?.profile?.specialties?.length > 0 && (
+                      <View className="flex-row flex-wrap gap-1 mt-1">
+                        {data.profile.specialties.slice(0, 3).map((s: string) => (
+                          <View key={s} className="rounded-full bg-primary-subtle px-2 py-0.5">
+                            <Text className="font-sans text-micro text-primary">
+                              {s}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                </View>
+
+                {/* Bio */}
+                {data?.profile?.bio && (
+                  <View>
+                    <Text className="font-poppins-medium text-body text-foreground mb-1">
+                      About
+                    </Text>
+                    <Text className="font-sans text-caption text-foreground-secondary leading-relaxed">
+                      {data.profile.bio}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Education */}
+                {data?.education && data.education.length > 0 && (
+                  <View>
+                    <Text className="font-poppins-medium text-body text-foreground mb-2">
+                      🎓 Education
+                    </Text>
+                    <View className="gap-2">
+                      {data.education.map((edu: any) => (
+                        <View
+                          key={edu.id}
+                          className="flex-row items-center gap-2 rounded-xl border border-border px-3 py-2"
+                        >
+                          <GraduationCap className="text-foreground-muted" size={16} />
+                          <View className="flex-1">
+                            <Text className="font-sans text-body text-primary">
+                              {edu.degree}
+                            </Text>
+                            <Text className="font-sans text-caption text-foreground-secondary">
+                              {edu.institution}{edu.year ? ` · ${edu.year}` : ""}
+                            </Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {/* Affiliated Hospitals */}
+                {(() => {
+                  const affData = doc?.affiliations ?? data?.profile?.affiliations;
+                  if (!affData || affData.length === 0) return null;
+                  const allAffs = affData;
+                  return (
+                    <View>
+                      <Text className="font-poppins-medium text-body text-foreground mb-2">
+                        🏥 Hospitals
+                      </Text>
+                      <View className="gap-2">
+                        {allAffs.map((aff: any) => {
+                          const tenant = tenants.find(
+                            (t: any) => t.id === aff.tenantId
+                          );
+                          return (
+                            <TouchableOpacity
+                              key={aff.tenantId}
+                              className="flex-row items-center gap-2 rounded-xl border border-border px-3 py-2.5"
+                              onPress={() => {
+                                setDoctorDetailId(null);
+                                if (tenant) {
+                                  centerOnHospital(tenant);
+                                }
+                              }}
+                            >
+                              <MapPin className="text-foreground-muted" size={16} />
+                              <View className="flex-1">
+                                <Text className="font-sans text-body text-primary">
+                                  {aff.tenantName}
+                                </Text>
+                                {tenant?.address && (
+                                  <Text className="font-sans text-caption text-foreground-secondary">
+                                    {tenant.address}
+                                  </Text>
+                                )}
+                              </View>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    </View>
+                  );
+                })()}
+
+                {/* Weekly Availability from affiliations */}
+                {(() => {
+                  if (!doc?.profile) return null;
+                  const affData = doc?.affiliations ?? [];
+                  if (affData.length === 0) return null;
+                  return (
+                    <View>
+                      <Text className="font-poppins-medium text-body text-foreground mb-2">
+                        🕐 Availability
+                      </Text>
+                      <Text className="font-sans text-caption text-foreground-muted mb-2">
+                        {doc.hasAvailability
+                          ? "Weekly availability set"
+                          : "No weekly availability configured"}
+                      </Text>
+                      {affData.map((aff: any) => {
+                        const windows = aff.availabilityWindows ?? [];
+                        if (windows.length === 0) return null;
+                        return (
+                          <View key={aff.tenantId} className="mb-2">
+                            <Text className="font-sans text-body text-primary mb-1">
+                              {aff.tenantName}
+                            </Text>
+                            <View className="gap-1">
+                              {windows.map((w: any) => (
+                                <View
+                                  key={`${aff.tenantId}-${w.dayOfWeek}`}
+                                  className="flex-row items-center gap-2"
+                                >
+                                  <Calendar className="text-foreground-muted" size={12} />
+                                  <Text className="font-sans text-caption text-foreground-secondary">
+                                    {DAY_NAMES[w.dayOfWeek]}: {w.startTime.slice(0, 5)} - {w.endTime.slice(0, 5)}
+                                  </Text>
+                                </View>
+                              ))}
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  );
+                })()}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
+  // ── Render ──────────────────────────────────────────────────────────
   return (
     <View className="flex-1 bg-background">
       <Stack.Screen options={{ headerShown: false, title: getScreenTitle("native:patient:map") }} />
 
       <MapComponent
         filteredHospitals={allHospitals}
-        onMarkerPress={setSelectedHospital}
-        platformHospitalNames={tenants.map((t) => t.name)}
+        doctorMarkers={doctorMarkers}
+        onMarkerPress={(hospital: any) => {
+          setSelectedHospital(hospital);
+          setSelectedDoctor(null);
+        }}
+        onDoctorMarkerPress={(doctorId: string) => {
+          centerOnDoctorMarker(doctorId);
+        }}
+        platformHospitalNames={tenants.map((t: any) => t.name)}
         ref={mapRef}
         selectedHospitalId={selectedHospital?.name}
         userLocation={userLocation}
@@ -152,6 +681,7 @@ export default function MapScreen() {
 
       {/* Floating Header */}
       <View className="absolute top-8 right-lg left-lg">
+        {renderSearchToggle()}
         <View className="flex-row items-center gap-2">
           <View className="flex-1">
             <Input
@@ -161,8 +691,12 @@ export default function MapScreen() {
                 <MapPin className="text-foreground-placeholder" size={20} />
               }
               onChangeText={setSearch}
-              onSubmitEditing={handleSearch}
-              placeholder="Search hospitals..."
+              onSubmitEditing={handleSearchSubmit}
+              placeholder={
+                searchMode === "hospitals"
+                  ? "Search hospitals..."
+                  : "Search doctors..."
+              }
               returnKeyType="search"
               value={search}
             />
@@ -170,7 +704,7 @@ export default function MapScreen() {
           <Pressable
             className={`size-16 items-center justify-center rounded-xl border-2 border-input shadow-lg backdrop-blur-[2px] ${isDebouncing ? "bg-foreground/10" : "bg-background-elevated/60"}`}
             disabled={isDebouncing && listOpen}
-            onPress={handleSearch}
+            onPress={handleSearchSubmit}
           >
             {isDebouncing && listOpen ? (
               <ActivityIndicator className="text-foreground" size="small" />
@@ -182,7 +716,7 @@ export default function MapScreen() {
       </View>
 
       {/* Selected Hospital Card */}
-      {selectedHospital && (
+      {selectedHospital && searchMode === "hospitals" && (
         <View className="absolute right-lg bottom-8 left-lg">
           <View className="gap-lg rounded-3xl bg-background-elevated/50 p-lg shadow-xl backdrop-blur-[2px]">
             <View className="flex-row items-start justify-between">
@@ -222,9 +756,18 @@ export default function MapScreen() {
             </View>
 
             <View className="flex-row gap-md">
+              {isTenantHospital(selectedHospital) && (
+                <Button
+                  className="flex-1"
+                  onPress={() => openClinicInfo(selectedHospital)}
+                >
+                  Clinic Info
+                </Button>
+              )}
               <Button
-                className="flex-1"
+                className={isTenantHospital(selectedHospital) ? "" : "flex-1"}
                 onPress={() => openMapsNavigation(selectedHospital)}
+                variant={isTenantHospital(selectedHospital) ? "outline" : "default"}
               >
                 Navigate
               </Button>
@@ -244,13 +787,71 @@ export default function MapScreen() {
         </View>
       )}
 
-      {!selectedHospital && (
+      {/* Selected Doctor Card */}
+      {selectedDoctor && searchMode === "doctors" && (
+        <View className="absolute right-lg bottom-8 left-lg">
+          <View className="gap-md rounded-3xl bg-background-elevated/50 p-lg shadow-xl backdrop-blur-[2px]">
+            <View className="flex-row items-start justify-between">
+              <View className="flex-1 gap-xxs">
+                <Text className="font-serif text-primary text-title">
+                  {selectedDoctor.profile.displayName ?? "Doctor"}
+                </Text>
+                {selectedDoctor.profile.headline && (
+                  <Text className="font-sans text-caption text-foreground-secondary">
+                    {selectedDoctor.profile.headline}
+                  </Text>
+                )}
+              </View>
+              <Pressable
+                className="h-8 w-8 items-center justify-center rounded-full bg-background-subtle"
+                onPress={() => setSelectedDoctor(null)}
+              >
+                <X className="text-foreground-muted" size={16} />
+              </Pressable>
+            </View>
+
+            {selectedDoctor.profile.specialties?.length > 0 && (
+              <View className="flex-row flex-wrap gap-1">
+                {selectedDoctor.profile.specialties.map((s: string) => (
+                  <View key={s} className="rounded-full bg-primary-subtle px-2.5 py-0.5">
+                    <Text className="font-sans text-micro text-primary">{s}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <View className="flex-row gap-md">
+              <Button
+                className="flex-1"
+                onPress={() => openDoctorDetail(selectedDoctor.profile.userId)}
+              >
+                View Profile
+              </Button>
+              {selectedDoctor.affiliations?.length > 0 && (
+                <Button
+                  className="flex-1"
+                  onPress={() => {
+                    const first = selectedDoctor.affiliations[0];
+                    const tenant = tenants.find((t: any) => t.id === first.tenantId);
+                    if (tenant) centerOnHospital(tenant);
+                  }}
+                  variant="outline"
+                >
+                  Hospital
+                </Button>
+              )}
+            </View>
+          </View>
+        </View>
+      )}
+
+      {!selectedHospital && !selectedDoctor && (
         <ScreenBottomBar
           leftActions={[
             {
               active: listOpen,
               icon: <ListIcon size={20} />,
-              label: "Hospitals",
+              label: searchMode === "hospitals" ? "Hospitals" : "Doctors",
               onPress: toggleList,
             },
             {
@@ -267,8 +868,8 @@ export default function MapScreen() {
       )}
 
       {/* Hospital List Panel */}
-      {listOpen && (
-        <View className="absolute top-28 right-lg left-lg h-auto max-h-[70%] rounded-2xl border-2 border-input bg-background-elevated/80 shadow-xl backdrop-blur-[2px]">
+      {listOpen && searchMode === "hospitals" && (
+        <View className="absolute top-32 right-lg left-lg h-auto max-h-[65%] rounded-2xl border-2 border-input bg-background-elevated/80 shadow-xl backdrop-blur-[2px]">
           <View className="flex-row items-center justify-between border-border border-b px-4 py-3">
             <Pressable
               className="h-8 w-8 items-center justify-center rounded-full bg-background-subtle"
@@ -285,7 +886,7 @@ export default function MapScreen() {
           <FlatList
             className="px-2"
             contentContainerClassName="py-2 gap-2"
-            data={filteredForList}
+            data={filteredHospitals}
             keyboardShouldPersistTaps="handled"
             keyExtractor={(item: any) => item.name}
             ListEmptyComponent={
@@ -321,12 +922,95 @@ export default function MapScreen() {
                   <Text className="font-sans text-caption text-foreground-muted">
                     {item.category}
                   </Text>
+                  {item.id && (
+                    <>
+                      <Text className="font-sans text-caption text-foreground-muted">
+                        &middot;
+                      </Text>
+                      <Text className="font-sans text-caption text-primary">
+                        Clinic Info
+                      </Text>
+                    </>
+                  )}
                 </View>
               </TouchableOpacity>
             )}
           />
         </View>
       )}
+
+      {/* Doctor List Panel */}
+      {listOpen && searchMode === "doctors" && (
+        <View className="absolute top-32 right-lg left-lg h-auto max-h-[65%] rounded-2xl border-2 border-input bg-background-elevated/80 shadow-xl backdrop-blur-[2px]">
+          <View className="flex-row items-center justify-between border-border border-b px-4 py-3">
+            <Pressable
+              className="h-8 w-8 items-center justify-center rounded-full bg-background-subtle"
+              onPress={() => setListOpen(false)}
+            >
+              <ArrowLeft className="text-foreground-muted" size={18} />
+            </Pressable>
+            <Text className="font-sans text-caption text-foreground">
+              {search ? `Results for "${search}"` : "All doctors"}
+            </Text>
+            <View className="w-8" />
+          </View>
+
+          <FlatList
+            className="px-2"
+            contentContainerClassName="py-2 gap-2"
+            data={doctorResults}
+            keyboardShouldPersistTaps="handled"
+            keyExtractor={(item: any) => item.profile.userId}
+            ListEmptyComponent={
+              <View className="items-center justify-center py-12">
+                <Stethoscope className="text-foreground-muted" size={32} />
+                <Text className="mt-2 font-sans text-caption text-foreground-muted">
+                  {doctorSearchQuery.isLoading
+                    ? "Searching..."
+                    : search
+                      ? "No doctors found"
+                      : "Search for doctors"}
+                </Text>
+              </View>
+            }
+            renderItem={({ item }: { item: any }) => (
+              <TouchableOpacity
+                className="rounded-xl border border-border px-3 py-2.5"
+                onPress={() => {
+                  centerOnDoctorMarker(item.profile.userId);
+                }}
+              >
+                <View className="flex-row items-center gap-2">
+                  <View className="h-9 w-9 items-center justify-center rounded-full bg-primary-subtle">
+                    <User className="text-primary" size={18} />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="font-sans text-body text-primary">
+                      {item.profile.displayName}
+                    </Text>
+                    <Text
+                      className="font-sans text-caption text-foreground-secondary"
+                      numberOfLines={1}
+                    >
+                      {item.profile.headline ?? item.profile.specialties?.slice(0, 2).join(", ")}
+                    </Text>
+                  </View>
+                  <Stethoscope className="text-foreground-muted" size={16} />
+                </View>
+                {item.affiliations?.length > 0 && (
+                  <Text className="font-sans text-caption text-foreground-muted mt-1 ml-11">
+                    {item.affiliations.map((a: any) => a.tenantName).join(", ")}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      )}
+
+      {/* Modals */}
+      {renderClinicInfoModal()}
+      {renderDoctorDetailModal()}
     </View>
   );
 }

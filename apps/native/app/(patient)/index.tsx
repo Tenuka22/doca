@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
 import { getScreenTitle } from "@suwa/app-info";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -360,6 +360,11 @@ export default function HomeScreen() {
     return () => clearInterval(timer);
   }, []);
 
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    queryClient.prefetchQuery(orpc.listTenants.queryOptions({ input: {} }));
+  }, [queryClient]);
+
   const handleSubmit = () => {
     const message = input.trim();
     if (!message) {
@@ -479,14 +484,14 @@ export default function HomeScreen() {
             <Sparkles color="#d78357" size={18} />
           </View>
           <View className="gap-md">
+            <FeatureCard
+              description="Chat anonymously"
+              icon={<MessageCircle color="#5f7267" size={23} />}
+              iconBackground="bg-tint-green"
+              onPress={() => router.push("/(patient)/doctors")}
+              title="Start a consultation"
+            />
             <View className="flex-row gap-md">
-              <FeatureCard
-                description="Chat anonymously"
-                icon={<MessageCircle color="#5f7267" size={23} />}
-                iconBackground="bg-tint-green"
-                onPress={() => router.push("/(patient)/doctors")}
-                title="Start a consultation"
-              />
               <FeatureCard
                 description="Learn and understand"
                 icon={<BookOpen color="#d78357" size={23} />}
@@ -494,8 +499,6 @@ export default function HomeScreen() {
                 onPress={() => router.push("/(patient)/materials")}
                 title="Health library"
               />
-            </View>
-            <View className="flex-row gap-md">
               <FeatureCard
                 description="Self-care and support"
                 icon={<Flower2 color="#9e8cb2" size={23} />}
@@ -503,6 +506,8 @@ export default function HomeScreen() {
                 onPress={() => router.push("/(patient)/health-hub")}
                 title="Wellness tools"
               />
+            </View>
+            <View className="flex-row gap-md">
               <FeatureCard
                 description="You are in control"
                 icon={<ShieldCheck color="#c3af5a" size={23} />}
@@ -517,7 +522,10 @@ export default function HomeScreen() {
         <Reveal delay={340}>
           <Pressable
             className="overflow-hidden rounded-3xl bg-accent-subtle px-xl py-lg"
-            onPress={() => router.push("/(patient)/map")}
+            onPress={() => {
+              fetch("https://tiles.openfreemap.org/styles/liberty").catch(() => {});
+              router.push("/(patient)/map");
+            }}
           >
             <View className="absolute -right-4 -bottom-12 h-32 w-32 rounded-full bg-accent/15" />
             <View className="flex-row items-center gap-lg">
