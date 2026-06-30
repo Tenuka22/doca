@@ -1,11 +1,14 @@
 import {
   doctorEducationEntries,
   doctorFiles,
+  doctorHospitalAffiliations,
   doctorProfiles,
+  doctorWeeklyAvailability,
   parseJsonApproachSteps,
   parseJsonStringArray,
+  tenants,
 } from "@suwa/db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { publicProcedure } from "../../../index";
 
@@ -49,10 +52,52 @@ export const getDoctorRoute = publicProcedure
       .from(doctorEducationEntries)
       .where(eq(doctorEducationEntries.doctorId, profile.userId));
 
+    const weeklyAvailability = await context.db
+      .select()
+      .from(doctorWeeklyAvailability)
+      .where(eq(doctorWeeklyAvailability.doctorId, profile.userId));
+
+    const rawAffiliations = await context.db
+      .select({
+        id: doctorHospitalAffiliations.id,
+        doctorId: doctorHospitalAffiliations.doctorId,
+        tenantId: doctorHospitalAffiliations.tenantId,
+        tenantName: tenants.name,
+        tenantAddress: tenants.address,
+        tenantLatitude: tenants.latitude,
+        tenantLongitude: tenants.longitude,
+        availabilityWindows: doctorHospitalAffiliations.availabilityWindows,
+        status: doctorHospitalAffiliations.status,
+      })
+      .from(doctorHospitalAffiliations)
+      .innerJoin(
+        tenants,
+        eq(doctorHospitalAffiliations.tenantId, tenants.id)
+      )
+      .where(
+        and(
+          eq(doctorHospitalAffiliations.doctorId, profile.userId),
+          eq(doctorHospitalAffiliations.status, "ACTIVE")
+        )
+      );
+
+    const affiliations = rawAffiliations.map((aff) => ({
+      ...aff,
+      availabilityWindows: aff.availabilityWindows
+        ? (JSON.parse(aff.availabilityWindows) as Array<{
+            dayOfWeek: number;
+            startTime: string;
+            endTime: string;
+          }>)
+        : [],
+    }));
+
     return {
       profile: mapDoctorProfile(profile),
       portrait: portrait ?? null,
       files,
       education,
+      weeklyAvailability,
+      affiliations,
     };
   });

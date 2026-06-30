@@ -461,11 +461,9 @@ export default function MapScreen() {
   const renderDoctorDetailModal = () => {
     if (!doctorDetailId) return null;
     const { data, isLoading } = doctorDetailQuery;
-    const doc =
-      data ??
-      doctorSearchQuery.data?.doctors.find(
-        (d: any) => d.profile.userId === doctorDetailId
-      );
+    const doc = data ?? doctorSearchQuery.data?.doctors.find(
+      (d: any) => d.profile.userId === doctorDetailId
+    );
 
     return (
       <Modal
@@ -478,7 +476,7 @@ export default function MapScreen() {
         <View className="flex-1 justify-end bg-black/50">
           <View className="max-h-[85%] rounded-t-[32px] bg-background pb-8">
             <View className="mt-sm h-1.5 w-12 self-center rounded-full bg-border" />
-            <View className="flex-row items-center justify-between px-6 pt-4 pb-2">
+            <View className="flex-row items-center justify-between px-6 pt-12 pb-2">
               <Text className="font-serif text-title text-foreground flex-1 mr-4" numberOfLines={1}>
                 {data?.profile?.displayName ?? doc?.profile?.displayName ?? "Doctor"}
               </Text>
@@ -536,12 +534,111 @@ export default function MapScreen() {
                   </View>
                 )}
 
+                {/* Practice Place & Availability */}
+                {(data?.profile?.placeName || data?.weeklyAvailability?.length > 0) && (
+                  <View>
+                    <Text className="font-poppins-medium text-body text-foreground mb-2">
+                      Practice & Availability
+                    </Text>
+                    <TouchableOpacity
+                      className="rounded-xl border border-border px-3 py-2.5"
+                      onPress={() => {
+                        setDoctorDetailId(null);
+                        const matchingTenant = data?.profile?.placeName
+                          ? tenants.find(
+                              (t: any) => t.name === data.profile.placeName
+                            )
+                          : null;
+                        if (matchingTenant?.latitude && matchingTenant?.longitude) {
+                          setSelectedHospital(matchingTenant);
+                          setSelectedDoctor(null);
+                          setListOpen(false);
+                          setSearch("");
+                          mapRef.current?.animateToRegion(
+                            {
+                              latitude: Number.parseFloat(matchingTenant.latitude),
+                              longitude: Number.parseFloat(matchingTenant.longitude),
+                              latitudeDelta: 0.02,
+                              longitudeDelta: 0.02,
+                            },
+                            400
+                          );
+                        } else if (data?.affiliations?.[0]) {
+                          const first = data.affiliations[0];
+                          if (first.tenantLatitude && first.tenantLongitude) {
+                            setSelectedHospital(first);
+                            setSelectedDoctor(null);
+                            setListOpen(false);
+                            setSearch("");
+                            mapRef.current?.animateToRegion(
+                              {
+                                latitude: Number.parseFloat(first.tenantLatitude),
+                                longitude: Number.parseFloat(first.tenantLongitude),
+                                latitudeDelta: 0.02,
+                                longitudeDelta: 0.02,
+                              },
+                              400
+                            );
+                          }
+                        }
+                      }}
+                    >
+                      {data?.profile?.placeName && (
+                        <>
+                          <View className="flex-row items-center gap-2">
+                            <MapPin className="text-foreground-muted" size={16} />
+                            <View className="flex-1">
+                              <Text className="font-sans text-body text-primary">
+                                {data.profile.placeName}
+                              </Text>
+                              {data.profile.placeAddress && (
+                                <Text className="font-sans text-caption text-foreground-secondary">
+                                  {data.profile.placeAddress}
+                                </Text>
+                              )}
+                            </View>
+                          </View>
+                          {data.profile.placeDescription && (
+                            <Text className="font-sans text-caption text-foreground-muted mt-1.5 ml-8 leading-relaxed">
+                              {data.profile.placeDescription}
+                            </Text>
+                          )}
+                        </>
+                      )}
+                      {data?.weeklyAvailability
+                        ?.filter((w: any) => w.isAvailable)
+                        .sort((a: any, b: any) => a.dayOfWeek - b.dayOfWeek)
+                        .length > 0 && (
+                        <View className={data?.profile?.placeName ? "mt-3 gap-1" : "gap-1"}>
+                          {data.weeklyAvailability
+                            .filter((w: any) => w.isAvailable)
+                            .sort((a: any, b: any) => a.dayOfWeek - b.dayOfWeek)
+                            .map((w: any) => (
+                              <View
+                                key={w.id}
+                                className="flex-row items-center gap-1.5"
+                              >
+                                <Calendar className="text-foreground-muted" size={12} />
+                                <Text className="font-sans text-caption text-foreground-secondary">
+                                  {DAY_NAMES[w.dayOfWeek]}: {w.startTime.slice(0, 5)} - {w.endTime.slice(0, 5)}
+                                </Text>
+                              </View>
+                            ))}
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                )}
+
                 {/* Education */}
                 {data?.education && data.education.length > 0 && (
                   <View>
-                    <Text className="font-poppins-medium text-body text-foreground mb-2">
-                      🎓 Education
-                    </Text>
+                    <View className="flex-row items-center gap-1.5 mb-2">
+                      <GraduationCap className="text-foreground-muted" size={16} />
+                      <Text className="font-poppins-medium text-body text-foreground">
+                        Education
+                      </Text>
+                    </View>
                     <View className="gap-2">
                       {data.education.map((edu: any) => (
                         <View
@@ -563,90 +660,79 @@ export default function MapScreen() {
                   </View>
                 )}
 
-                {/* Affiliated Hospitals */}
+                {/* Practice Locations */}
                 {(() => {
-                  const affData = doc?.affiliations ?? data?.profile?.affiliations;
-                  if (!affData || affData.length === 0) return null;
-                  const allAffs = affData;
+                  const affiliations = data?.affiliations ?? doc?.affiliations ?? [];
+                  if (affiliations.length === 0) return null;
                   return (
                     <View>
-                      <Text className="font-poppins-medium text-body text-foreground mb-2">
-                        🏥 Hospitals
-                      </Text>
+                      <View className="flex-row items-center gap-1.5 mb-2">
+                        <Building2 className="text-foreground-muted" size={16} />
+                        <Text className="font-poppins-medium text-body text-foreground">
+                          Practice Locations
+                        </Text>
+                      </View>
                       <View className="gap-2">
-                        {allAffs.map((aff: any) => {
-                          const tenant = tenants.find(
-                            (t: any) => t.id === aff.tenantId
+                        {affiliations.map((aff: any) => {
+                          const hospital = allHospitals.find(
+                            (h: any) => h.name === aff.tenantName
                           );
+                          const windows = aff.availabilityWindows ?? [];
                           return (
                             <TouchableOpacity
                               key={aff.tenantId}
-                              className="flex-row items-center gap-2 rounded-xl border border-border px-3 py-2.5"
+                              className="rounded-xl border border-border px-3 py-2.5"
                               onPress={() => {
                                 setDoctorDetailId(null);
-                                if (tenant) {
-                                  centerOnHospital(tenant);
+                                if (hospital) {
+                                  setSelectedHospital(hospital);
+                                  setSelectedDoctor(null);
+                                  setListOpen(false);
+                                  setSearch("");
+                                  mapRef.current?.animateToRegion(
+                                    {
+                                      latitude: hospital.latitude,
+                                      longitude: hospital.longitude,
+                                      latitudeDelta: 0.02,
+                                      longitudeDelta: 0.02,
+                                    },
+                                    400
+                                  );
                                 }
                               }}
                             >
-                              <MapPin className="text-foreground-muted" size={16} />
-                              <View className="flex-1">
-                                <Text className="font-sans text-body text-primary">
-                                  {aff.tenantName}
-                                </Text>
-                                {tenant?.address && (
-                                  <Text className="font-sans text-caption text-foreground-secondary">
-                                    {tenant.address}
+                              <View className="flex-row items-center gap-2">
+                                <MapPin className="text-foreground-muted" size={16} />
+                                <View className="flex-1">
+                                  <Text className="font-sans text-body text-primary">
+                                    {aff.tenantName}
                                   </Text>
-                                )}
+                                  {hospital?.address && (
+                                    <Text className="font-sans text-caption text-foreground-secondary">
+                                      {hospital.address}
+                                    </Text>
+                                  )}
+                                </View>
                               </View>
+                              {windows.length > 0 && (
+                                <View className="mt-2 ml-8 gap-1">
+                                  {windows.map((w: any) => (
+                                    <View
+                                      key={`${aff.tenantId}-${w.dayOfWeek}`}
+                                      className="flex-row items-center gap-1.5"
+                                    >
+                                      <Calendar className="text-foreground-muted" size={11} />
+                                      <Text className="font-sans text-caption text-foreground-secondary">
+                                        {DAY_NAMES[w.dayOfWeek]}: {w.startTime.slice(0, 5)} - {w.endTime.slice(0, 5)}
+                                      </Text>
+                                    </View>
+                                  ))}
+                                </View>
+                              )}
                             </TouchableOpacity>
                           );
                         })}
                       </View>
-                    </View>
-                  );
-                })()}
-
-                {/* Weekly Availability from affiliations */}
-                {(() => {
-                  if (!doc?.profile) return null;
-                  const affData = doc?.affiliations ?? [];
-                  if (affData.length === 0) return null;
-                  return (
-                    <View>
-                      <Text className="font-poppins-medium text-body text-foreground mb-2">
-                        🕐 Availability
-                      </Text>
-                      <Text className="font-sans text-caption text-foreground-muted mb-2">
-                        {doc.hasAvailability
-                          ? "Weekly availability set"
-                          : "No weekly availability configured"}
-                      </Text>
-                      {affData.map((aff: any) => {
-                        const windows = aff.availabilityWindows ?? [];
-                        if (windows.length === 0) return null;
-                        return (
-                          <View key={aff.tenantId} className="mb-2">
-                            <Text className="font-sans text-body text-primary mb-1">
-                              {aff.tenantName}
-                            </Text>
-                            <View className="gap-1">
-                              {windows.map((w: any) => (
-                                <View
-                                  key={`${aff.tenantId}-${w.dayOfWeek}`}
-                                  className="flex-row items-center gap-2"
-                                >
-                                  <Calendar className="text-foreground-muted" size={12} />
-                                  <Text className="font-sans text-caption text-foreground-secondary">
-                                    {DAY_NAMES[w.dayOfWeek]}: {w.startTime.slice(0, 5)} - {w.endTime.slice(0, 5)}
-                                  </Text>
-                                </View>
-                              ))}
-                            </View>
-                          </View>
-                        );
-                      })}
                     </View>
                   );
                 })()}
@@ -669,6 +755,8 @@ export default function MapScreen() {
         onMarkerPress={(hospital: any) => {
           setSelectedHospital(hospital);
           setSelectedDoctor(null);
+          setListOpen(false);
+          setSearch("");
         }}
         onDoctorMarkerPress={(doctorId: string) => {
           centerOnDoctorMarker(doctorId);
@@ -716,49 +804,91 @@ export default function MapScreen() {
       </View>
 
       {/* Selected Hospital Card */}
-      {selectedHospital && searchMode === "hospitals" && (
+      {selectedHospital && (
         <View className="absolute right-lg bottom-8 left-lg">
-          <View className="gap-lg rounded-3xl bg-background-elevated/50 p-lg shadow-xl backdrop-blur-[2px]">
+          <View className="rounded-2xl bg-background-elevated/50 p-4 shadow-xl backdrop-blur-[2px]">
             <View className="flex-row items-start justify-between">
-              <View className="flex-1 gap-xxs">
-                <Text className="font-serif text-primary text-title">
+              <View className="flex-1 gap-0.5">
+                <Text className="font-serif text-title text-primary">
                   {selectedHospital.name}
                 </Text>
-                <View className="flex-row items-center gap-xs">
-                  <Star className="fill-accent text-accent" size={14} />
+                <View className="flex-row items-center gap-1.5">
+                  <Star className="fill-accent text-accent" size={12} />
                   <Text className="font-sans text-caption text-foreground-secondary">
                     {selectedHospital.rating || "4.5"}
                   </Text>
                   <Text className="font-sans text-caption text-foreground-muted">
-                    •
+                    &middot;
                   </Text>
                   <Text className="font-sans text-caption text-foreground-muted">
                     {selectedHospital.category}
                   </Text>
                 </View>
+                <View className="flex-row items-center gap-1 mt-0.5">
+                  <MapPin className="text-foreground-muted" size={12} />
+                  <Text
+                    className="flex-1 font-sans text-caption text-foreground-secondary"
+                    numberOfLines={1}
+                  >
+                    {selectedHospital.address}
+                  </Text>
+                </View>
               </View>
               <Pressable
-                className="h-8 w-8 items-center justify-center rounded-full bg-background-subtle"
+                className="h-7 w-7 items-center justify-center rounded-full bg-background-subtle"
                 onPress={() => setSelectedHospital(null)}
               >
-                <X className="text-foreground-muted" size={16} />
+                <X className="text-foreground-muted" size={14} />
               </Pressable>
             </View>
 
-            <View className="flex-row items-center gap-sm">
-              <MapPin className="text-foreground-muted" size={16} />
-              <Text
-                className="flex-1 font-sans text-body text-foreground-secondary"
-                numberOfLines={2}
-              >
-                {selectedHospital.address}
-              </Text>
-            </View>
+            {/* Affiliated doctors */}
+            {(() => {
+              const docs = doctorResults.filter((doc: any) =>
+                doc.affiliations?.some(
+                  (aff: any) => aff.tenantName === selectedHospital.name
+                )
+              );
+              if (docs.length === 0) return null;
+              return (
+                <View className="mt-3 gap-1.5">
+                  <Text className="font-poppins-medium text-caption text-foreground">
+                    Doctors
+                  </Text>
+                  {docs.slice(0, 3).map((doc: any) => (
+                    <TouchableOpacity
+                      key={doc.profile.userId}
+                      className="flex-row items-center gap-2"
+                      onPress={() => openDoctorDetail(doc.profile.userId)}
+                    >
+                      <View className="h-7 w-7 items-center justify-center rounded-full bg-primary-subtle">
+                        <User className="text-primary" size={13} />
+                      </View>
+                      <View className="flex-1">
+                        <Text className="font-sans text-caption text-primary">
+                          {doc.profile.displayName}
+                        </Text>
+                        <Text className="font-sans text-micro text-foreground-secondary" numberOfLines={1}>
+                          {doc.profile.headline ?? doc.profile.specialties?.slice(0, 2).join(", ")}
+                        </Text>
+                      </View>
+                      <Stethoscope className="text-foreground-muted" size={13} />
+                    </TouchableOpacity>
+                  ))}
+                  {docs.length > 3 && (
+                    <Text className="font-sans text-micro text-foreground-muted ml-9">
+                      +{docs.length - 3} more
+                    </Text>
+                  )}
+                </View>
+              );
+            })()}
 
-            <View className="flex-row gap-md">
+            <View className="flex-row gap-2 mt-3">
               {isTenantHospital(selectedHospital) && (
                 <Button
                   className="flex-1"
+                  size="sm"
                   onPress={() => openClinicInfo(selectedHospital)}
                 >
                   Clinic Info
@@ -766,6 +896,7 @@ export default function MapScreen() {
               )}
               <Button
                 className={isTenantHospital(selectedHospital) ? "" : "flex-1"}
+                size="sm"
                 onPress={() => openMapsNavigation(selectedHospital)}
                 variant={isTenantHospital(selectedHospital) ? "outline" : "default"}
               >
@@ -774,6 +905,7 @@ export default function MapScreen() {
               {selectedHospital.phone && (
                 <Button
                   className="flex-1"
+                  size="sm"
                   onPress={() =>
                     Linking.openURL(`tel:${selectedHospital.phone}`)
                   }
@@ -788,7 +920,7 @@ export default function MapScreen() {
       )}
 
       {/* Selected Doctor Card */}
-      {selectedDoctor && searchMode === "doctors" && (
+      {selectedDoctor && (
         <View className="absolute right-lg bottom-8 left-lg">
           <View className="gap-md rounded-3xl bg-background-elevated/50 p-lg shadow-xl backdrop-blur-[2px]">
             <View className="flex-row items-start justify-between">
@@ -941,7 +1073,7 @@ export default function MapScreen() {
 
       {/* Doctor List Panel */}
       {listOpen && searchMode === "doctors" && (
-        <View className="absolute top-32 right-lg left-lg h-auto max-h-[65%] rounded-2xl border-2 border-input bg-background-elevated/80 shadow-xl backdrop-blur-[2px]">
+        <View className="absolute top-36 right-lg left-lg h-auto max-h-[65%] rounded-2xl border-2 border-input bg-background-elevated/80 shadow-xl backdrop-blur-[2px]">
           <View className="flex-row items-center justify-between border-border border-b px-4 py-3">
             <Pressable
               className="h-8 w-8 items-center justify-center rounded-full bg-background-subtle"
@@ -976,9 +1108,7 @@ export default function MapScreen() {
             renderItem={({ item }: { item: any }) => (
               <TouchableOpacity
                 className="rounded-xl border border-border px-3 py-2.5"
-                onPress={() => {
-                  centerOnDoctorMarker(item.profile.userId);
-                }}
+                onPress={() => openDoctorDetail(item.profile.userId)}
               >
                 <View className="flex-row items-center gap-2">
                   <View className="h-9 w-9 items-center justify-center rounded-full bg-primary-subtle">
