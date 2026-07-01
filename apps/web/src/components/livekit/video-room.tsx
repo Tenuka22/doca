@@ -1,6 +1,7 @@
 import { Badge } from "@suwa/ui/components/badge";
 import { Button } from "@suwa/ui/components/button";
 import { Card, CardContent } from "@suwa/ui/components/card";
+import { Dialog, DialogContent } from "@suwa/ui/components/dialog";
 import {
   Camera,
   CameraOff,
@@ -261,6 +262,45 @@ function VideoRoomContent({
     return () => clearInterval(interval);
   }, [liveKit.isConnected]);
 
+  const remoteParticipantsArray = liveKit.isConnected
+    ? Array.from(liveKit.room?.remoteParticipants?.values() ?? []).filter(
+        (participant) => isClinicalIdentity(participant.identity)
+      )
+    : [];
+  const allParticipants = [
+    ...(liveKit.isConnected && liveKit.room?.localParticipant
+      ? [liveKit.room.localParticipant]
+      : []),
+    ...remoteParticipantsArray,
+  ];
+
+  const remoteVideoParticipant = remoteParticipantsArray.find((participant) =>
+    participant.videoTrackPublications.size > 0
+  );
+  const hasRemote = isMock || !!remoteVideoParticipant;
+
+  useEffect(() => {
+    if (!liveKit.isConnected || isMock) return;
+
+    const currentIdentity = remoteVideoParticipant?.identity;
+
+    if (currentIdentity) {
+      liveKit.attachParticipantTracks(currentIdentity);
+    }
+
+    return () => {
+      if (currentIdentity) {
+        liveKit.detachParticipantTracks(currentIdentity);
+      }
+    };
+  }, [
+    liveKit.isConnected,
+    isMock,
+    remoteVideoParticipant?.identity,
+    liveKit.attachParticipantTracks,
+    liveKit.detachParticipantTracks,
+  ]);
+
   if (tokenError) {
     return (
       <div className="flex flex-col items-center justify-center gap-4">
@@ -284,44 +324,11 @@ function VideoRoomContent({
     );
   }
 
-  const remoteParticipantsArray = liveKit.isConnected
-    ? Array.from(liveKit.room?.remoteParticipants?.values() ?? []).filter((participant) =>
-        isClinicalIdentity(participant.identity)
-      )
-    : [];
-  const allParticipants = [
-    ...(liveKit.isConnected && liveKit.room?.localParticipant
-      ? [liveKit.room.localParticipant]
-      : []),
-    ...remoteParticipantsArray,
-  ];
-
   const formatElapsed = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
-
-  const remoteVideoParticipant = remoteParticipantsArray.find((participant) =>
-    participant.videoTrackPublications.size > 0
-  );
-  const hasRemote = isMock || !!remoteVideoParticipant;
-
-  useEffect(() => {
-    if (!liveKit.isConnected || isMock) return;
-
-    let currentIdentity = remoteVideoParticipant?.identity;
-
-    if (currentIdentity) {
-      liveKit.attachParticipantTracks(currentIdentity);
-    }
-
-    return () => {
-      if (currentIdentity) {
-        liveKit.detachParticipantTracks(currentIdentity);
-      }
-    };
-  }, [liveKit.isConnected, isMock, remoteVideoParticipant?.identity, liveKit.attachParticipantTracks, liveKit.detachParticipantTracks]);
 
   if (isMock || timing.canJoin) {
     const remoteLabel = formatParticipantLabel(
@@ -842,8 +849,6 @@ export function VideoRoomWeb({
   );
 
   if (asDialog) {
-    const { Dialog, DialogContent } =
-      require("@suwa/ui/components/dialog") as typeof import("@suwa/ui/components/dialog");
     return (
       <Dialog onOpenChange={(o: boolean) => !o && onClose()} open={open}>
         <DialogContent className="max-w-5xl overflow-hidden p-0 sm:rounded-2xl">

@@ -20,6 +20,7 @@ import {
   loadSessionKeyPair,
   saveSessionKeyPair,
 } from "@/utils/privacy";
+import { buildHeadFromKey } from "../../__root";
 
 export const Route = createFileRoute("/doctor/sessions/$sessionId")({
   head: () => buildHeadFromKey("web:doctor:sessions:detail"),
@@ -28,6 +29,16 @@ export const Route = createFileRoute("/doctor/sessions/$sessionId")({
 
 function DoctorSessionDetailRoute() {
   const { sessionId } = Route.useParams();
+  return <DoctorSessionRoom backTo="/doctor/sessions" sessionId={sessionId} />;
+}
+
+export function DoctorSessionRoom({
+  backTo,
+  sessionId,
+}: {
+  backTo: "/doctor/sessions" | "/doctor/test/session" | "/doctor/test/sessions";
+  sessionId: string;
+}) {
   const navigate = useNavigate();
   const role = useRole();
   const userRole: "admin" | "doctor" = role === "admin" ? "admin" : "doctor";
@@ -224,7 +235,7 @@ function DoctorSessionDetailRoute() {
         <p className="text-muted-foreground text-sm">
           The video session could not be loaded. Please try again.
         </p>
-        <Button onClick={() => navigate({ to: "/doctor/sessions" })}>
+        <Button onClick={() => navigate({ to: backTo })}>
           Back to Sessions
         </Button>
       </div>
@@ -321,7 +332,7 @@ function DoctorSessionDetailRoute() {
       <header className="relative z-10 flex items-center gap-3 border-b border-border/90 bg-card/80 px-6 py-4 backdrop-blur-md">
         <Button
           aria-label="Back to sessions"
-          onClick={() => navigate({ to: "/doctor/sessions" })}
+          onClick={() => navigate({ to: backTo })}
           size="icon"
           variant="ghost"
         >
@@ -337,7 +348,7 @@ function DoctorSessionDetailRoute() {
         <div className="grid h-full gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           <VideoRoomWeb
             endAt={session.endAt}
-            onClose={() => navigate({ to: "/doctor/sessions" })}
+            onClose={() => navigate({ to: backTo })}
             open={true}
             role={userRole}
             sessionId={sessionId}

@@ -11,6 +11,7 @@ import { streamRegistry } from "@/hooks/use-livekit-room";
 
 export function VideoRoom(props: VideoRoomProps) {
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
+  const audioRefs = useRef<Map<string, HTMLAudioElement>>(new Map());
 
   return (
     <VideoRoomBase
@@ -22,22 +23,37 @@ export function VideoRoom(props: VideoRoomProps) {
           : streamRegistry.remoteStreams.get(streamURL) ?? null;
 
         return (
-          <video
-            autoPlay
-            muted={isLocal}
-            playsInline
-            ref={(el) => {
-              if (el && el.srcObject !== stream) {
-                el.srcObject = stream;
-                videoRefs.current.set(streamURL, el);
-              }
-            }}
-            style={{
-              ...StyleSheet.absoluteFillObject,
-              objectFit: "cover",
-              transform: mirror ? "scaleX(-1)" : undefined,
-            }}
-          />
+          <>
+            <video
+              autoPlay
+              muted
+              playsInline
+              ref={(el) => {
+                if (el && el.srcObject !== stream) {
+                  el.srcObject = stream;
+                  videoRefs.current.set(streamURL, el);
+                  el.play().catch(() => undefined);
+                }
+              }}
+              style={{
+                ...StyleSheet.absoluteFillObject,
+                objectFit: "cover",
+                transform: mirror ? "scaleX(-1)" : undefined,
+              }}
+            />
+            {!isLocal ? (
+              <audio
+                autoPlay
+                ref={(el) => {
+                  if (el && el.srcObject !== stream) {
+                    el.srcObject = stream;
+                    audioRefs.current.set(streamURL, el);
+                    el.play().catch(() => undefined);
+                  }
+                }}
+              />
+            ) : null}
+          </>
         );
       }}
     />

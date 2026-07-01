@@ -1,13 +1,20 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { Copy, Shield } from "lucide-react-native";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 
 import { VideoRoom } from "@/components/design/ui/video-room";
 import { orpc } from "@/utils/orpc";
+import {
+  decryptData,
+  deriveSharedKey,
+  encryptData,
+  generateKeyPair,
+  getStoredSecret,
+} from "@/utils/privacy";
 
 function MockVideoRoom({
   onDisconnect,
@@ -85,6 +92,8 @@ export default function TestSessionsScreen() {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [isMock, setIsMock] = useState(false);
   const [selectedRole, setSelectedRole] = useState<"patient" | "doctor">("patient");
+  const [privacyMode, setPrivacyMode] = useState<"anonymous" | "show-info" | null>(null);
+  const hasSharedInfoRef = useRef(false);
 
   const testWindow = useMemo(() => {
     const startAt = new Date().toISOString();
@@ -93,14 +102,116 @@ export default function TestSessionsScreen() {
     return { endAt, startAt };
   }, []);
 
-  const createSession = useMutation(
+  const createSession = (useMutation as any)(
     orpc.createTestSession.mutationOptions({
       onSuccess: (result) => {
         setGeneratedSessionId(result.sessionId);
         setSessionId(result.sessionId);
       },
-    })
+    }) as any
   );
+
+  const profileQuery = useQuery(
+    orpc.getPatientProfile.queryOptions({
+      enabled: selectedRole === "patient",
+      retry: false,
+      meta: { ignoreError: true },
+    }) as any
+  );
+
+  const doctorKeyQuery = useQuery(
+    orpc.getDoctorPublicKey.queryOptions({
+      input: { sessionId: activeSessionId ?? "" },
+      enabled: !!activeSessionId && selectedRole === "patient",
+      refetchInterval: 5000,
+      meta: { ignoreError: true },
+    }) as any
+  );
+
+  const shareMutation = (useMutation as any)(
+    orpc.sharePatientData.mutationOptions({
+      meta: { ignoreError: true },
+    }) as any
+  );
+
+  const profile = profileQuery.data as Record<string, any> | null | undefined;
+  const hasInfoToShare = profile?.secured && profile?._securedData;
+  const doctorPublicKey = (doctorKeyQuery.data as { publicKey?: string } | null | undefined)?.publicKey;
+
+  useEffect(() => {
+    hasSharedInfoRef.current = false;
+    setPrivacyMode(null);
+  }, [activeSessionId]);
+
+  useEffect(() => {
+    if (
+      privacyMode !== "show-info" ||
+      !(hasInfoToShare && activeSessionId && doctorPublicKey) ||
+      shareMutation.isPending ||
+      shareMutation.isSuccess ||
+      hasSharedInfoRef.current
+    ) {
+      return;
+    }
+
+    hasSharedInfoRef.current = true;
+
+    getStoredSecret()
+      .then(async (secret) => {
+        if (!(secret && profile?._securedData)) {
+          hasSharedInfoRef.current = false;
+          return;
+        }
+
+        const decrypted = await decryptData(profile._securedData, secret);
+        if (!decrypted) {
+          hasSharedInfoRef.current = false;
+          return;
+        }
+
+        const keyPair = await generateKeyPair();
+        const sessionKey = await deriveSharedKey(
+          keyPair.privateKey,
+          doctorPublicKey
+        );
+        const encrypted = await encryptData(
+          {
+            email: decrypted.email,
+            phone: decrypted.phone,
+            fullName: decrypted.fullName,
+            address: decrypted.address,
+            ageCategory: decrypted.ageCategory,
+            profession: decrypted.profession,
+          },
+          sessionKey
+        );
+
+        (shareMutation.mutate as any)(
+          {
+            sessionId: activeSessionId,
+            encryptedData: encrypted,
+            patientPublicKey: keyPair.publicKey,
+          },
+          {
+            onError: () => {
+              hasSharedInfoRef.current = false;
+            },
+          }
+        );
+      })
+      .catch(() => {
+        hasSharedInfoRef.current = false;
+      });
+  }, [
+    privacyMode,
+    hasInfoToShare,
+    activeSessionId,
+    doctorPublicKey,
+    shareMutation.isPending,
+    shareMutation.isSuccess,
+    shareMutation.mutate,
+    profile?._securedData,
+  ]);
 
   const handleCopy = () => {
     if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
@@ -152,6 +263,7 @@ export default function TestSessionsScreen() {
         onFetchToken={(currentSessionId) =>
           orpc.getTestLiveKitToken.call({ sessionId: currentSessionId, role: selectedRole })
         }
+        onPrivacyModeChange={setPrivacyMode}
         participantRole={selectedRole}
         sessionId={activeSessionId}
         startAt={testWindow.startAt}
@@ -208,7 +320,7 @@ export default function TestSessionsScreen() {
             <Pressable
               className={`items-center rounded-full px-6 py-4 ${createSession.isPending ? "bg-primary/60" : "bg-primary"}`}
               disabled={createSession.isPending}
-              onPress={() => createSession.mutate({})}
+              onPress={() => (createSession.mutate as any)({})}
             >
               <Text className="font-poppins-medium text-body text-primary-foreground">
                 {createSession.isPending

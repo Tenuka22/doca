@@ -22,6 +22,7 @@ import {
 import {
   createFileRoute,
   Link,
+  useLocation,
   Outlet,
   redirect,
   useLoaderData,
@@ -31,13 +32,18 @@ import { StethoscopeIcon } from "lucide-react";
 import { Button } from "@suwa/ui/components/button";
 
 import { DoctorSidebar } from "@/components/doctor-sidebar";
-import { requireAuth } from "@/utils/auth";
+import { getServerSession, requireAuth } from "@/utils/auth";
 import { buildHeadFromKey } from "./__root";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/doctor")({
   head: () => buildHeadFromKey("web:doctor:index"),
   beforeLoad: async ({ context, location }) => {
+    if (location.pathname.startsWith("/doctor/test/session")) {
+      const session = await getServerSession();
+      return { session };
+    }
+
     const session = await requireAuth(["doctor", "pending-doctor"]).catch(() => null);
     if (!session) return { session: null };
 
@@ -105,8 +111,14 @@ function Breadcrumbs() {
 
 function DoctorLayoutRoute() {
   const { session } = useLoaderData({ from: "/doctor" });
+  const location = useLocation();
+  const isTestSessionRoute = location.pathname.startsWith("/doctor/test/session");
 
   if (!session) {
+    if (isTestSessionRoute) {
+      return <Outlet />;
+    }
+
     return (
       <div className="relative flex min-h-svh items-center justify-center overflow-hidden bg-background px-4 text-foreground">
         <div

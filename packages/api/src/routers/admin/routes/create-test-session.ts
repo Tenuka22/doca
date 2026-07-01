@@ -1,13 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { doctorSessions } from "@suwa/db";
 import { z } from "zod";
-import { requireAdmin } from "../../../hooks";
+import { requireAuth } from "../../../hooks";
 import { protectedProcedure } from "../../../index";
 
 export const adminCreateTestSessionRoute = protectedProcedure
   .input(z.object({}).optional())
   .handler(async ({ context }) => {
-    const { userId } = requireAdmin(context);
+    const { userId } = requireAuth(context);
 
     const now = new Date();
     const startAt = new Date(now.getTime() - 30 * 60 * 1000);
